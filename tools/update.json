@@ -1,13 +1,13 @@
 {
   "build": 2,
   "version": "2026.09.21-test",
-  "url": "https://discord.gg/YGEt9eNKuH",
+  "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/download/v2/Rune_Manager_Modern.zip",
   "notes_fr": [
-    "Test MAJ : icône NEW sur Vérifier MAJ.",
-    "Télécharger ouvre encore le Discord."
+    "ZIP de l'appli sur GitHub Releases.",
+    "Télécharger ouvre le zip GitHub, plus le Discord."
   ],
   "notes_en": [
-    "Update test: NEW tag on Check Update.",
-    "Download still opens Discord."
+    "App ZIP is on GitHub Releases.",
+    "Download opens the GitHub zip, not Discord."
   ]
 }

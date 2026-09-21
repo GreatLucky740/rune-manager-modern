@@ -1,11 +1,13 @@
 {
-  "build": 1,
-  "version": "2026.09.21",
+  "build": 2,
+  "version": "2026.09.21-test",
   "url": "https://discord.gg/YGEt9eNKuH",
   "notes_fr": [
-    "Première version partagée."
+    "Test MAJ : icône NEW sur Vérifier MAJ.",
+    "Télécharger ouvre encore le Discord."
   ],
   "notes_en": [
-    "First shared release."
+    "Update test: NEW tag on Check Update.",
+    "Download still opens Discord."
   ]
 }

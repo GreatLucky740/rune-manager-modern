@@ -1,0 +1,196 @@
+{
+  "unit_id": 3027870181,
+  "master_id": 14511,
+  "monster": "Sigmarus",
+  "unequipped_recheck_after_resistance": {
+    "rune_count": 0,
+    "artifact_count": 0,
+    "relic_count": 0,
+    "app_rank": 237,
+    "game_rank": 260,
+    "sources": "Utilisateur : sans rien appli 237, jeu 260. Aucun instantane JSON verifie.",
+    "notes": "Point zero recent associe au test RES +3 % (233 / 259) : gain de 4 places application et 1 place jeu avec la rune. L'ancien point zero jeu 258 reste historique, ne pas le remplacer retroactivement pour les autres tests. Cause de la variation du classement de reference non determinee. Les gains de rang ne donnent pas un rapport de coefficients de score."
+  },
+  "resistance_plus2_observation": {
+    "rune": {"slot": 6, "set": "Swift", "stars": 1, "displayed_quality": "Normal", "level": 2, "primary_stat": "Resistance", "primary_value": 3, "secondary_effects": []},
+    "app_rank": 233,
+    "game_rank": 259,
+    "sources": "Capture utilisateur et rangs rapportes. Aucun instantane JSON verifie. Capture affichant Engrave Temporarily : equipement effectif au moment du releve non confirme par la capture.",
+    "assumption": "Test demande avec rune seule, sans artefact ni relique ; etat complet au moment des rangs a confirmer.",
+    "notes": "Rune une etoile, contrairement aux tests Swift SPD/CR/CD deux etoiles : comparaison potentiellement confondue par le grade. Rang jeu 259 contre point zero historique 258 : refaire une mesure sans equipement dans le meme etat de compte, puis reequiper pour confirmer. Ne pas interpreter ce recul comme une contribution negative de RES. Bonus Swift inactif si rune seule."
+  },
+  "crit_rate_plus2_observation": {
+    "rune": {"slot": 4, "set": "Swift", "stars": 2, "displayed_quality": "Normal", "level": 2, "primary_stat": "CRI Rate", "primary_value": 4, "secondary_effects": []},
+    "app_rank": 231,
+    "game_rank": 256,
+    "sources": "Capture utilisateur montrant la rune equipee sur Sigmarus et rangs rapportes. Aucun instantane JSON verifie pour cette mesure.",
+    "assumption": "Continuation des tests avec une seule rune, sans artefact ni relique, en remplacement de la precedente ; etat complet non reconfirme dans ce message.",
+    "notes": "Sous cette hypothese, Swift inactif. Comparables deux etoiles +2 Swift : SPD +4 donne application 231 / jeu 258 ; CRI Rate +4 donne 231 / 256 ; CRI Dmg +7 donne 231 / 254. Meme rang application ne signifie pas meme score. Ces contraintes suggerent une contribution relative differente entre les effets testes, sans etablir des coefficients par point ni une surevaluation absolue. Point zero historique 237 / 258, sous reserve de formule et inventaire comparables."
+  },
+  "crit_damage_plus2_observation": {
+    "rune": {"slot": 4, "set": "Swift", "stars": 2, "displayed_quality": "Normal", "level": 2, "primary_stat": "CRI Dmg", "primary_value": 7, "secondary_effects": []},
+    "app_rank": 231,
+    "game_rank": 254,
+    "sources": "Capture utilisateur et rangs rapportes. Aucun instantane JSON verifie pour cette mesure.",
+    "assumption": "Continuation des tests avec une seule rune et sans artefact ni relique ; remplacement de la rune precedente, non explicitement reconfirme dans ce message.",
+    "notes": "Sous cette hypothese : bonus Swift inactif. Par rapport au point zero historique application 237 / jeu 258, gain de 6 places / 4 places. Comparaison avec Swift slot 2 deux etoiles +2 SPD +4 (231 / 258) : meme rang application, rang jeu meilleur de 4 places pour CRI Dmg +7. Les rangs ne donnent ni egalite des scores ni coefficient exact ; inventaire, formule et autres equipements doivent etre comparables."
+  },
+  "speed_plus5_observation": {
+    "rune_count": 1,
+    "artifact_count": 0,
+    "relic_count": 0,
+    "rune": {"slot": 2, "set": "Swift", "stars": 2, "displayed_quality": "Normal", "level": 5, "primary_stat": "SPD", "primary_value": 7, "secondary_effects": [{"stat": "ATK%", "value": 3}]},
+    "app_rank": 229,
+    "game_rank": 251,
+    "sources": "Capture utilisateur et rangs rapportes ; continuation du test de la rune Swift seule. Aucun instantane JSON verifie pour cette mesure.",
+    "notes": "Depuis +2 : SPD +4 devient +7 et une sous-stat ATK +3 % apparait ; niveau +2 devient +5. Gain de 2 places dans l'application et de 7 dans le jeu. Mesure combinee, pas un test isole du coefficient SPD. Le conseil precedent de rester sous +6 pour eviter une sous-stat etait incorrect, comme le montre cette capture. Ne pas deduire un multiplicateur du rapport des gains de rang. Bonus Swift inactif avec une seule rune."
+  },
+  "speed_plus2_observation": {
+    "rune_count": 1,
+    "artifact_count": 0,
+    "relic_count": 0,
+    "rune": {"slot": 2, "set": "Swift", "stars": 2, "rank": 1, "level": 2, "primary_stat": "SPD", "primary_value": 4, "secondary_effects": []},
+    "app_rank": 231,
+    "game_rank": 258,
+    "sources": "Capture utilisateur et declaration 'juste avec cette rune'. Aucun nouvel instantane JSON verifie pour cette mesure.",
+    "notes": "Une seule rune Swift : bonus de set inactif. Par rapport au point zero historique (application 237, jeu 258), gain de 6 places dans l'application et aucun changement de rang dans le jeu, sous reserve d'un inventaire et d'une formule comparables. Cela ne prouve pas que SPD vaut zero : contribution SPD et eventuelle contribution propre a la rune ne sont pas isolees. Ne pas deduire un coefficient de score du rapport des rangs."
+  },
+  "accuracy_plus2_observation": {
+    "equipped_rune_ids": [61714477956],
+    "rune": {"slot": 6, "set_id": 19, "stars": 3, "rank": 1, "level": 2, "primary_effect": [12, 8], "secondary_effects": []},
+    "app_rank": 230,
+    "game_rank": 252,
+    "app_score": 48673.9,
+    "sources": "Niveau et precision observes sur la capture utilisateur ; rangs rapportes par l'utilisateur ; score lu dans worldboss-plan.json.",
+    "notes": "Le JSON exporte consultable contient encore la rune +0 ACC 4 %, contrairement a la capture +2 ACC 8 %. Ne pas considerer cet export comme un instantane valide du test +2. Difference de score du plan depuis +0 : 286.8 points. Le niveau et la precision changent simultanement ; leurs contributions ne sont pas isolees."
+  },
+  "interpretation_caution": "Les notes historiques de surevaluation ou sous-evaluation sont des hypotheses, pas des preuves. Les differences de rang ne mesurent pas les differences de score du jeu : la distribution et l'ordre des autres monstres peuvent differer. Ne pas deduire un multiplicateur de statistique du rapport des gains de rang. Les app_score sont des scores calcules, jamais des scores observes dans le jeu.",
+  "observations": [
+    {
+      "removed_slots": [],
+      "rune_count": 6,
+      "app_score": 120498.9,
+      "app_rank": 1,
+      "game_rank": 1
+    },
+    {
+      "removed_slots": [4],
+      "rune_count": 5,
+      "app_score": 106993.7,
+      "app_rank": 43,
+      "game_rank": 43,
+      "notes": "Perte de la rune slot 4 et du bonus de set Despair x4."
+    },
+    {
+      "removed_slots": [4, 3],
+      "rune_count": 4,
+      "app_score": 99287.6,
+      "app_rank": 60,
+      "game_rank": 58,
+      "notes": "La slot 3 est retiree alors que Despair est deja casse : aucun nouveau bonus de set perdu."
+    },
+    {
+      "removed_slots": [4, 3, 2],
+      "rune_count": 3,
+      "app_score": 87532.4,
+      "app_rank": 61,
+      "game_rank": 61,
+      "notes": "La slot 2 est retiree sans nouvelle perte de set. Validation exacte du rang pour ATK, CR, CD, HP et SPD combines."
+    },
+    {
+      "removed_slots": [4, 3, 2, 5],
+      "rune_count": 2,
+      "app_score": 77744.3,
+      "app_rank": 64,
+      "game_rank": 64,
+      "notes": "La slot 5 est retiree sans nouvelle perte de set. Baisse calculee de 9788.1 points et rang parfaitement identique. Il reste les slots 1 et 6, qui activent encore Focus x2."
+    },
+    {
+      "removed_slots": [4, 3, 2, 5, 1],
+      "rune_count": 1,
+      "app_score": 67544.2,
+      "app_rank": 85,
+      "game_rank": 79,
+      "notes": "Retrait de la slot 1 et perte simultanee du bonus Focus x2. Baisse calculee de 10200.1 points. Premier ecart important : l'application classe Sigmarus 6 places trop bas, donc elle surestime la valeur combinee de cette rune et/ou du bonus Focus."
+    },
+    {
+      "removed_slots": [4, 3, 2, 5, 1, 6],
+      "rune_count": 0,
+      "app_score": 55802.7,
+      "app_rank": 158,
+      "game_rank": 147,
+      "notes": "Retrait isole de la slot 6, le set Focus etant deja casse. Baisse calculee de 11741.5 points. L'ecart passe de 6 a 11 places : la slot 6 est elle aussi surevaluee par la formule actuelle. Deux artefacts restent equipes."
+    },
+    {
+      "removed_slots": [4, 3, 2, 5, 1, 6],
+      "removed_artifact_ids": [809098684],
+      "rune_count": 0,
+      "artifact_count": 1,
+      "app_score": 52479.8,
+      "app_rank": 191,
+      "game_rank": 189,
+      "notes": "Retrait de l'artefact Element Eau 809098684. Contribution calculee de 3322.9 points. Le jeu perd environ 42 rangs contre 33 dans l'application : cet artefact semble relativement sous-evalue, et l'ecart absolu se reduit a 2 places."
+    },
+    {
+      "removed_slots": [4, 3, 2, 5, 1, 6],
+      "removed_artifact_ids": [809098684, 583549840],
+      "rune_count": 0,
+      "artifact_count": 0,
+      "app_score": 49082.6,
+      "app_rank": 229,
+      "game_rank": 241,
+      "notes": "Retrait du dernier artefact Type 583549840. Contribution calculee de 3397.2 points. Le jeu perd 52 places contre 38 dans l'application : les artefacts sont globalement sous-evalues. Il ne reste aucune rune ni aucun artefact, mais la relique ATK +12 % reste equipee et est incluse par l'application dans UnitBase via RelicAtkPct. Avec cette relique, Sigmarus est classe 12 places trop haut par l'application."
+    },
+    {
+      "removed_slots": [4, 3, 2, 5, 1, 6],
+      "removed_artifact_ids": [809098684, 583549840],
+      "relic_removed": true,
+      "rune_count": 0,
+      "artifact_count": 0,
+      "relic_count": 0,
+      "app_score": 47778.5,
+      "app_rank": 237,
+      "game_rank": 258,
+      "notes": "Vrai point zero sans rune, artefact ni relique. Retirer la relique ATK +12 % fait passer le score de 49082.6 a 47778.5, soit 1304.1 points. Elle procure 17 rangs dans le jeu contre seulement 8 dans l'application : coefficient ATK nettement sous-evalue. Le score de base pur reste classe 21 places trop haut par l'application."
+    },
+    {
+      "removed_slots": [4, 3, 2, 5, 1, 6],
+      "removed_artifact_ids": [809098684, 583549840],
+      "rune_count": 0,
+      "artifact_count": 0,
+      "relic_count": 1,
+      "relic_id": 1556785,
+      "relic_primary_effect": [100, 16],
+      "relic_secondary_effect": [3, 13500, 1],
+      "app_score": 48962.3,
+      "app_rank": 229,
+      "game_rank": 243,
+      "notes": "Mesure du 8 septembre 2026 : relique HP +16 % seule. Gain calcule de 1183.8 points par rapport au point zero 47778.5. Gain de 15 rangs dans le jeu (258 vers 243) et 8 dans l'application (237 vers 229). Ces rangs contraignent la calibration mais ne prouvent pas a eux seuls que le coefficient HP est trop faible."
+    },
+    {
+      "removed_slots": [4, 3, 2, 5, 1, 6],
+      "removed_artifact_ids": [809098684, 583549840],
+      "rune_count": 0,
+      "artifact_count": 0,
+      "relic_count": 1,
+      "relic_id": 1556782,
+      "relic_primary_effect": [102, 12],
+      "relic_secondary_effect": [11, 150, 2],
+      "app_score": 48410.4,
+      "app_rank": 231,
+      "game_rank": 250,
+      "notes": "Relique DEF +12 % seule, zero rune et zero artefact verifies dans le JSON. Gain calcule de 631.9 points par rapport au point zero 47778.5. Gain de 8 rangs dans le jeu et 6 dans l'application. Les variations de rang ne donnent pas directement un coefficient de score."
+    },
+    {
+      "rune_count": 1,
+      "artifact_count": 0,
+      "relic_count": 0,
+      "equipped_rune_ids": [61714477956],
+      "rune": {"id": 61714477956, "slot": 6, "set_id": 19, "stars": 3, "rank": 1, "level": 0, "primary_effect": [12, 4], "innate": [0, 0], "secondary_effects": []},
+      "app_score": 48387.1,
+      "app_rank": 231,
+      "game_rank": 258,
+      "notes": "Rune Fight normale 3 etoiles +0, ACC +4 %, seule et sans bonus de set actif. Etat verifie dans le JSON : aucun artefact ni relique. Gain calcule de 608.6 points par rapport au point zero historique. Rang jeu inchange a 258, rang application 237 vers 231. Un rang inchange ne prouve pas une contribution nulle ; le gain peut rester inferieur au seuil du monstre precedent."
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "generator": "Built-in imagegen",
+  "style": "Detailed beveled cracked stone, faceted glyphs, gold stars, silver level; no normal glow, narrow white ancient rim.",
+  "glyphs": [
+    {
+      "name": "energy",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-bc9ec6b7-37f5-4c81-835b-0ec99d1f86a8.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for energy rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "guard",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-93621ee7-f378-4cc1-9939-736a21d5495a.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for guard rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "swift",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-d95fad1a-e58a-420f-803f-0612b62ce0e5.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for swift rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "blade",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-22f141f9-2a9f-441d-afe0-b2faf405eeec.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for blade rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "rage",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-6d03be65-29b1-4de5-884a-ad2fcf528039.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for rage rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "focus",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-5ec9f87f-1454-47bf-a71c-2f841456d104.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for focus rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "endure",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-bb670ea2-ebdf-4f6c-9c88-8aba42e31af1.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for endure rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "fatal",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-502483cc-096d-41ce-a155-eace18cd21ff.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for fatal rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "despair",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-f42c8da7-2d9b-4fc6-bc3e-62a5a81abe37.png",
+      "prompt": "Use case style-transfer. Create the attached Summoners War Despair equipment-set icon as a single polished silver 3D game inventory glyph. Preserve its exact small bent angular zigzag silhouette from image1. Image2 is material reference only, not shape: sharply faceted white silver surfaces, broad clean bevel, darker extruded edges, light from upper left. Plain neutral grayscale, centered isolated on genuine transparent alpha background. No lettering, no scenery, no stone plate, no stars or additional symbols."
+    },
+    {
+      "name": "vampire",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-63a2d76f-8892-4275-b33d-3f04b59eec2a.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for vampire rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "violent",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-814bc7d9-3099-4336-979c-6d001376881e.png",
+      "prompt": "Use case style-transfer. Image1 exact glyph silhouette to preserve: angular rune shaped like B with TWO triangular OPEN holes. Image2 material reference ONLY: glossy deeply beveled faceted purple gem glyph on stone. Create ONE isolated glyph, image1 symbol in image2 raised faceted style, but render in neutral grayscale WHITE/SILVER (runtime recoloring). Strong wide sharply cut polished bevels, clear angular planes, brilliant top-left highlights, medium-gray face, dark graphite extruded lower-right sides. Front-facing, upright, exact silhouette and holes, no perspective skew. Genuine transparent background including both interior holes. NO stone, NO stars, NO text, NO other objects, NO colored halo. Large centered with 8% padding."
+    },
+    {
+      "name": "nemesis",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-ba291ccb-b1df-4176-aed4-396740d2bfdc.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for nemesis rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "will",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-1d7f0ac2-fd66-417a-8dd9-d72f103b3950.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for will rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "shield",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-f8a01734-72a2-4bb3-a4fe-0be8fd42b628.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for shield rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "revenge",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-127ba420-d37b-43f3-833e-dadcf1ebd7d0.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for revenge rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "destroy",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-9283790c-c76f-451e-83d0-c74e4830eeec.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for destroy rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "fight",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-cf6db40e-431a-4719-907b-64bb97df61cc.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for fight rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "determination",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-bfc55f31-026d-48af-ae86-0204c646d725.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for determination rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "enhance",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-65c3a4f9-8428-43da-b4a7-5e3c7353b649.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for enhance rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "accuracy",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-4acf6e14-a5a0-4738-90cd-49353e57754a.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for accuracy rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "tolerance",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-66359ddd-9fb6-40be-b95a-94a8fdc8cb8c.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for tolerance rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "seal",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-32996eb5-5333-4874-ae99-1577b8809117.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for seal rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    },
+    {
+      "name": "intangible",
+      "path": "C:\\Users\\Great-Lucky\\.codex\\generated_images\\019fe77f-9f75-7b21-bbfa-5df6f8146552\\exec-204c8fef-b266-4625-8d1a-3b7532216133.png",
+      "prompt": "Use case style-transfer. Image1 EXACT silhouette for intangible rune set: preserve every stroke, dot, opening and orientation; do NOT use image2's B silhouette. Image2 MATERIAL ONLY. Create ONE isolated glyph of image1, glossy faceted white/silver crystal metal like image2: wide sharp angular bevels, white upper-left highlights, medium gray faces, dark graphite extruded lower-right edges. Front-facing and upright. Exact shape of image1, including separated parts and open holes. Neutral grayscale for runtime recoloring. Genuine transparent alpha background including interior holes. NO stone, stars, text, glow, or extra symbols. Large centered with 8% padding."
+    }
+  ],
+  "stones": [
+    {
+      "file": "slot1.png",
+      "prompt": "Match the original slot silhouette using premium brown-grey cracked beveled stone. Empty front face, no glyph, stars, level or glow. Transparent alpha."
+    },
+    {
+      "file": "slot2.png",
+      "prompt": "Match the original slot silhouette using premium brown-grey cracked beveled stone. Empty front face, no glyph, stars, level or glow. Transparent alpha."
+    },
+    {
+      "file": "slot3.png",
+      "prompt": "Match the original slot silhouette using premium brown-grey cracked beveled stone. Empty front face, no glyph, stars, level or glow. Transparent alpha."
+    },
+    {
+      "file": "slot4.png",
+      "prompt": "Use case style-transfer. Image1 exact silhouette for slot 4; image2 material reference only. Generate ONE blank rune stone preserving image1 shape: point DOWN, flat horizontal top, upper-left and upper-right shoulders, long taper to bottom center. Thick polished beveled brown-grey cracked stone, broad empty flat front face, lit upper-left bevel, dark lower edge, premium detailed 3D game icon. No glyph, no symbols, no stars, no text, no glow, no border light, no environment. Genuinely transparent alpha background. Large centered stone plate with narrow padding."
+    },
+    {
+      "file": "slot5.png",
+      "prompt": "Use case style-transfer. Image1 exact silhouette for slot 5; image2 material reference only. Generate ONE blank rune stone preserving image1 shape: top horizontal from x35 to x80, rightmost corner at x95 y45, lower-right at x65 y85, bottom-left at x8 y85; right-leaning reverse of slot2. Thick polished beveled brown-grey cracked stone, broad empty flat front face, lit upper-left bevel, dark lower edge, premium detailed 3D game icon. No glyph, no symbols, no stars, no text, no glow, no border light, no environment. Genuinely transparent alpha background. Large centered stone plate with narrow padding."
+    },
+    {
+      "file": "slot6.png",
+      "prompt": "Use case style-transfer. Image1 exact silhouette for slot 6; image2 material reference only. Generate ONE blank rune stone preserving image1 shape: top-left x8 y15, top-right x65 y15, rightmost corner x95 y50, bottom-right x78 y85, bottom-left x35 y85; left leaning reverse of slot3. Thick polished beveled brown-grey cracked stone, broad empty flat front face, lit upper-left bevel, dark lower edge, premium detailed 3D game icon. No glyph, no symbols, no stars, no text, no glow, no border light, no environment. Genuinely transparent alpha background. Large centered stone plate with narrow padding."
+    }
+  ],
+  "star": {
+    "file": "star.png",
+    "prompt": "Use case stylized-concept. Asset type game UI component. One single five-point GOLD STAR, front facing upright, premium sharply faceted 3D gem-like golden star. Ten triangular facets meeting center, brilliant pale yellow upper-left, vivid yellow gold upper faces and orange amber lower faces. Thick dark brown-black outer edge and subtle bevel, identical quality to the big gold stars in a premium fantasy rune icon. No diffuse halo, no other objects, no text, no stone, no multiple stars. Entire star visible centered with 8% padding on genuinely transparent alpha background."
+  }
+}

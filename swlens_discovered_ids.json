@@ -1,0 +1,58 @@
+[
+  {
+    "id": 30713,
+    "name": "swlens.io/webapp/monster/30713",
+    "queryName": "Ereshion",
+    "icon": "https://jljnwnydzodbisihlqcj.supabase.co/storage/v1/object/public/game-icons/monsters/unit_icon_0161_1_3.png",
+    "url": "https://www.swlens.io/webapp/monster/30713"
+  },
+  {
+    "id": 34411,
+    "name": "Gandalf",
+    "queryName": "Gandalf",
+    "icon": "https://jljnwnydzodbisihlqcj.supabase.co/storage/v1/object/public/game-icons/monsters/unit_icon_0204_1_1.png",
+    "url": "https://www.swlens.io/webapp/monster/34411"
+  },
+  {
+    "id": 34413,
+    "name": "Gandalf",
+    "queryName": "Gandalf",
+    "icon": "https://jljnwnydzodbisihlqcj.supabase.co/storage/v1/object/public/game-icons/monsters/unit_icon_0204_1_3.png",
+    "url": "https://www.swlens.io/webapp/monster/34413"
+  },
+  {
+    "id": 34414,
+    "name": "Gandalf",
+    "queryName": "Gandalf",
+    "icon": "https://jljnwnydzodbisihlqcj.supabase.co/storage/v1/object/public/game-icons/monsters/unit_icon_0204_1_4.png",
+    "url": "https://www.swlens.io/webapp/monster/34414"
+  },
+  {
+    "id": 34412,
+    "name": "swlens.io/webapp/monster/34412",
+    "queryName": "Gandalf",
+    "icon": "https://jljnwnydzodbisihlqcj.supabase.co/storage/v1/object/public/game-icons/monsters/unit_icon_0204_1_2.png",
+    "url": "https://www.swlens.io/webapp/monster/34412"
+  },
+  {
+    "id": 28613,
+    "name": "Layla",
+    "queryName": "Layla",
+    "icon": "https://jljnwnydzodbisihlqcj.supabase.co/storage/v1/object/public/game-icons/monsters/unit_icon_0127_1_3.png",
+    "url": "https://www.swlens.io/webapp/monster/28613"
+  },
+  {
+    "id": 31211,
+    "name": "swlens.io/webapp/monster/31211",
+    "queryName": "Aya / Nobara",
+    "icon": "https://jljnwnydzodbisihlqcj.supabase.co/storage/v1/object/public/game-icons/monsters/unit_icon_0164_1_1.png",
+    "url": "https://www.swlens.io/webapp/monster/31211"
+  },
+  {
+    "id": 31214,
+    "name": "swlens.io/webapp/monster/31214",
+    "queryName": "Aya / Nobara",
+    "icon": "https://jljnwnydzodbisihlqcj.supabase.co/storage/v1/object/public/game-icons/monsters/unit_icon_0164_1_4.png",
+    "url": "https://www.swlens.io/webapp/monster/31214"
+  }
+]

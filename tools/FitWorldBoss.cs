@@ -1,0 +1,28 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+using System.Web.Script.Serialization;
+class FitWorldBoss {
+ class Point {public long id;public double score;public double[] gradient=new double[8];public double Eval(double[] delta){double s=score;for(int j=0;j<8;j++)s+=gradient[j]*delta[j];return s;}}
+ class Metrics {public int[] ranks,errors,teamRanks;public double mean,teamMean;public int max,teamMax;public double loss;}
+ static Dictionary<string,object> D(object x){return (Dictionary<string,object>)x;}static object[] A(object x){return (object[])x;}static double F(object x){return Convert.ToDouble(x);}
+ static List<Point> others=new List<Point>(),team=new List<Point>(),tests=new List<Point>();static int[] targets,teamTargets;static double[] original;static Metrics initial;
+ static Point Make(long id,object[] samples,bool row){var p=new Point{id=id};Func<object,double> value=s=>row?F(A(D(s)["rows"]).Select(D).Single(r=>Convert.ToInt64(r["id"])==id)["score"]):F(D(D(s)["scores"])[id.ToString()]);p.score=value(samples[0]);for(int j=0;j<8;j++)p.gradient[j]=value(samples[j+1])-p.score;return p;}
+ static Metrics Measure(double[] w){var delta=w.Select((v,j)=>v-original[j]).ToArray();var m=new Metrics{ranks=new int[tests.Count],errors=new int[tests.Count],teamRanks=new int[team.Count]};var scores=others.Select(p=>p.Eval(delta)).ToArray();
+  for(int i=0;i<tests.Count;i++){double score=tests[i].Eval(delta);int rank=1;for(int n=0;n<scores.Length;n++)if(scores[n]>score||scores[n]==score&&others[n].id<tests[i].id)rank++;m.ranks[i]=rank;m.errors[i]=Math.Abs(rank-targets[i]);}m.mean=m.errors.Average();m.max=m.errors.Max();
+  var order=team.Select((p,i)=>new{i,score=p.Eval(delta),p.id}).OrderByDescending(p=>p.score).ThenBy(p=>p.id).ToArray();for(int n=0;n<order.Length;n++)m.teamRanks[order[n].i]=n+1;var errors=m.teamRanks.Select((v,j)=>teamTargets[j]>0?Math.Abs(v-teamTargets[j]):-1).Where(v=>v>=0).ToArray();m.teamMean=errors.Average();m.teamMax=errors.Max();
+  double regularity=w.Select((v,j)=>Math.Pow(Math.Log(v/original[j]),2)).Average();m.loss=m.mean+.5*m.max+.7*m.teamMean+.3*m.teamMax+.5*regularity;
+  if(initial!=null)m.loss+=8*Math.Max(0,m.teamMean-initial.teamMean)+3*Math.Max(0,m.teamMax-initial.teamMax);return m;
+ }
+ static int Main(){try{var js=new JavaScriptSerializer{MaxJsonLength=int.MaxValue,RecursionLimit=256};var root=D(js.DeserializeObject(File.ReadAllText("outputs/worldboss-calibration-features.json")));original=A(root["weights"]).Select(F).ToArray();var scenarios=A(root["scenarios"]).Select(D).ToArray();targets=scenarios.Select(s=>Convert.ToInt32(s["target"])).ToArray();long sig=3027870181L;var first=A(scenarios[0]["samples"]);
+  foreach(string id in D(D(first[0])["scores"]).Keys)if(long.Parse(id)!=sig)others.Add(Make(long.Parse(id),first,false));foreach(var s in scenarios)tests.Add(Make(sig,A(s["samples"]),false));
+  int[] truth={14511,20511,21111,14411,24511,15711,26111,17411,28911,25611,21211,29311,14611,20511,22611,25311,25711,34411,18611,32811,27911,16611,31311,13811,13811,19711,25211,35611,26811,18911,16811,14513,33411,21511,32911,19211,34911,17011,21811,16911,17911,18411,28211,33211,19911,21411,19411,13411,30711,29211,23111,11911,18811,25011,11211,24911,15511,13911,22711,28611};
+  var queues=truth.Select((master,i)=>new{master,rank=i+1}).GroupBy(x=>x.master).ToDictionary(g=>g.Key,g=>new Queue<int>(g.Select(x=>x.rank)));var tt=new List<int>();foreach(var r in A(D(first[0])["rows"]).Select(D).OrderByDescending(r=>F(r["score"]))){int master=Convert.ToInt32(r["master"]);team.Add(Make(Convert.ToInt64(r["id"]),first,true));tt.Add(queues.ContainsKey(master)&&queues[master].Count>0?queues[master].Dequeue():0);}teamTargets=tt.ToArray();if(team.Count!=60)throw new Exception("Need 60 builds");
+  initial=Measure(original);var best=(double[])original.Clone();var bestM=Measure(best);var rng=new Random(120926);int evaluated=0;
+  for(int restart=0;restart<12;restart++){var current=(double[])best.Clone();var cm=Measure(current);for(int step=0;step<7000;step++){var candidate=(double[])current.Clone();double scale=step<2000?.15:step<4500?.045:.012;int changes=step%7==0?8:1;for(int k=0;k<changes;k++){int j=changes==8?k:rng.Next(8);candidate[j]=Math.Max(original[j]*.25,Math.Min(original[j]*4,candidate[j]*Math.Exp((rng.NextDouble()*2-1)*scale)));}var m=Measure(candidate);evaluated++;double temp=.1*(1.0-step/7000.0);if(m.loss<cm.loss||rng.NextDouble()<Math.Exp((cm.loss-m.loss)/Math.Max(.0001,temp))){current=candidate;cm=m;}if(m.loss<bestM.loss){best=candidate;bestM=m;}}Console.WriteLine("Search "+restart+" tests MAE="+bestM.mean+" max="+bestM.max+" team MAE="+bestM.teamMean+" max="+bestM.teamMax);}
+  for(int j=0;j<8;j++)best[j]=Math.Round(best[j],6);bestM=Measure(best);
+  var results=tests.Select((p,i)=>new{name=scenarios[i]["name"],game=targets[i],before=initial.ranks[i],after=bestM.ranks[i]}).ToArray();bool improved=bestM.mean<initial.mean&&bestM.max<=initial.max&&bestM.teamMean<=initial.teamMean&&bestM.teamMax<=initial.teamMax;
+  File.WriteAllText("outputs/worldboss-coefficient-fit.json",js.Serialize(new{experimental=true,warning="Historical rank targets with current inventory; not validation of true game formula. Duplicate monsters matched by prior score, not verified instance ID. No per-monster coefficients.",evaluated=evaluated,matchedTeamTargets=teamTargets.Count(t=>t>0),accepted=improved,names=root["names"],beforeWeights=original,afterWeights=best,before=initial,after=bestM,scenarios=results}));Console.WriteLine("ACCEPTED="+improved);foreach(var r in results)Console.WriteLine(r.name+": "+r.before+" -> "+r.after+" game "+r.game);return improved?0:2;
+ }catch(Exception e){Console.WriteLine(e);return 1;}}
+}

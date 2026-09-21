@@ -1,0 +1,13 @@
+ARTIFACT MANAGER V2 SWLENS
+
+1. Extrayez entièrement le fichier ZIP.
+2. Double-cliquez sur Installer_Artifact_Manager.vbs.
+3. Ouvrez Artifact_Manager_Modern_V2_SWLens_Macros.xlsm.
+4. Cliquez sur IMPORTER JSON dans la feuille Home.
+
+Les fichiers ArtifactManagerEngine.exe et Artifact_Manager_Data.json doivent rester
+dans le même dossier que le classeur XLSM.
+
+Si Excel bloque l'installation VBA :
+Fichier > Options > Centre de gestion de la confidentialité > Paramètres du Centre
+> Paramètres des macros > activez « Accès approuvé au modèle d'objet du projet VBA ».

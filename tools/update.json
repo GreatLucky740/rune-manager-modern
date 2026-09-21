@@ -1,13 +1,15 @@
 {
-  "build": 2,
-  "version": "2026.09.21-test",
-  "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/download/v2/Rune_Manager_Update.exe",
+  "build": 3,
+  "version": "2026.09.21",
+  "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/download/v3/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Mise à jour par exe : Télécharger ferme l'appli, remplace le moteur, puis relance.",
-    "Le zip complet reste pour une première install."
+    "Mise à jour automatique : Télécharger ferme l'appli, remplace le moteur, puis relance.",
+    "Classement SPD : colonnes SPD de base et SPD + meules.",
+    "Bouton Vérifier MAJ avec icône NEW."
   ],
   "notes_en": [
-    "EXE update: Download closes the app, replaces the engine, then relaunches.",
-    "Full zip stays for first install."
+    "Auto-update: Download closes the app, replaces the engine, then relaunches.",
+    "SPD ranking: Base SPD and SPD + grind columns.",
+    "Check Update button with NEW tag."
   ]
 }

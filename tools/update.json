@@ -1,21 +1,19 @@
 {
-  "build": 4,
+  "build": 5,
   "version": "1.0",
-  "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/download/v1.0/Rune_Manager_Update.exe",
+  "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Version 1.0.",
-    "Assistant RTA pick/ban manuel : tes picks du tour se confirment tout seuls (1er pick inclus).",
-    "Picks adverses : clique un ?, puis l'icône du monstre — c'est posé tout de suite.",
-    "Synergie d'équipe (LuckSack + SWLens) et conseil ban en 5v5.",
-    "Plus de capture d'écran RTA.",
-    "Lien Twitch. Vérifier MAJ. Classement SPD."
+    "Interface RTA en anglais (langue EN) : boutons, phases, tableau et conseils.",
+    "Lien de téléchargement stable : /releases/latest/download/ (plus de numéro de version dans l'URL).",
+    "Assistant RTA pick/ban manuel : tes picks du tour se confirment tout seuls.",
+    "Picks adverses : clique un ?, puis l'icône — c'est posé tout de suite.",
+    "Synergie d'équipe (LuckSack + SWLens) et conseil ban en 5v5."
   ],
   "notes_en": [
-    "Version 1.0.",
-    "Manual RTA pick/ban advisor: your picks for the current turn auto-confirm (including first pick).",
+    "RTA UI in English when language is EN: buttons, phases, table and advice.",
+    "Stable download link: /releases/latest/download/ (no version number in the URL).",
+    "Manual RTA pick/ban advisor: your picks for the current turn auto-confirm.",
     "Enemy picks: click ?, then the monster icon — it is placed immediately.",
-    "Team synergy (LuckSack + SWLens) and ban advice at 5v5.",
-    "RTA screen capture removed.",
-    "Twitch link. Check for updates. SPD ranking."
+    "Team synergy (LuckSack + SWLens) and ban advice at 5v5."
   ]
 }

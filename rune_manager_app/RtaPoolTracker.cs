@@ -126,13 +126,13 @@ namespace RuneManagerModern {
 
     public static void ShowChanges(Form owner,RtaPoolDiff diff,Func<int,Image> icon){
       if(diff==null) return;
-      var f=new Form{Text="Top "+diff.PoolSize+"  •  changements meta",BackColor=Color.FromArgb(7,13,22),ForeColor=Color.White,StartPosition=FormStartPosition.CenterParent,Size=new Size(760,520),MinimumSize=new Size(620,380),Icon=owner!=null?owner.Icon:null};
-      var title=new Label{Text="Monstres possédés qui rentrent ou sortent de ton top "+diff.PoolSize,Dock=DockStyle.Top,Height=42,Padding=new Padding(18,12,18,0),Font=new Font("Segoe UI Semibold",12),ForeColor=Color.FromArgb(20,184,210)};
+      var f=new Form{Text=Loc.T("rta_chg_title",diff.PoolSize),BackColor=Color.FromArgb(7,13,22),ForeColor=Color.White,StartPosition=FormStartPosition.CenterParent,Size=new Size(760,520),MinimumSize=new Size(620,380),Icon=owner!=null?owner.Icon:null};
+      var title=new Label{Text=Loc.T("rta_chg_head",diff.PoolSize),Dock=DockStyle.Top,Height=42,Padding=new Padding(18,12,18,0),Font=new Font("Segoe UI Semibold",12),ForeColor=Color.FromArgb(20,184,210)};
       var cols=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=2,RowCount=2,Padding=new Padding(16,8,16,8)};
       cols.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,50)); cols.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,50));
       cols.RowStyles.Add(new RowStyle(SizeType.AutoSize)); cols.RowStyles.Add(new RowStyle(SizeType.Percent,100));
-      cols.Controls.Add(new Label{Text="ENTRENT  •  "+diff.Entered.Count,ForeColor=Color.FromArgb(80,220,140),Font=new Font("Segoe UI Semibold",11),AutoSize=true,Margin=new Padding(4,4,4,8)},0,0);
-      cols.Controls.Add(new Label{Text="SORTENT  •  "+diff.Left.Count,ForeColor=Color.FromArgb(255,120,115),Font=new Font("Segoe UI Semibold",11),AutoSize=true,Margin=new Padding(4,4,4,8)},1,0);
+      cols.Controls.Add(new Label{Text=Loc.T("rta_chg_in",diff.Entered.Count),ForeColor=Color.FromArgb(80,220,140),Font=new Font("Segoe UI Semibold",11),AutoSize=true,Margin=new Padding(4,4,4,8)},0,0);
+      cols.Controls.Add(new Label{Text=Loc.T("rta_chg_out",diff.Left.Count),ForeColor=Color.FromArgb(255,120,115),Font=new Font("Segoe UI Semibold",11),AutoSize=true,Margin=new Padding(4,4,4,8)},1,0);
       cols.Controls.Add(MakeList(diff.Entered,icon,Color.FromArgb(80,220,140)),0,1);
       cols.Controls.Add(MakeList(diff.Left,icon,Color.FromArgb(255,120,115)),1,1);
       var ok=new Button{Text="OK",DialogResult=DialogResult.OK,Width=120,Height=34,FlatStyle=FlatStyle.Flat,BackColor=Color.FromArgb(36,137,112),ForeColor=Color.White,Font=new Font("Segoe UI Semibold",10),Dock=DockStyle.Right};
@@ -143,12 +143,12 @@ namespace RuneManagerModern {
 
     static Control MakeList(List<RtaPoolMember> rows,Func<int,Image> icon,Color nameColor){
       var box=new Panel{Dock=DockStyle.Fill,AutoScroll=true,BackColor=Color.FromArgb(10,20,32),Margin=new Padding(4)};
-      if(rows==null||rows.Count==0){ box.Controls.Add(new Label{Text="Aucun",ForeColor=Color.Silver,Font=new Font("Segoe UI",10),Location=new Point(12,14),AutoSize=true}); return box; }
+      if(rows==null||rows.Count==0){ box.Controls.Add(new Label{Text=Loc.T("rta_chg_none"),ForeColor=Color.Silver,Font=new Font("Segoe UI",10),Location=new Point(12,14),AutoSize=true}); return box; }
       int y=8;
       foreach(var m in rows){
         var row=new Panel{Location=new Point(8,y),Size=new Size(320,44),Anchor=AnchorStyles.Left|AnchorStyles.Top|AnchorStyles.Right};
         var pic=new PictureBox{Location=new Point(2,2),Size=new Size(40,40),SizeMode=PictureBoxSizeMode.Zoom,Image=icon!=null?icon(m.Id):null};
-        var name=new Label{Text=string.IsNullOrEmpty(m.Name)?"Monstre "+m.Id:m.Name,Location=new Point(48,10),Size=new Size(260,24),ForeColor=nameColor,Font=new Font("Segoe UI Semibold",10),AutoEllipsis=true};
+        var name=new Label{Text=string.IsNullOrEmpty(m.Name)?Loc.T("rta_monster_n",m.Id):m.Name,Location=new Point(48,10),Size=new Size(260,24),ForeColor=nameColor,Font=new Font("Segoe UI Semibold",10),AutoEllipsis=true};
         row.Controls.Add(pic); row.Controls.Add(name); box.Controls.Add(row); y+=48;
       }
       return box;

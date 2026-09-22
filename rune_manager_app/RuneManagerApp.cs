@@ -151,8 +151,8 @@ namespace RuneManagerModern {
     // affiche un compte > 0, revient a l'orange normal sinon. NormalActionBorder =
     // meme orange que les autres boutons "outils/fonction".
     readonly Color RedAlertBorder=Color.FromArgb(218,70,62), NormalActionBorder=Color.FromArgb(255,170,40);
-    const int AppBuild=8;
-    const string AppVersion="1.03";
+    const int AppBuild=9;
+    const string AppVersion="1.04";
     void SetActionBorder(Button b,bool active){SetActionBorder(b,null,active);}
     // Le cadre du badge suit la meme couleur que le contour du bouton ou il se trouve
     // (rouge si action a faire, orange sinon) au lieu d'une couleur fixe independante.
@@ -168,14 +168,15 @@ namespace RuneManagerModern {
       if(on&&badge!=null)badge.BringToFront();
       LayoutToolbar();
     }
-    readonly DataGridView grid=new BufferedGrid(); readonly Label status=new Label(), counters=new Label(); readonly IconBadge reappNormalBadge=new IconBadge(),reappAncientBadge=new IconBadge(),refinementBadge=new IconBadge(); readonly CountBadge improveBadge=new CountBadge(),skillBadge=new CountBadge(),worldBossBadge=new CountBadge(),spdRankBadge=new CountBadge(),updateBadge=new CountBadge(); readonly TextBox search=new TextBox(); readonly Label searchHint=new Label(); readonly ComboBox set=new ComboBox(),slot=new ComboBox(),action=new ComboBox(),build=new ComboBox(),runeType=new ComboBox();
+    readonly DataGridView grid=new BufferedGrid(); readonly Label status=new Label(), counters=new Label(); readonly IconBadge reappNormalBadge=new IconBadge(),reappAncientBadge=new IconBadge(),refinementBadge=new IconBadge(); readonly CountBadge improveBadge=new CountBadge(),skillBadge=new CountBadge(),worldBossBadge=new CountBadge(),spdRankBadge=new CountBadge(),updateBadge=new CountBadge(),codesBadge=new CountBadge(); readonly TextBox search=new TextBox(); readonly Label searchHint=new Label(); readonly ComboBox set=new ComboBox(),slot=new ComboBox(),action=new ComboBox(),build=new ComboBox(),runeType=new ComboBox();
     readonly Dictionary<string,Image> setIcons=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,Image> runeIcons=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly Image[] slotLayers=new Image[7]; readonly Dictionary<int,Image> worldBossMonsterIcons=new Dictionary<int,Image>(),monsterPortraits=new Dictionary<int,Image>(); readonly Dictionary<int,string> portraitPathById=new Dictionary<int,string>(); readonly Dictionary<string,string[]> portraitFilesByPrefix=new Dictionary<string,string[]>(); readonly Dictionary<long,double> upgradeCaps=new Dictionary<long,double>(),craftPotentials=new Dictionary<long,double>();
     readonly Image[] croquis3dSlot=new Image[7]; readonly Image[] croquis3dBlankSlot=new Image[7]; readonly Dictionary<string,Bitmap> croquis3dBaseByKey=new Dictionary<string,Bitmap>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,Image> croquis3dByKey=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,Image> croquis3dPulseByKey=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,RectangleF> croquis3dOpaqueByKey=new Dictionary<string,RectangleF>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,RectangleF> croquis3dSetByKey=new Dictionary<string,RectangleF>(StringComparer.OrdinalIgnoreCase); readonly RectangleF[] croquis3dSetBounds=new RectangleF[7]; readonly RectangleF[] croquis3dOpaqueBounds=new RectangleF[7];
     static readonly Color CroquisOrange=Color.FromArgb(255,170,40),CroquisViolet=Color.FromArgb(150,90,230),CroquisBlue=Color.FromArgb(20,184,210);
     Point[] shineOuterPts,shineInnerPts; float[] shineOuterAng,shineInnerAng; int shineMapW,shineMapH;
     readonly HashSet<long> hiddenUpgradeIds=new HashSet<long>(); readonly HashSet<int> hiddenSkillTargetIds=new HashSet<int>();
     FileSystemWatcher jsonWatcher; readonly Timer jsonDebounce=new Timer(),liveLogTimer=new Timer(),worldBossTimer=new Timer(),ancientShineTimer=new Timer(),updateCheckTimer=new Timer(); float ancientPulseT; string pendingJson="",liveLogPath="",liveLogPending=""; DateTime lastAutoImport=DateTime.MinValue,liveLogStableSince=DateTime.MinValue; long liveLogOffset=0,liveLogObservedLength=-1; Action liveStockRefresh;
-    List<RuneRow> all=new List<RuneRow>(); List<SkillUpGroup> skillGroups=new List<SkillUpGroup>(); List<SkillUpFamily> skillFamilies=new List<SkillUpFamily>(); int skillGroupsRevision,worldBossRevision; readonly List<string> liveSavedEvents=new List<string>(); readonly List<WorldBossChangeRow> worldBossChanges=new List<WorldBossChangeRow>(); string currentFile="",viewMode="normal",worldBossCalculatedFile=""; bool potentialDesc=true,liveAwaitingResponse=false,liveAwaitingRequest=false,liveRequestEquipment=false,liveRequestSkill=false,liveRequestCraft=false,showHiddenSkillTargets=false,worldBossCalculating=false; Button worldBossButton,retentionButton,rtaButton,improveButton,skillButton,reevalButton,refinementButton,spdRankButton,importButton,potButton,obtButton,presetButton,coefficientButton,autoKeepButton,rulesButton; Panel row2Divider,row1Divider,topBar; Label titleLabel; ComboBox langCombo; PictureBox paypalButton,discordButton,twitchButton; Button updateButton; Label versionLabel; readonly ToolTip reappNormalTip=new ToolTip(),reappAncientTip=new ToolTip(),refinementTip=new ToolTip(),paypalTip=new ToolTip(),discordTip=new ToolTip(),twitchTip=new ToolTip(),searchTip=new ToolTip(),updateTip=new ToolTip(); bool applyingLang; const int Row2Gap=8; const string PaypalDonateUrl="https://www.paypal.me/greatlucky"; const string DiscordInviteUrl="https://discord.gg/YGEt9eNKuH"; const string TwitchUrl="https://www.twitch.tv/imgreatlucky"; const string UpdateManifestUrl="https://api.github.com/repos/GreatLucky740/rune-manager-modern/contents/tools/update.json"; string pendingUpdateUrl="",pendingUpdateVersion=""; string[] pendingUpdateNotes=new string[0]; bool updateAvailable,updateCheckBusy; WorldBossResult worldBossLatest,worldBossSeen;
+    List<RuneRow> all=new List<RuneRow>(); List<SkillUpGroup> skillGroups=new List<SkillUpGroup>(); List<SkillUpFamily> skillFamilies=new List<SkillUpFamily>(); int skillGroupsRevision,worldBossRevision; readonly List<string> liveSavedEvents=new List<string>(); readonly List<WorldBossChangeRow> worldBossChanges=new List<WorldBossChangeRow>(); string currentFile="",viewMode="normal",worldBossCalculatedFile=""; bool potentialDesc=true,liveAwaitingResponse=false,liveAwaitingRequest=false,liveRequestEquipment=false,liveRequestSkill=false,liveRequestCraft=false,showHiddenSkillTargets=false,worldBossCalculating=false; Button worldBossButton,retentionButton,rtaButton,codesButton,improveButton,skillButton,reevalButton,refinementButton,spdRankButton,importButton,potButton,obtButton,presetButton,coefficientButton,autoKeepButton,rulesButton; Panel row2Divider,row1Divider,topBar; Label titleLabel; ComboBox langCombo; PictureBox paypalButton,discordButton,twitchButton; Button updateButton; Label versionLabel; readonly ToolTip reappNormalTip=new ToolTip(),reappAncientTip=new ToolTip(),refinementTip=new ToolTip(),paypalTip=new ToolTip(),discordTip=new ToolTip(),twitchTip=new ToolTip(),searchTip=new ToolTip(),updateTip=new ToolTip(); bool applyingLang; const int Row2Gap=8; const string PaypalDonateUrl="https://www.paypal.me/greatlucky"; const string DiscordInviteUrl="https://discord.gg/YGEt9eNKuH"; const string TwitchUrl="https://www.twitch.tv/imgreatlucky"; const string UpdateManifestUrl="https://api.github.com/repos/GreatLucky740/rune-manager-modern/contents/tools/update.json"; string pendingUpdateUrl="",pendingUpdateVersion=""; string[] pendingUpdateNotes=new string[0]; bool updateAvailable,updateCheckBusy,codesRefreshBusy; WorldBossResult worldBossLatest,worldBossSeen;
+    Action codesWindowFill;
     // Le bouton WORLD BOSS MAX change de largeur au runtime (Padding gauche 16->38
     // quand le badge de compte s'affiche), mais skillButton/rtaButton/divider/retention
     // ont ete positionnes une seule fois a la construction (avant que le badge
@@ -184,7 +185,7 @@ namespace RuneManagerModern {
     // ses coordonnees d'origine (18,rowY2 ...) — s'appuyer sur worldBossButton.Right ici faisait
     // sauter skill-up a la place theorique du bouton cache des qu'un refresh (badge, etc.)
     // redeclenchait ce calcul. Part directement de x=18 tant que le bouton reste cache.
-    void RelayoutRow2(){if(worldBossButton==null||skillButton==null)return;int x=worldBossButton.Parent==null?18:worldBossButton.Right+Row2Gap;skillButton.Left=x;x=skillButton.Right+Row2Gap;if(rtaButton!=null){rtaButton.Left=x;x=rtaButton.Right+Row2Gap;}if(row2Divider!=null){row2Divider.Left=x;x=row2Divider.Right+Row2Gap;}if(retentionButton!=null)retentionButton.Left=x;}
+    void RelayoutRow2(){if(worldBossButton==null||skillButton==null)return;int x=worldBossButton.Parent==null?18:worldBossButton.Right+Row2Gap;skillButton.Left=x;x=skillButton.Right+Row2Gap;if(rtaButton!=null){rtaButton.Left=x;x=rtaButton.Right+Row2Gap;}if(codesButton!=null){codesButton.Left=x;x=codesButton.Right+Row2Gap;}if(row2Divider!=null){row2Divider.Left=x;x=row2Divider.Right+Row2Gap;}if(retentionButton!=null)retentionButton.Left=x;}
     string StockSavePath {get{return Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"stock-sauvegarde-v2.tsv");}}
     string SettingsSavePath {get{return Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"parametres-runes.tsv");}}
     string RetentionSavePath {get{return Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"seuil-dynamique.txt");}}
@@ -255,11 +256,12 @@ namespace RuneManagerModern {
       worldBossButton=Button("WORLD BOSS MAX",rx2,rowY2,0,FonctionColor,rh);worldBossButton.Click+=(s,e)=>ShowWorldBoss();/*top.Controls.Add(worldBossButton);*/ConfigureCountBadge(worldBossBadge,7,1,NormalActionBorder);worldBossBadge.Text="0";worldBossBadge.Visible=false;worldBossBadge.Click+=(s,e)=>ShowWorldBoss();worldBossButton.Controls.Add(worldBossBadge);worldBossBadge.BringToFront();
       skillButton=Button(Loc.T("skillup"),rx2,rowY2,0,FonctionColor,rh);skillButton.Click+=(s,e)=>ShowSkillUps();top.Controls.Add(skillButton);ConfigureCountBadge(skillBadge,5,6,NormalActionBorder);skillBadge.Click+=(s,e)=>skillButton.PerformClick();skillButton.Controls.Add(skillBadge);skillBadge.BringToFront();rx2=skillButton.Right+gap;
       rtaButton=Button(Loc.T("rta"),rx2,rowY2,0,FonctionColor,rh);rtaButton.Click+=(s,e)=>ShowRtaAdvisor();top.Controls.Add(rtaButton);rx2=rtaButton.Right+gap;
+      codesButton=Button(Loc.T("codes"),rx2,rowY2,0,FonctionColor,rh);codesButton.Click+=(s,e)=>ShowGameCodes();top.Controls.Add(codesButton);ConfigureCountBadge(codesBadge,5,6,NormalActionBorder);codesBadge.Click+=(s,e)=>codesButton.PerformClick();codesButton.Controls.Add(codesBadge);codesBadge.BringToFront();rx2=codesButton.Right+gap;
       row2Divider=divider(rx2,rowY2,rh);rx2+=gap+2;
       retentionButton=Button("",rx2,rowY2,0,SeuilColor,rh);retentionButton.Click+=(s,e)=>ShowRetentionSettings();top.Controls.Add(retentionButton);RefreshRetentionButton();
       status.Dock=DockStyle.Bottom;status.Height=22;status.ForeColor=Color.Silver;top.Controls.Add(status);
       grid.Dock=DockStyle.Fill;grid.BackgroundColor=Grid;grid.BorderStyle=BorderStyle.None;grid.GridColor=Color.Black;grid.CellBorderStyle=DataGridViewCellBorderStyle.Single;grid.RowHeadersVisible=false;grid.AllowUserToAddRows=false;grid.AllowUserToDeleteRows=false;grid.ReadOnly=true;grid.MultiSelect=false;grid.SelectionMode=DataGridViewSelectionMode.CellSelect;grid.AutoSizeRowsMode=DataGridViewAutoSizeRowsMode.None;grid.RowTemplate.Height=56;grid.EnableHeadersVisualStyles=false;grid.ColumnHeadersHeight=44;grid.ColumnHeadersHeightSizeMode=DataGridViewColumnHeadersHeightSizeMode.DisableResizing;grid.ColumnHeadersDefaultCellStyle=new DataGridViewCellStyle{BackColor=Teal,ForeColor=Color.White,Font=new Font("Segoe UI Semibold",12),SelectionBackColor=Teal};grid.DefaultCellStyle=new DataGridViewCellStyle{BackColor=Grid,ForeColor=Color.White,Font=new Font("Segoe UI",12),SelectionBackColor=Color.FromArgb(26,70,83),SelectionForeColor=Color.White,Padding=new Padding(2,0,2,0)};grid.CellFormatting+=FormatCell;grid.CellPainting+=PaintCraftBorder;grid.KeyDown+=GridKeyDown;grid.CellMouseDown+=GridMouseDown;grid.CellToolTipTextNeeded+=(s,e)=>{if(e.RowIndex>=0){var r=grid.Rows[e.RowIndex].DataBoundItem as RuneRow;if(r!=null&&e.ColumnIndex==0)e.ToolTipText=r.Rune;}};Controls.Add(grid);grid.BringToFront();
-      AddColumns();jsonDebounce.Interval=1200;jsonDebounce.Tick+=(s,e)=>ImportPendingJson();liveLogTimer.Interval=500;liveLogTimer.Tick+=(s,e)=>ReadLiveLog();worldBossTimer.Interval=700;worldBossTimer.Tick+=(s,e)=>{worldBossTimer.Stop();StartWorldBossRealtimeCalculation();};ancientShineTimer.Interval=70;ancientShineTimer.Tick+=(s,e)=>{ancientPulseT+=0.040f;if(ancientPulseT>=1f)ancientPulseT-=1f;if(grid.Columns.Count>0)grid.InvalidateColumn(0);};Shown+=(s,e)=>{LayoutToolbar();TryAutoLoad();LoadWorldBossOrderEvents();LoadWorldBossRealOrder();StartJsonWatcher();StartLiveLog();ancientShineTimer.Start();StartUpdateCheck(false);if(!updateCheckTimer.Enabled){updateCheckTimer.Interval=3600000;updateCheckTimer.Tick+=(t,ev)=>StartUpdateCheck(false);updateCheckTimer.Start();}};      Resize+=(s,e)=>{FitColumns();PlaceLangCombo();};
+      AddColumns();jsonDebounce.Interval=1200;jsonDebounce.Tick+=(s,e)=>ImportPendingJson();liveLogTimer.Interval=500;liveLogTimer.Tick+=(s,e)=>ReadLiveLog();worldBossTimer.Interval=700;worldBossTimer.Tick+=(s,e)=>{worldBossTimer.Stop();StartWorldBossRealtimeCalculation();};ancientShineTimer.Interval=70;ancientShineTimer.Tick+=(s,e)=>{ancientPulseT+=0.040f;if(ancientPulseT>=1f)ancientPulseT-=1f;if(grid.Columns.Count>0)grid.InvalidateColumn(0);};Shown+=(s,e)=>{LayoutToolbar();TryAutoLoad();LoadWorldBossOrderEvents();LoadWorldBossRealOrder();StartJsonWatcher();StartLiveLog();ancientShineTimer.Start();StartUpdateCheck(false);StartGameCodesRefresh();if(!updateCheckTimer.Enabled){updateCheckTimer.Interval=600000;updateCheckTimer.Tick+=(t,ev)=>{StartUpdateCheck(false);StartGameCodesRefresh();};updateCheckTimer.Start();}};      Resize+=(s,e)=>{FitColumns();PlaceLangCombo();};
       ApplyLanguage();
     }
     void PlaceLangCombo(){
@@ -432,6 +434,7 @@ namespace RuneManagerModern {
       if(autoKeepButton!=null)autoKeepButton.Text=Loc.T("autokeep");
       if(rulesButton!=null)rulesButton.Text=Loc.T("rules");
       if(skillButton!=null)skillButton.Text=Loc.T("skillup");
+      if(codesButton!=null)codesButton.Text=Loc.T("codes");
       if(spdRankButton!=null)spdRankButton.Text=Loc.T("spd_rank");
       RefreshRtaSavedStatus(currentFile);
       reappNormalTip.SetToolTip(reappNormalBadge,Loc.T("tip_reapp_n"));
@@ -483,6 +486,126 @@ namespace RuneManagerModern {
     // une legere surbrillance teintee au survol/clic.
     Button Button(string text,int x,int y,int w,Color c,int h){var b=new Button{Text=text,AutoSize=true,AutoSizeMode=AutoSizeMode.GrowAndShrink,MinimumSize=new Size(w,h),Padding=new Padding(16,0,16,0),Location=new Point(x,y),FlatStyle=FlatStyle.Flat,BackColor=Color.FromArgb(22,34,50),ForeColor=Color.Gainsboro,Font=new Font("Segoe UI Semibold",h>=40?10.5f:9f),Cursor=Cursors.Hand,TextAlign=ContentAlignment.MiddleCenter};b.FlatAppearance.BorderSize=2;b.FlatAppearance.BorderColor=c;b.FlatAppearance.MouseOverBackColor=Color.FromArgb(55,c.R,c.G,c.B);b.FlatAppearance.MouseDownBackColor=Color.FromArgb(90,c.R,c.G,c.B);return b;}
     void ShowRtaAdvisor(){if(string.IsNullOrWhiteSpace(currentFile)||!File.Exists(currentFile)){MessageBox.Show(Loc.T("import_first"),Loc.T("rta_title"),MessageBoxButtons.OK,MessageBoxIcon.Information);return;}string catalog=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"assets","monsters","catalog.json");if(!File.Exists(catalog)){MessageBox.Show(Loc.T("catalog_missing"),Loc.T("rta_title"),MessageBoxButtons.OK,MessageBoxIcon.Error);return;}new RtaAdvisorForm(currentFile,catalog,Icon).Show(this);}
+    void StartGameCodesRefresh(){
+      if(codesRefreshBusy)return;
+      codesRefreshBusy=true;
+      System.Threading.ThreadPool.QueueUserWorkItem(_=>{
+        SwGameCodesRefresh result=null;Exception err=null;
+        try{result=SwGameCodes.Refresh();}catch(Exception ex){err=ex;}
+        if(!(IsHandleCreated&&!IsDisposed)){codesRefreshBusy=false;return;}
+        BeginInvoke((MethodInvoker)delegate{
+          codesRefreshBusy=false;
+          if(IsDisposed)return;
+          RefreshCodesBadge();
+          if(err!=null)status.Text=Loc.T("codes_fail",err.Message);
+          else if(result!=null&&(result.Added>0||result.Removed>0))status.Text=Loc.T("codes_status",result.Codes.Count,result.Added,result.Removed);
+          if(codesWindowFill!=null)codesWindowFill();
+        });
+      });
+    }
+    void RefreshCodesBadge(){SetCountAlert(codesButton,codesBadge,SwGameCodes.UnusedCount());}
+    void ShowGameCodes(){
+      var f=new Form{Text=Loc.T("codes_title"),Icon=Icon,BackColor=Bg,ForeColor=Color.White,Size=new Size(980,580),MinimumSize=new Size(860,420),StartPosition=FormStartPosition.CenterParent};
+      var head=new Panel{Dock=DockStyle.Top,Height=50,BackColor=Panel};
+      var src=new Label{Text=Loc.T("codes_src"),AutoSize=true,ForeColor=Color.Silver,Cursor=Cursors.Hand};
+      src.Click+=(s,e)=>{try{Process.Start(SwGameCodes.PageUrl);}catch{}};
+      var showUsed=new CheckBox{Text=Loc.T("codes_show_used"),AutoSize=true,ForeColor=Color.Gainsboro,BackColor=Panel};
+      head.Controls.Add(src);head.Controls.Add(showUsed);
+      head.Resize+=(s,e)=>{src.Location=new Point(18,(head.Height-src.Height)/2);showUsed.Location=new Point(Math.Max(src.Right+16,head.ClientSize.Width-showUsed.Width-18),(head.Height-showUsed.Height)/2);};
+      var body=new FlowLayoutPanel{Dock=DockStyle.Fill,AutoScroll=true,FlowDirection=FlowDirection.TopDown,WrapContents=false,BackColor=Bg,Padding=new Padding(16,12,8,16)};
+      var note=new Label{Text=Loc.T("codes_load"),AutoSize=true,Margin=new Padding(8,24,8,8),ForeColor=Color.Silver,Font=new Font("Segoe UI",11)};
+      f.Controls.Add(body);f.Controls.Add(head);
+      Action sizeCards=delegate{
+        int w=Math.Max(780,body.ClientSize.Width-8);
+        foreach(Control c in body.Controls)if(c.Tag as string=="code-row")c.Width=w;
+      };
+      body.Resize+=(s,e)=>sizeCards();
+      Action fill=null;
+      fill=delegate{
+        body.SuspendLayout();
+        body.Controls.Clear();
+        var list=SwGameCodes.LastFetch??new List<SwGameCode>();
+        var visible=new List<SwGameCode>();
+        foreach(var c in list)if(c!=null&&(showUsed.Checked||!SwGameCodes.IsUsed(c.Code)))visible.Add(c);
+        if(visible.Count==0){
+          body.Controls.Add(new Label{Text=Loc.T("codes_empty"),AutoSize=true,Margin=new Padding(8,24,8,8),ForeColor=Color.Silver,Font=new Font("Segoe UI",11)});
+          body.ResumeLayout();return;
+        }
+        int cardW=Math.Max(780,body.ClientSize.Width-8);
+        foreach(var code in visible){
+          string captured=code.Code;bool used=SwGameCodes.IsUsed(captured);
+          var card=new Panel{Tag="code-row",Height=112,Width=cardW,Margin=new Padding(0,0,0,10),BackColor=used?Color.FromArgb(16,22,30):Color.FromArgb(14,26,40)};
+          var accent=new Panel{Dock=DockStyle.Left,Width=4,BackColor=used?Color.FromArgb(70,82,96):Cyan};
+          var actions=new Panel{Dock=DockStyle.Right,Width=188,BackColor=Color.Transparent};
+          var left=new Panel{Dock=DockStyle.Left,Width=268,BackColor=Color.Transparent};
+          var mid=new Panel{Dock=DockStyle.Fill,BackColor=Color.Transparent};
+          var copy=Button(captured,16,18,236,Cyan,44);copy.AutoSize=false;copy.Size=new Size(236,44);copy.Font=new Font("Segoe UI Semibold",11);
+          var copyTip=new ToolTip();copyTip.SetToolTip(copy,Loc.T("codes_copy"));
+          copy.Click+=(s,e)=>{try{Clipboard.SetText(captured);status.Text=Loc.T("codes_copied",captured);}catch{}};
+          var date=new Label{Text=code.Added??"",AutoSize=true,Location=new Point(16,70),ForeColor=Color.FromArgb(160,176,192),Font=new Font("Segoe UI",8.5f)};
+          left.Controls.Add(copy);left.Controls.Add(date);
+          var rewards=new FlowLayoutPanel{Dock=DockStyle.Fill,WrapContents=true,FlowDirection=FlowDirection.LeftToRight,Padding=new Padding(8,18,8,8),BackColor=Color.Transparent};
+          foreach(var rw in code.Rewards){
+            string qty=(rw.Qty??"").Trim();
+            if(qty.StartsWith("x",StringComparison.OrdinalIgnoreCase))qty=qty.Substring(1).Trim();
+            var chip=new Panel{Height=72,Width=132,Margin=new Padding(4,0,10,0),BackColor=Color.FromArgb(20,34,50)};
+            var pic=new PictureBox{Size=new Size(36,36),Location=new Point(10,18),SizeMode=PictureBoxSizeMode.Zoom,Image=rw.Icon};
+            var name=new Label{Text=rw.Name??"",AutoSize=true,Location=new Point(52,14),ForeColor=Color.FromArgb(170,186,200),Font=new Font("Segoe UI",8.5f)};
+            var amount=new Label{Text="× "+qty,AutoSize=true,Location=new Point(52,36),ForeColor=Color.White,Font=new Font("Segoe UI Semibold",12)};
+            var tip=new ToolTip();tip.SetToolTip(chip,(rw.Name??"")+"  × "+qty);tip.SetToolTip(pic,(rw.Name??"")+"  × "+qty);
+            chip.Controls.Add(pic);chip.Controls.Add(name);chip.Controls.Add(amount);
+            int need=Math.Max(name.PreferredWidth,amount.PreferredWidth)+64;
+            chip.Width=Math.Max(126,need);
+            rewards.Controls.Add(chip);
+          }
+          var hive=Button(Loc.T("codes_hive"),0,0,0,Color.FromArgb(70,118,176),34);
+          string hiveUrl=code.HiveUrl;
+          hive.Click+=(s,e)=>{try{if(!string.IsNullOrEmpty(hiveUrl))Process.Start(hiveUrl);}catch{}};
+          var hide=Button(used?Loc.T("codes_restore"):Loc.T("codes_used"),0,0,0,used?Color.FromArgb(70,140,110):Color.FromArgb(176,72,72),34);
+          bool capturedUsed=used;
+          hide.Click+=(s,e)=>{SwGameCodes.MarkUsed(captured,!capturedUsed);RefreshCodesBadge();fill();};
+          actions.Width=Math.Max(176,Math.Max(hive.PreferredSize.Width,hide.PreferredSize.Width)+24);
+          Action placeActions=delegate{
+            int pad=10;
+            hive.Left=Math.Max(pad,actions.Width-hive.Width-pad);
+            hide.Left=Math.Max(pad,actions.Width-hide.Width-pad);
+            hive.Top=20;hide.Top=hive.Bottom+8;
+          };
+          actions.Resize+=(s,e)=>placeActions();
+          actions.Controls.Add(hive);actions.Controls.Add(hide);placeActions();
+          card.Controls.Add(mid);card.Controls.Add(left);card.Controls.Add(actions);card.Controls.Add(accent);
+          mid.Controls.Add(rewards);
+          body.Controls.Add(card);
+        }
+        body.ResumeLayout(true);
+        sizeCards();
+      };
+      showUsed.CheckedChanged+=(s,e)=>fill();
+      codesWindowFill=fill;
+      f.FormClosed+=(s,e)=>{if(codesWindowFill==fill)codesWindowFill=null;};
+      f.Shown+=(s,e)=>{
+        head.PerformLayout();
+        if(SwGameCodes.LastFetch!=null)fill();
+        else body.Controls.Add(note);
+        System.Threading.ThreadPool.QueueUserWorkItem(_=>{
+          SwGameCodesRefresh result=null;Exception err=null;
+          try{result=SwGameCodes.Refresh();}catch(Exception ex){err=ex;}
+          if(f.IsDisposed)return;
+          f.BeginInvoke((MethodInvoker)delegate{
+            if(f.IsDisposed)return;
+            RefreshCodesBadge();
+            if(err!=null){
+              body.Controls.Clear();
+              body.Controls.Add(new Label{Text=Loc.T("codes_fail",err.Message),AutoSize=true,MaximumSize=new Size(820,0),Margin=new Padding(8,24,8,8),ForeColor=Color.FromArgb(255,140,130)});
+            }else{
+              if(result!=null)status.Text=Loc.T("codes_status",result.Codes.Count,result.Added,result.Removed);
+              fill();
+            }
+          });
+        });
+      };
+      f.Show(this);
+    }
     void RefreshRtaSavedStatus(string jsonPath){if(rtaButton==null)return;int saved=RtaTargetEditor.SavedProfileCount();if(saved==0){rtaButton.Text=Loc.T("rta");return;}int runeUp=RtaTargetEditor.CountSavedRuneImprovements(jsonPath),artifactUp=RtaTargetEditor.CountSavedArtifactImprovements(jsonPath);rtaButton.Text="RTA "+saved+" • R↑"+runeUp+" A↑"+artifactUp;}
     // Badges agrandis avec les boutons (h=42) : rond 30->40, icone-rond 26->34,
     // pilule refinement 42x26->55x34, police proportionnelle a la taille (au lieu

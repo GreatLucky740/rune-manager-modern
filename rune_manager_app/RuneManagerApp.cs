@@ -151,7 +151,8 @@ namespace RuneManagerModern {
     // affiche un compte > 0, revient a l'orange normal sinon. NormalActionBorder =
     // meme orange que les autres boutons "outils/fonction".
     readonly Color RedAlertBorder=Color.FromArgb(218,70,62), NormalActionBorder=Color.FromArgb(255,170,40);
-    const int AppBuild=7;
+    const int AppBuild=8;
+    const string AppVersion="1.03";
     void SetActionBorder(Button b,bool active){SetActionBorder(b,null,active);}
     // Le cadre du badge suit la meme couleur que le contour du bouton ou il se trouve
     // (rouge si action a faire, orange sinon) au lieu d'une couleur fixe independante.
@@ -174,7 +175,7 @@ namespace RuneManagerModern {
     Point[] shineOuterPts,shineInnerPts; float[] shineOuterAng,shineInnerAng; int shineMapW,shineMapH;
     readonly HashSet<long> hiddenUpgradeIds=new HashSet<long>(); readonly HashSet<int> hiddenSkillTargetIds=new HashSet<int>();
     FileSystemWatcher jsonWatcher; readonly Timer jsonDebounce=new Timer(),liveLogTimer=new Timer(),worldBossTimer=new Timer(),ancientShineTimer=new Timer(),updateCheckTimer=new Timer(); float ancientPulseT; string pendingJson="",liveLogPath="",liveLogPending=""; DateTime lastAutoImport=DateTime.MinValue,liveLogStableSince=DateTime.MinValue; long liveLogOffset=0,liveLogObservedLength=-1; Action liveStockRefresh;
-    List<RuneRow> all=new List<RuneRow>(); List<SkillUpGroup> skillGroups=new List<SkillUpGroup>(); List<SkillUpFamily> skillFamilies=new List<SkillUpFamily>(); int skillGroupsRevision,worldBossRevision; readonly List<string> liveSavedEvents=new List<string>(); readonly List<WorldBossChangeRow> worldBossChanges=new List<WorldBossChangeRow>(); string currentFile="",viewMode="normal",worldBossCalculatedFile=""; bool potentialDesc=true,liveAwaitingResponse=false,liveAwaitingRequest=false,liveRequestEquipment=false,liveRequestSkill=false,liveRequestCraft=false,showHiddenSkillTargets=false,worldBossCalculating=false; Button worldBossButton,retentionButton,rtaButton,improveButton,skillButton,reevalButton,refinementButton,spdRankButton,importButton,potButton,obtButton,presetButton,coefficientButton,autoKeepButton,rulesButton; Panel row2Divider,row1Divider,topBar; Label titleLabel; ComboBox langCombo; PictureBox paypalButton,discordButton,twitchButton; Button updateButton; readonly ToolTip reappNormalTip=new ToolTip(),reappAncientTip=new ToolTip(),refinementTip=new ToolTip(),paypalTip=new ToolTip(),discordTip=new ToolTip(),twitchTip=new ToolTip(),searchTip=new ToolTip(),updateTip=new ToolTip(); bool applyingLang; const int Row2Gap=8; const string PaypalDonateUrl="https://www.paypal.me/greatlucky"; const string DiscordInviteUrl="https://discord.gg/YGEt9eNKuH"; const string TwitchUrl="https://www.twitch.tv/imgreatlucky"; const string UpdateManifestUrl="https://api.github.com/repos/GreatLucky740/rune-manager-modern/contents/tools/update.json"; string pendingUpdateUrl="",pendingUpdateVersion=""; string[] pendingUpdateNotes=new string[0]; bool updateAvailable,updateCheckBusy; WorldBossResult worldBossLatest,worldBossSeen;
+    List<RuneRow> all=new List<RuneRow>(); List<SkillUpGroup> skillGroups=new List<SkillUpGroup>(); List<SkillUpFamily> skillFamilies=new List<SkillUpFamily>(); int skillGroupsRevision,worldBossRevision; readonly List<string> liveSavedEvents=new List<string>(); readonly List<WorldBossChangeRow> worldBossChanges=new List<WorldBossChangeRow>(); string currentFile="",viewMode="normal",worldBossCalculatedFile=""; bool potentialDesc=true,liveAwaitingResponse=false,liveAwaitingRequest=false,liveRequestEquipment=false,liveRequestSkill=false,liveRequestCraft=false,showHiddenSkillTargets=false,worldBossCalculating=false; Button worldBossButton,retentionButton,rtaButton,improveButton,skillButton,reevalButton,refinementButton,spdRankButton,importButton,potButton,obtButton,presetButton,coefficientButton,autoKeepButton,rulesButton; Panel row2Divider,row1Divider,topBar; Label titleLabel; ComboBox langCombo; PictureBox paypalButton,discordButton,twitchButton; Button updateButton; Label versionLabel; readonly ToolTip reappNormalTip=new ToolTip(),reappAncientTip=new ToolTip(),refinementTip=new ToolTip(),paypalTip=new ToolTip(),discordTip=new ToolTip(),twitchTip=new ToolTip(),searchTip=new ToolTip(),updateTip=new ToolTip(); bool applyingLang; const int Row2Gap=8; const string PaypalDonateUrl="https://www.paypal.me/greatlucky"; const string DiscordInviteUrl="https://discord.gg/YGEt9eNKuH"; const string TwitchUrl="https://www.twitch.tv/imgreatlucky"; const string UpdateManifestUrl="https://api.github.com/repos/GreatLucky740/rune-manager-modern/contents/tools/update.json"; string pendingUpdateUrl="",pendingUpdateVersion=""; string[] pendingUpdateNotes=new string[0]; bool updateAvailable,updateCheckBusy; WorldBossResult worldBossLatest,worldBossSeen;
     // Le bouton WORLD BOSS MAX change de largeur au runtime (Padding gauche 16->38
     // quand le badge de compte s'affiche), mais skillButton/rtaButton/divider/retention
     // ont ete positionnes une seule fois a la construction (avant que le badge
@@ -208,6 +209,7 @@ namespace RuneManagerModern {
       discordButton=new PictureBox{Size=new Size(36,36),SizeMode=PictureBoxSizeMode.Zoom,Image=LoadDiscordIcon(),Cursor=Cursors.Hand,BackColor=Color.Transparent,Anchor=AnchorStyles.Top|AnchorStyles.Right};discordButton.Click+=(s,e)=>OpenDiscordInvite();discordTip.SetToolTip(discordButton,Loc.T("tip_discord"));top.Controls.Add(discordButton);
       twitchButton=new PictureBox{Size=new Size(36,36),SizeMode=PictureBoxSizeMode.Zoom,Image=LoadTwitchIcon(),Cursor=Cursors.Hand,BackColor=Color.Transparent,Anchor=AnchorStyles.Top|AnchorStyles.Right};twitchButton.Click+=(s,e)=>OpenTwitchChannel();twitchTip.SetToolTip(twitchButton,Loc.T("tip_twitch"));top.Controls.Add(twitchButton);
       updateButton=Button(Loc.T("update_check_btn"),0,12,0,Cyan,36);updateButton.Padding=new Padding(16,0,16,0);updateButton.Anchor=AnchorStyles.Top|AnchorStyles.Right;updateButton.Click+=(s,e)=>{if(updateAvailable)ShowUpdateDialog();else StartUpdateCheck(true);};top.Controls.Add(updateButton);ConfigureCountBadge(updateBadge,3,3,Cyan);updateBadge.Click+=(s,e)=>{if(updateAvailable)ShowUpdateDialog();else StartUpdateCheck(true);};updateButton.Controls.Add(updateBadge);updateBadge.BringToFront();updateTip.SetToolTip(updateButton,Loc.T("tip_update_check"));updateTip.SetToolTip(updateBadge,Loc.T("tip_update_check"));
+      versionLabel=new Label{AutoSize=true,Text="v"+AppVersion,ForeColor=Color.FromArgb(150,170,185),Font=new Font("Segoe UI",8f),Anchor=AnchorStyles.Top|AnchorStyles.Right,TextAlign=ContentAlignment.TopCenter};top.Controls.Add(versionLabel);
       importButton=Button(Loc.T("import_json"),18,61,0,Cyan);importButton.Click+=(s,e)=>ChooseFile();top.Controls.Add(importButton);
       search.SetBounds(importButton.Right+8,61,268,32);search.BackColor=Bg;search.ForeColor=Color.White;search.BorderStyle=BorderStyle.FixedSingle;search.TextChanged+=(s,e)=>{RefreshSearchHint();RefreshGrid();};top.Controls.Add(search);
       searchHint.AutoSize=false;searchHint.BackColor=Bg;searchHint.ForeColor=Color.FromArgb(130,150,165);searchHint.TextAlign=ContentAlignment.MiddleLeft;searchHint.Cursor=Cursors.IBeam;searchHint.Click+=(s,e)=>search.Focus();top.Controls.Add(searchHint);RefreshSearchHint();searchTip.SetToolTip(search,Loc.T("search_tip"));searchTip.SetToolTip(searchHint,Loc.T("search_tip"));
@@ -266,7 +268,14 @@ namespace RuneManagerModern {
       if(paypalButton!=null){paypalButton.Location=new Point(right-paypalButton.Width,12);right=paypalButton.Left-10;}
       if(discordButton!=null){discordButton.Location=new Point(right-discordButton.Width,12);right=discordButton.Left-10;}
       if(twitchButton!=null){twitchButton.Location=new Point(right-twitchButton.Width,12);right=twitchButton.Left-10;}
-      if(updateButton!=null){updateButton.Location=new Point(right-updateButton.Width,10);right=updateButton.Left-10;}
+      if(updateButton!=null){
+        updateButton.Location=new Point(right-updateButton.Width,10);
+        if(versionLabel!=null){
+          int vx=updateButton.Left+(updateButton.Width-versionLabel.Width)/2;
+          versionLabel.Location=new Point(vx,updateButton.Bottom+1);
+        }
+        right=Math.Min(updateButton.Left,versionLabel!=null?versionLabel.Left:updateButton.Left)-10;
+      }
       langCombo.Location=new Point(Math.Max((titleLabel==null?18:titleLabel.Right)+24,right-langCombo.Width),14);
     }
     void OpenPaypalDonate(){try{Process.Start(PaypalDonateUrl);}catch{}}

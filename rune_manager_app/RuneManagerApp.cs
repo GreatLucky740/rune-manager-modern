@@ -151,7 +151,7 @@ namespace RuneManagerModern {
     // affiche un compte > 0, revient a l'orange normal sinon. NormalActionBorder =
     // meme orange que les autres boutons "outils/fonction".
     readonly Color RedAlertBorder=Color.FromArgb(218,70,62), NormalActionBorder=Color.FromArgb(255,170,40);
-    const int AppBuild=5;
+    const int AppBuild=6;
     void SetActionBorder(Button b,bool active){SetActionBorder(b,null,active);}
     // Le cadre du badge suit la meme couleur que le contour du bouton ou il se trouve
     // (rouge si action a faire, orange sinon) au lieu d'une couleur fixe independante.
@@ -320,7 +320,11 @@ namespace RuneManagerModern {
         updateCheckBusy=false;
         if(IsDisposed)return;
         if(failed){if(!updateAvailable)MarkUpdateIdle();}else MarkUpdateIdle();
-        if(report)status.Text=failed?Loc.T("update_fail"):Loc.T("update_ok",AppBuild.ToString(CultureInfo.InvariantCulture));
+        if(report){
+          string msg=failed?Loc.T("update_fail"):Loc.T("update_ok");
+          status.Text=msg;
+          if(!failed)MessageBox.Show(msg,Loc.T("update_check_btn"),MessageBoxButtons.OK,MessageBoxIcon.Information);
+        }
       });
     }
     void MarkUpdateIdle(){

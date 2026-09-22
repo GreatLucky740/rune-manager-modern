@@ -1,19 +1,15 @@
 {
-  "build": 5,
-  "version": "1.0",
+  "build": 6,
+  "version": "1.01",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Interface RTA en anglais (langue EN) : boutons, phases, tableau et conseils.",
-    "Lien de téléchargement stable : /releases/latest/download/ (plus de numéro de version dans l'URL).",
-    "Assistant RTA pick/ban manuel : tes picks du tour se confirment tout seuls.",
-    "Picks adverses : clique un ?, puis l'icône — c'est posé tout de suite.",
-    "Synergie d'équipe (LuckSack + SWLens) et conseil ban en 5v5."
+    "Version 1.01.",
+    "Anglais : le bouton TRI REEVAL s’affiche REAPP SORT.",
+    "VÉRIFIER MAJ : si tu as déjà la dernière version, un message Tu es à jour !"
   ],
   "notes_en": [
-    "RTA UI in English when language is EN: buttons, phases, table and advice.",
-    "Stable download link: /releases/latest/download/ (no version number in the URL).",
-    "Manual RTA pick/ban advisor: your picks for the current turn auto-confirm.",
-    "Enemy picks: click ?, then the monster icon — it is placed immediately.",
-    "Team synergy (LuckSack + SWLens) and ban advice at 5v5."
+    "Version 1.01.",
+    "English: the REEVAL SORT button is now REAPP SORT.",
+    "CHECK UPDATE: if you already have the latest version, a message says You're up to date!"
   ]
 }

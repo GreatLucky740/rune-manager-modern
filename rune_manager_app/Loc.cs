@@ -13,7 +13,7 @@ namespace RuneManagerModern {
       Add("sort_potential","Tri Potential Value","Potential Value sort");
       Add("sort_obtained","Tri Obtained","Obtained sort");
       Add("sort_upgrade","Tri Amélioration Disponible","Available Upgrade sort");
-      Add("sort_reeval","TRI REEVAL","REEVAL SORT");
+      Add("sort_reeval","TRI REEVAL","REAPP SORT");
       Add("sort_refinement","TRI REFINEMENT","REFINEMENT SORT");
       Add("preset","Preset","Preset");
       Add("coefficient","Coefficient","Coefficient");
@@ -346,7 +346,7 @@ namespace RuneManagerModern {
       Add("update_check_btn","VÉRIFIER MAJ","CHECK UPDATE");
       Add("tip_update","Une nouvelle version est disponible","A new version is available");
       Add("tip_update_check","Vérifier si une mise à jour est disponible sur GitHub","Check GitHub for an available update");
-      Add("update_ok","Tu as déjà la dernière version (build {0})","You already have the latest version (build {0})");
+      Add("update_ok","Tu es à jour !","You're up to date!");
       Add("update_fail","Impossible de vérifier GitHub. Réessaie plus tard.","Could not check GitHub. Try again later.");
       Add("update_title","Mise à jour disponible","Update available");
       Add("update_head","Version {0} disponible","Version {0} available");

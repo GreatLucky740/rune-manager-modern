@@ -10,6 +10,7 @@ using System.Linq;
 using System.Globalization;
 using System.Text;
 using System.Net;
+using System.Net.Cache;
 using System.Collections;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
@@ -150,10 +151,11 @@ namespace RuneManagerModern {
     // affiche un compte > 0, revient a l'orange normal sinon. NormalActionBorder =
     // meme orange que les autres boutons "outils/fonction".
     readonly Color RedAlertBorder=Color.FromArgb(218,70,62), NormalActionBorder=Color.FromArgb(255,170,40);
+    const int AppBuild=4;
     void SetActionBorder(Button b,bool active){SetActionBorder(b,null,active);}
     // Le cadre du badge suit la meme couleur que le contour du bouton ou il se trouve
     // (rouge si action a faire, orange sinon) au lieu d'une couleur fixe independante.
-    void SetActionBorder(Button b,CountBadge badge,bool active){Color c=active?RedAlertBorder:NormalActionBorder;if(b!=null)b.FlatAppearance.BorderColor=c;if(badge!=null)badge.Invalidate();}
+    void SetActionBorder(Button b,CountBadge badge,bool active){Color idle=b==spdRankButton?CroquisViolet:b==updateButton?Cyan:NormalActionBorder;Color c=active&&b!=updateButton?RedAlertBorder:idle;if(b!=null)b.FlatAppearance.BorderColor=c;if(badge!=null)badge.Invalidate();}
     void SetCountAlert(Button b,CountBadge badge,int count){
       if(badge!=null)badge.Text=count.ToString(CultureInfo.InvariantCulture);
       bool on=count>0;
@@ -171,8 +173,8 @@ namespace RuneManagerModern {
     static readonly Color CroquisOrange=Color.FromArgb(255,170,40),CroquisViolet=Color.FromArgb(150,90,230),CroquisBlue=Color.FromArgb(20,184,210);
     Point[] shineOuterPts,shineInnerPts; float[] shineOuterAng,shineInnerAng; int shineMapW,shineMapH;
     readonly HashSet<long> hiddenUpgradeIds=new HashSet<long>(); readonly HashSet<int> hiddenSkillTargetIds=new HashSet<int>();
-    FileSystemWatcher jsonWatcher; readonly Timer jsonDebounce=new Timer(),liveLogTimer=new Timer(),worldBossTimer=new Timer(),ancientShineTimer=new Timer(); float ancientPulseT; string pendingJson="",liveLogPath="",liveLogPending=""; DateTime lastAutoImport=DateTime.MinValue,liveLogStableSince=DateTime.MinValue; long liveLogOffset=0,liveLogObservedLength=-1; Action liveStockRefresh;
-    List<RuneRow> all=new List<RuneRow>(); List<SkillUpGroup> skillGroups=new List<SkillUpGroup>(); List<SkillUpFamily> skillFamilies=new List<SkillUpFamily>(); int skillGroupsRevision,worldBossRevision; readonly List<string> liveSavedEvents=new List<string>(); readonly List<WorldBossChangeRow> worldBossChanges=new List<WorldBossChangeRow>(); string currentFile="",viewMode="normal",worldBossCalculatedFile=""; bool potentialDesc=true,liveAwaitingResponse=false,liveAwaitingRequest=false,liveRequestEquipment=false,liveRequestSkill=false,liveRequestCraft=false,showHiddenSkillTargets=false,worldBossCalculating=false; Button worldBossButton,retentionButton,rtaButton,improveButton,skillButton,reevalButton,refinementButton,spdRankButton,importButton,potButton,obtButton,presetButton,coefficientButton,autoKeepButton,rulesButton; Panel row2Divider,row1Divider,topBar; Label titleLabel; ComboBox langCombo; PictureBox paypalButton,discordButton; Button updateButton; readonly ToolTip reappNormalTip=new ToolTip(),reappAncientTip=new ToolTip(),refinementTip=new ToolTip(),paypalTip=new ToolTip(),discordTip=new ToolTip(),searchTip=new ToolTip(),updateTip=new ToolTip(); bool applyingLang; const int Row2Gap=8; const string PaypalDonateUrl="https://www.paypal.me/greatlucky"; const string DiscordInviteUrl="https://discord.gg/YGEt9eNKuH"; const int AppBuild=1; const string UpdateManifestUrl="https://raw.githubusercontent.com/GreatLucky740/rune-manager-modern/main/tools/update.json"; string pendingUpdateUrl="",pendingUpdateVersion=""; string[] pendingUpdateNotes=new string[0]; WorldBossResult worldBossLatest,worldBossSeen;
+    FileSystemWatcher jsonWatcher; readonly Timer jsonDebounce=new Timer(),liveLogTimer=new Timer(),worldBossTimer=new Timer(),ancientShineTimer=new Timer(),updateCheckTimer=new Timer(); float ancientPulseT; string pendingJson="",liveLogPath="",liveLogPending=""; DateTime lastAutoImport=DateTime.MinValue,liveLogStableSince=DateTime.MinValue; long liveLogOffset=0,liveLogObservedLength=-1; Action liveStockRefresh;
+    List<RuneRow> all=new List<RuneRow>(); List<SkillUpGroup> skillGroups=new List<SkillUpGroup>(); List<SkillUpFamily> skillFamilies=new List<SkillUpFamily>(); int skillGroupsRevision,worldBossRevision; readonly List<string> liveSavedEvents=new List<string>(); readonly List<WorldBossChangeRow> worldBossChanges=new List<WorldBossChangeRow>(); string currentFile="",viewMode="normal",worldBossCalculatedFile=""; bool potentialDesc=true,liveAwaitingResponse=false,liveAwaitingRequest=false,liveRequestEquipment=false,liveRequestSkill=false,liveRequestCraft=false,showHiddenSkillTargets=false,worldBossCalculating=false; Button worldBossButton,retentionButton,rtaButton,improveButton,skillButton,reevalButton,refinementButton,spdRankButton,importButton,potButton,obtButton,presetButton,coefficientButton,autoKeepButton,rulesButton; Panel row2Divider,row1Divider,topBar; Label titleLabel; ComboBox langCombo; PictureBox paypalButton,discordButton,twitchButton; Button updateButton; readonly ToolTip reappNormalTip=new ToolTip(),reappAncientTip=new ToolTip(),refinementTip=new ToolTip(),paypalTip=new ToolTip(),discordTip=new ToolTip(),twitchTip=new ToolTip(),searchTip=new ToolTip(),updateTip=new ToolTip(); bool applyingLang; const int Row2Gap=8; const string PaypalDonateUrl="https://www.paypal.me/greatlucky"; const string DiscordInviteUrl="https://discord.gg/YGEt9eNKuH"; const string TwitchUrl="https://www.twitch.tv/imgreatlucky"; const string UpdateManifestUrl="https://api.github.com/repos/GreatLucky740/rune-manager-modern/contents/tools/update.json"; string pendingUpdateUrl="",pendingUpdateVersion=""; string[] pendingUpdateNotes=new string[0]; bool updateAvailable,updateCheckBusy; WorldBossResult worldBossLatest,worldBossSeen;
     // Le bouton WORLD BOSS MAX change de largeur au runtime (Padding gauche 16->38
     // quand le badge de compte s'affiche), mais skillButton/rtaButton/divider/retention
     // ont ete positionnes une seule fois a la construction (avant que le badge
@@ -181,7 +183,7 @@ namespace RuneManagerModern {
     // ses coordonnees d'origine (18,rowY2 ...) — s'appuyer sur worldBossButton.Right ici faisait
     // sauter skill-up a la place theorique du bouton cache des qu'un refresh (badge, etc.)
     // redeclenchait ce calcul. Part directement de x=18 tant que le bouton reste cache.
-    void RelayoutRow2(){if(worldBossButton==null||skillButton==null)return;int x=worldBossButton.Parent==null?18:worldBossButton.Right+Row2Gap;skillButton.Left=x;x=skillButton.Right+Row2Gap;if(rtaButton!=null){rtaButton.Left=x;x=rtaButton.Right+Row2Gap;}if(row2Divider!=null){row2Divider.Left=x;x=row2Divider.Right+Row2Gap;}if(retentionButton!=null){retentionButton.Left=x;if(spdRankButton!=null)spdRankButton.Left=retentionButton.Right+Row2Gap;}}
+    void RelayoutRow2(){if(worldBossButton==null||skillButton==null)return;int x=worldBossButton.Parent==null?18:worldBossButton.Right+Row2Gap;skillButton.Left=x;x=skillButton.Right+Row2Gap;if(rtaButton!=null){rtaButton.Left=x;x=rtaButton.Right+Row2Gap;}if(row2Divider!=null){row2Divider.Left=x;x=row2Divider.Right+Row2Gap;}if(retentionButton!=null)retentionButton.Left=x;}
     string StockSavePath {get{return Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"stock-sauvegarde-v2.tsv");}}
     string SettingsSavePath {get{return Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"parametres-runes.tsv");}}
     string RetentionSavePath {get{return Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"seuil-dynamique.txt");}}
@@ -204,7 +206,8 @@ namespace RuneManagerModern {
       top.Controls.Add(langCombo);
       paypalButton=new PictureBox{Size=new Size(36,36),SizeMode=PictureBoxSizeMode.Zoom,Image=LoadPaypalIcon(),Cursor=Cursors.Hand,BackColor=Color.Transparent,Anchor=AnchorStyles.Top|AnchorStyles.Right};paypalButton.Click+=(s,e)=>OpenPaypalDonate();paypalTip.SetToolTip(paypalButton,Loc.T("tip_paypal"));top.Controls.Add(paypalButton);
       discordButton=new PictureBox{Size=new Size(36,36),SizeMode=PictureBoxSizeMode.Zoom,Image=LoadDiscordIcon(),Cursor=Cursors.Hand,BackColor=Color.Transparent,Anchor=AnchorStyles.Top|AnchorStyles.Right};discordButton.Click+=(s,e)=>OpenDiscordInvite();discordTip.SetToolTip(discordButton,Loc.T("tip_discord"));top.Controls.Add(discordButton);
-      updateButton=Button(Loc.T("update_btn"),0,12,0,RedAlertBorder,36);updateButton.Visible=false;updateButton.Padding=new Padding(56,0,16,0);updateButton.Anchor=AnchorStyles.Top|AnchorStyles.Right;updateButton.Click+=(s,e)=>ShowUpdateDialog();top.Controls.Add(updateButton);ConfigureCountBadge(updateBadge,4,3,RedAlertBorder);updateButton.Controls.Add(updateBadge);updateBadge.BringToFront();updateTip.SetToolTip(updateButton,Loc.T("tip_update"));
+      twitchButton=new PictureBox{Size=new Size(36,36),SizeMode=PictureBoxSizeMode.Zoom,Image=LoadTwitchIcon(),Cursor=Cursors.Hand,BackColor=Color.Transparent,Anchor=AnchorStyles.Top|AnchorStyles.Right};twitchButton.Click+=(s,e)=>OpenTwitchChannel();twitchTip.SetToolTip(twitchButton,Loc.T("tip_twitch"));top.Controls.Add(twitchButton);
+      updateButton=Button(Loc.T("update_check_btn"),0,12,0,Cyan,36);updateButton.Padding=new Padding(16,0,16,0);updateButton.Anchor=AnchorStyles.Top|AnchorStyles.Right;updateButton.Click+=(s,e)=>{if(updateAvailable)ShowUpdateDialog();else StartUpdateCheck(true);};top.Controls.Add(updateButton);ConfigureCountBadge(updateBadge,3,3,Cyan);updateBadge.Click+=(s,e)=>{if(updateAvailable)ShowUpdateDialog();else StartUpdateCheck(true);};updateButton.Controls.Add(updateBadge);updateBadge.BringToFront();updateTip.SetToolTip(updateButton,Loc.T("tip_update_check"));updateTip.SetToolTip(updateBadge,Loc.T("tip_update_check"));
       importButton=Button(Loc.T("import_json"),18,61,0,Cyan);importButton.Click+=(s,e)=>ChooseFile();top.Controls.Add(importButton);
       search.SetBounds(importButton.Right+8,61,268,32);search.BackColor=Bg;search.ForeColor=Color.White;search.BorderStyle=BorderStyle.FixedSingle;search.TextChanged+=(s,e)=>{RefreshSearchHint();RefreshGrid();};top.Controls.Add(search);
       searchHint.AutoSize=false;searchHint.BackColor=Bg;searchHint.ForeColor=Color.FromArgb(130,150,165);searchHint.TextAlign=ContentAlignment.MiddleLeft;searchHint.Cursor=Cursors.IBeam;searchHint.Click+=(s,e)=>search.Focus();top.Controls.Add(searchHint);RefreshSearchHint();searchTip.SetToolTip(search,Loc.T("search_tip"));searchTip.SetToolTip(searchHint,Loc.T("search_tip"));
@@ -237,9 +240,10 @@ namespace RuneManagerModern {
       row1Divider=divider(rx,101,rh);rx+=gap+2;
       presetButton=Button(Loc.T("preset"),rx,101,0,OutilsColor,rh);presetButton.Click+=(s,e)=>ShowPresets();top.Controls.Add(presetButton);rx=presetButton.Right+gap;
       coefficientButton=Button(Loc.T("coefficient"),rx,101,0,OutilsColor,rh);coefficientButton.Click+=(s,e)=>ShowCoefficients();top.Controls.Add(coefficientButton);rx=coefficientButton.Right+gap;
-      autoKeepButton=Button(Loc.T("autokeep"),rx,101,0,OutilsColor,rh);autoKeepButton.Click+=(s,e)=>ShowAutoKeepSettings();top.Controls.Add(autoKeepButton);
+      autoKeepButton=Button(Loc.T("autokeep"),rx,101,0,OutilsColor,rh);autoKeepButton.Click+=(s,e)=>ShowAutoKeepSettings();top.Controls.Add(autoKeepButton);rx=autoKeepButton.Right+gap;
+      spdRankButton=Button(Loc.T("spd_rank"),rx,101,0,OutilsColor,rh);spdRankButton.Click+=(s,e)=>ShowSpdRanking();top.Controls.Add(spdRankButton);ConfigureCountBadge(spdRankBadge,5,6,CroquisViolet);spdRankBadge.Click+=(s,e)=>spdRankButton.PerformClick();spdRankButton.Controls.Add(spdRankBadge);spdRankBadge.BringToFront();
       // Bouton Regles retire (Jeremy : trop chiant a regler). Les ScoreRules restent chargees
-      // et appliquees (Spd 23+/25+ etc). On garde l'objet pour pouvoir le remettre plus tard.
+      // et appliquees (Spd 23+/25+/27+ etc). On garde l'objet pour pouvoir le remettre plus tard.
       rulesButton=Button(Loc.T("rules"),rx,101,0,OutilsColor,rh);rulesButton.Click+=(s,e)=>ShowScoreRules();
       int rowY2=101+rh+gap;int rx2=18;
       // Bouton retire de l'interface a la demande de Jeremy (valeurs World Boss pas bonnes pour
@@ -251,14 +255,9 @@ namespace RuneManagerModern {
       rtaButton=Button(Loc.T("rta"),rx2,rowY2,0,FonctionColor,rh);rtaButton.Click+=(s,e)=>ShowRtaAdvisor();top.Controls.Add(rtaButton);rx2=rtaButton.Right+gap;
       row2Divider=divider(rx2,rowY2,rh);rx2+=gap+2;
       retentionButton=Button("",rx2,rowY2,0,SeuilColor,rh);retentionButton.Click+=(s,e)=>ShowRetentionSettings();top.Controls.Add(retentionButton);RefreshRetentionButton();
-      // Demande Jeremy : classement SPD deplace a droite du bouton Seuil (etait sur la rangee du
-      // haut, pres de Tri Refinement). Repositionne dans RefreshRetentionButton() aussi (pas
-      // seulement ici) car le bouton Seuil change de largeur (AutoSize) des que son texte change
-      // (seuil dynamique/fixe, ECO MANA) — sinon meme bug que SKILL-UP qui se decalait tout seul.
-      spdRankButton=Button(Loc.T("spd_rank"),retentionButton.Right+Row2Gap,rowY2,0,FonctionColor,rh);spdRankButton.Click+=(s,e)=>ShowSpdRanking();top.Controls.Add(spdRankButton);ConfigureCountBadge(spdRankBadge,5,6,NormalActionBorder);spdRankBadge.Click+=(s,e)=>spdRankButton.PerformClick();spdRankButton.Controls.Add(spdRankBadge);spdRankBadge.BringToFront();
       status.Dock=DockStyle.Bottom;status.Height=22;status.ForeColor=Color.Silver;top.Controls.Add(status);
       grid.Dock=DockStyle.Fill;grid.BackgroundColor=Grid;grid.BorderStyle=BorderStyle.None;grid.GridColor=Color.Black;grid.CellBorderStyle=DataGridViewCellBorderStyle.Single;grid.RowHeadersVisible=false;grid.AllowUserToAddRows=false;grid.AllowUserToDeleteRows=false;grid.ReadOnly=true;grid.MultiSelect=false;grid.SelectionMode=DataGridViewSelectionMode.CellSelect;grid.AutoSizeRowsMode=DataGridViewAutoSizeRowsMode.None;grid.RowTemplate.Height=56;grid.EnableHeadersVisualStyles=false;grid.ColumnHeadersHeight=44;grid.ColumnHeadersHeightSizeMode=DataGridViewColumnHeadersHeightSizeMode.DisableResizing;grid.ColumnHeadersDefaultCellStyle=new DataGridViewCellStyle{BackColor=Teal,ForeColor=Color.White,Font=new Font("Segoe UI Semibold",12),SelectionBackColor=Teal};grid.DefaultCellStyle=new DataGridViewCellStyle{BackColor=Grid,ForeColor=Color.White,Font=new Font("Segoe UI",12),SelectionBackColor=Color.FromArgb(26,70,83),SelectionForeColor=Color.White,Padding=new Padding(2,0,2,0)};grid.CellFormatting+=FormatCell;grid.CellPainting+=PaintCraftBorder;grid.KeyDown+=GridKeyDown;grid.CellMouseDown+=GridMouseDown;grid.CellToolTipTextNeeded+=(s,e)=>{if(e.RowIndex>=0){var r=grid.Rows[e.RowIndex].DataBoundItem as RuneRow;if(r!=null&&e.ColumnIndex==0)e.ToolTipText=r.Rune;}};Controls.Add(grid);grid.BringToFront();
-      AddColumns();jsonDebounce.Interval=1200;jsonDebounce.Tick+=(s,e)=>ImportPendingJson();liveLogTimer.Interval=500;liveLogTimer.Tick+=(s,e)=>ReadLiveLog();worldBossTimer.Interval=700;worldBossTimer.Tick+=(s,e)=>{worldBossTimer.Stop();StartWorldBossRealtimeCalculation();};ancientShineTimer.Interval=70;ancientShineTimer.Tick+=(s,e)=>{ancientPulseT+=0.040f;if(ancientPulseT>=1f)ancientPulseT-=1f;if(grid.Columns.Count>0)grid.InvalidateColumn(0);};Shown+=(s,e)=>{LayoutToolbar();TryAutoLoad();LoadWorldBossOrderEvents();LoadWorldBossRealOrder();StartJsonWatcher();StartLiveLog();ancientShineTimer.Start();StartUpdateCheck();};      Resize+=(s,e)=>{FitColumns();PlaceLangCombo();};
+      AddColumns();jsonDebounce.Interval=1200;jsonDebounce.Tick+=(s,e)=>ImportPendingJson();liveLogTimer.Interval=500;liveLogTimer.Tick+=(s,e)=>ReadLiveLog();worldBossTimer.Interval=700;worldBossTimer.Tick+=(s,e)=>{worldBossTimer.Stop();StartWorldBossRealtimeCalculation();};ancientShineTimer.Interval=70;ancientShineTimer.Tick+=(s,e)=>{ancientPulseT+=0.040f;if(ancientPulseT>=1f)ancientPulseT-=1f;if(grid.Columns.Count>0)grid.InvalidateColumn(0);};Shown+=(s,e)=>{LayoutToolbar();TryAutoLoad();LoadWorldBossOrderEvents();LoadWorldBossRealOrder();StartJsonWatcher();StartLiveLog();ancientShineTimer.Start();StartUpdateCheck(false);if(!updateCheckTimer.Enabled){updateCheckTimer.Interval=3600000;updateCheckTimer.Tick+=(t,ev)=>StartUpdateCheck(false);updateCheckTimer.Start();}};      Resize+=(s,e)=>{FitColumns();PlaceLangCombo();};
       ApplyLanguage();
     }
     void PlaceLangCombo(){
@@ -266,27 +265,43 @@ namespace RuneManagerModern {
       int right=topBar.ClientSize.Width-18;
       if(paypalButton!=null){paypalButton.Location=new Point(right-paypalButton.Width,12);right=paypalButton.Left-10;}
       if(discordButton!=null){discordButton.Location=new Point(right-discordButton.Width,12);right=discordButton.Left-10;}
-      if(updateButton!=null&&updateButton.Visible){updateButton.Location=new Point(right-updateButton.Width,10);right=updateButton.Left-10;}
+      if(twitchButton!=null){twitchButton.Location=new Point(right-twitchButton.Width,12);right=twitchButton.Left-10;}
+      if(updateButton!=null){updateButton.Location=new Point(right-updateButton.Width,10);right=updateButton.Left-10;}
       langCombo.Location=new Point(Math.Max((titleLabel==null?18:titleLabel.Right)+24,right-langCombo.Width),14);
     }
     void OpenPaypalDonate(){try{Process.Start(PaypalDonateUrl);}catch{}}
     void OpenDiscordInvite(){try{Process.Start(DiscordInviteUrl);}catch{}}
-    void StartUpdateCheck(){
+    void OpenTwitchChannel(){try{Process.Start(TwitchUrl);}catch{}}
+    void StartUpdateCheck(){StartUpdateCheck(false);}
+    void StartUpdateCheck(bool report){
+      if(updateCheckBusy)return;
+      updateCheckBusy=true;
       System.Threading.ThreadPool.QueueUserWorkItem(_=>{
         try{
           ServicePointManager.SecurityProtocol=(SecurityProtocolType)3072;
           var req=(HttpWebRequest)WebRequest.Create(UpdateManifestUrl);
           req.Timeout=8000;req.ReadWriteTimeout=8000;req.UserAgent="RuneManager/"+AppBuild;
+          req.Accept="application/vnd.github.raw";
+          req.CachePolicy=new RequestCachePolicy(RequestCacheLevel.BypassCache);
           req.AutomaticDecompression=DecompressionMethods.GZip|DecompressionMethods.Deflate;
           string json;
           using(var resp=req.GetResponse())
           using(var sr=new StreamReader(resp.GetResponseStream()))
             json=sr.ReadToEnd();
-          var root=new JavaScriptSerializer().DeserializeObject(json) as Dictionary<string,object>;
-          if(root==null)return;
-          object b;if(!root.TryGetValue("build",out b))return;
+          var ser=new JavaScriptSerializer();
+          var root=ser.DeserializeObject(json) as Dictionary<string,object>;
+          if(root!=null&&root.ContainsKey("content")&&root.ContainsKey("encoding")){
+            string enc=Convert.ToString(root["encoding"]);
+            if(string.Equals(enc,"base64",StringComparison.OrdinalIgnoreCase)){
+              string b64=Convert.ToString(root["content"]).Replace("\n","").Replace("\r","");
+              json=Encoding.UTF8.GetString(Convert.FromBase64String(b64));
+              root=ser.DeserializeObject(json) as Dictionary<string,object>;
+            }
+          }
+          if(root==null){FinishUpdateCheck(true,report);return;}
+          object b;if(!root.TryGetValue("build",out b)){FinishUpdateCheck(true,report);return;}
           int remote=Convert.ToInt32(b,CultureInfo.InvariantCulture);
-          if(remote<=AppBuild)return;
+          if(remote<=AppBuild){FinishUpdateCheck(false,report);return;}
           string ver=root.ContainsKey("version")?Convert.ToString(root["version"]):remote.ToString(CultureInfo.InvariantCulture);
           string url=root.ContainsKey("url")?Convert.ToString(root["url"]):DiscordInviteUrl;
           string notesKey=Loc.En?"notes_en":"notes_fr";
@@ -294,27 +309,86 @@ namespace RuneManagerModern {
           if(!root.TryGetValue(notesKey,out n))root.TryGetValue("notes_fr",out n);
           var list=n as IEnumerable;
           if(list!=null&&!(n is string))foreach(var x in list){string line=Convert.ToString(x);if(!string.IsNullOrWhiteSpace(line))notes.Add(line);}
-          if(IsHandleCreated&&!IsDisposed)BeginInvoke((MethodInvoker)delegate{if(!IsDisposed)ApplyRemoteUpdate(ver,url,notes.ToArray());});
-        }catch{}
+          if(IsHandleCreated&&!IsDisposed)BeginInvoke((MethodInvoker)delegate{updateCheckBusy=false;if(!IsDisposed)ApplyRemoteUpdate(ver,url,notes.ToArray());});
+          else updateCheckBusy=false;
+        }catch{FinishUpdateCheck(true,report);}
       });
+    }
+    void FinishUpdateCheck(bool failed,bool report){
+      if(!(IsHandleCreated&&!IsDisposed)){updateCheckBusy=false;return;}
+      BeginInvoke((MethodInvoker)delegate{
+        updateCheckBusy=false;
+        if(IsDisposed)return;
+        if(failed){if(!updateAvailable)MarkUpdateIdle();}else MarkUpdateIdle();
+        if(report)status.Text=failed?Loc.T("update_fail"):Loc.T("update_ok",AppBuild.ToString(CultureInfo.InvariantCulture));
+      });
+    }
+    void MarkUpdateIdle(){
+      updateAvailable=false;
+      if(updateButton==null)return;
+      updateButton.Visible=true;updateButton.Text=Loc.T("update_check_btn");updateButton.Padding=new Padding(16,0,16,0);
+      SetActionBorder(updateButton,updateBadge,false);
+      if(updateBadge!=null)updateBadge.Visible=false;
+      updateTip.SetToolTip(updateButton,Loc.T("tip_update_check"));
+      PlaceLangCombo();
     }
     void ApplyRemoteUpdate(string ver,string url,string[] notes){
       pendingUpdateVersion=ver??"";pendingUpdateUrl=string.IsNullOrWhiteSpace(url)?DiscordInviteUrl:url;pendingUpdateNotes=notes??new string[0];
-      if(updateButton!=null){updateButton.Visible=true;updateButton.Text=Loc.T("update_btn");SetActionBorder(updateButton,updateBadge,true);if(updateBadge!=null){updateBadge.Text="1";updateBadge.Visible=true;updateBadge.BringToFront();}}
+      updateAvailable=true;
+      if(updateButton!=null){
+        updateButton.Visible=true;updateButton.Text=Loc.T("update_check_btn");updateButton.Padding=new Padding(72,0,16,0);
+        SetActionBorder(updateButton,updateBadge,false);
+        if(updateBadge!=null){updateBadge.Visible=true;updateBadge.BringToFront();updateTip.SetToolTip(updateBadge,Loc.T("tip_update"));}
+        updateTip.SetToolTip(updateButton,Loc.T("tip_update"));
+      }
       PlaceLangCombo();
       status.Text=Loc.T("update_status",pendingUpdateVersion);
     }
     void ShowUpdateDialog(){
-      if(updateButton==null||!updateButton.Visible)return;
+      if(updateButton==null)return;
+      if(!updateAvailable){StartUpdateCheck(true);return;}
       var f=new Form{Text=Loc.T("update_title"),Icon=Icon,BackColor=Bg,ForeColor=Color.White,ClientSize=new Size(520,420),FormBorderStyle=FormBorderStyle.FixedDialog,MaximizeBox=false,MinimizeBox=false,StartPosition=FormStartPosition.CenterParent};
       var title=new Label{Text=Loc.T("update_head",string.IsNullOrEmpty(pendingUpdateVersion)?"?":pendingUpdateVersion),Dock=DockStyle.Top,Height=72,BackColor=Panel,ForeColor=Color.FromArgb(255,178,55),Font=new Font("Segoe UI Semibold",16),Padding=new Padding(18,12,18,8)};
-      var body=new TextBox{Multiline=true,ReadOnly=true,BorderStyle=BorderStyle.None,BackColor=Bg,ForeColor=Color.Gainsboro,Font=new Font("Segoe UI",11),ScrollBars=ScrollBars.Vertical,Dock=DockStyle.Fill,Text=pendingUpdateNotes.Length==0?Loc.T("update_none"):"• "+string.Join("\r\n• ",pendingUpdateNotes)};
+      var wrap=new Panel{Dock=DockStyle.Fill,BackColor=Bg,Padding=new Padding(22,16,18,16),AutoScroll=true};
+      var body=new Label{AutoSize=true,MaximumSize=new Size(460,0),BackColor=Bg,ForeColor=Color.Gainsboro,Font=new Font("Segoe UI",11),Text=pendingUpdateNotes.Length==0?Loc.T("update_none"):"• "+string.Join("\r\n\r\n• ",pendingUpdateNotes)};
+      wrap.Controls.Add(body);
       var bar=new Panel{Dock=DockStyle.Bottom,Height=58,BackColor=Panel};
       var later=Button(Loc.T("update_later"),18,12,0,Color.FromArgb(120,140,155),36);later.Click+=(s,e)=>f.Close();bar.Controls.Add(later);
       later.PerformLayout();
-      var dl=Button(Loc.T("update_download"),later.Right+10,12,0,CroquisOrange,36);dl.Click+=(s,e)=>{try{Process.Start(string.IsNullOrWhiteSpace(pendingUpdateUrl)?DiscordInviteUrl:pendingUpdateUrl);}catch{}f.Close();};bar.Controls.Add(dl);
-      f.Controls.Add(bar);f.Controls.Add(title);f.Controls.Add(body);
+      var dl=Button(Loc.T("update_download"),later.Right+10,12,0,CroquisOrange,36);dl.Click+=(s,e)=>StartUpdateApply(f,dl);bar.Controls.Add(dl);
+      f.Controls.Add(wrap);f.Controls.Add(title);f.Controls.Add(bar);
       f.ShowDialog(this);
+    }
+    void StartUpdateApply(Form dialog,Button dl){
+      string url=string.IsNullOrWhiteSpace(pendingUpdateUrl)?DiscordInviteUrl:pendingUpdateUrl;
+      if(!url.EndsWith(".exe",StringComparison.OrdinalIgnoreCase)){try{Process.Start(url);}catch{}if(dialog!=null)dialog.Close();return;}
+      if(dl!=null){dl.Enabled=false;dl.Text=Loc.T("update_applying");}
+      if(status!=null)status.Text=Loc.T("update_applying");
+      System.Threading.ThreadPool.QueueUserWorkItem(_=>{
+        try{
+          ServicePointManager.SecurityProtocol=(SecurityProtocolType)3072;
+          string tmp=Path.Combine(Path.GetTempPath(),"Rune_Manager_Update.exe");
+          var req=(HttpWebRequest)WebRequest.Create(url);
+          req.Timeout=180000;req.ReadWriteTimeout=180000;req.UserAgent="RuneManager/"+AppBuild;req.AllowAutoRedirect=true;
+          using(var resp=req.GetResponse())
+          using(var input=resp.GetResponseStream())
+          using(var output=File.Create(tmp)){
+            var buf=new byte[64*1024];int n;int first=input.Read(buf,0,buf.Length);
+            if(first<2||buf[0]!='M'||buf[1]!='Z')throw new InvalidOperationException("not-exe");
+            output.Write(buf,0,first);
+            while((n=input.Read(buf,0,buf.Length))>0)output.Write(buf,0,n);
+          }
+          string root=Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar)).FullName;
+          Process.Start(new ProcessStartInfo(tmp){UseShellExecute=true,Arguments="--target \""+root+"\" --wait "+Process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture)});
+          if(IsHandleCreated&&!IsDisposed)BeginInvoke((MethodInvoker)delegate{if(dialog!=null&&!dialog.IsDisposed)dialog.Close();Close();});
+        }catch{
+          if(IsHandleCreated&&!IsDisposed)BeginInvoke((MethodInvoker)delegate{
+            if(dl!=null){dl.Enabled=true;dl.Text=Loc.T("update_download");}
+            if(status!=null)status.Text=Loc.T("update_dl_fail");
+            MessageBox.Show(Loc.T("update_dl_fail"),Loc.T("update_title"),MessageBoxButtons.OK,MessageBoxIcon.Error);
+          });
+        }
+      });
     }
     static Image LoadPaypalIcon(){
       string p=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"assets","paypal.png");
@@ -323,6 +397,11 @@ namespace RuneManagerModern {
     }
     static Image LoadDiscordIcon(){
       string p=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"assets","discord.png");
+      try{if(File.Exists(p)){using(var fs=new FileStream(p,FileMode.Open,FileAccess.Read))using(var img=Image.FromStream(fs))return new Bitmap(img);}}catch{}
+      return null;
+    }
+    static Image LoadTwitchIcon(){
+      string p=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"assets","twitch.png");
       try{if(File.Exists(p)){using(var fs=new FileStream(p,FileMode.Open,FileAccess.Read))using(var img=Image.FromStream(fs))return new Bitmap(img);}}catch{}
       return null;
     }
@@ -347,7 +426,8 @@ namespace RuneManagerModern {
       refinementTip.SetToolTip(refinementBadge,Loc.T("tip_refine"));
       if(paypalButton!=null)paypalTip.SetToolTip(paypalButton,Loc.T("tip_paypal"));
       if(discordButton!=null)discordTip.SetToolTip(discordButton,Loc.T("tip_discord"));
-      if(updateButton!=null){updateButton.Text=Loc.T("update_btn");updateTip.SetToolTip(updateButton,Loc.T("tip_update"));}
+      if(twitchButton!=null)twitchTip.SetToolTip(twitchButton,Loc.T("tip_twitch"));
+      if(updateButton!=null){if(updateAvailable){updateButton.Text=Loc.T("update_check_btn");updateTip.SetToolTip(updateButton,Loc.T("tip_update"));if(updateBadge!=null)updateTip.SetToolTip(updateBadge,Loc.T("tip_update"));}else{updateButton.Text=Loc.T("update_check_btn");updateTip.SetToolTip(updateButton,Loc.T("tip_update_check"));if(updateBadge!=null)updateTip.SetToolTip(updateBadge,Loc.T("tip_update_check"));}}
       if(searchTip!=null){searchTip.SetToolTip(search,Loc.T("search_tip"));searchTip.SetToolTip(searchHint,Loc.T("search_tip"));}
       RefreshSearchHint();
       if(langCombo!=null){int want=Loc.En?1:0;if(langCombo.SelectedIndex!=want)langCombo.SelectedIndex=want;}
@@ -369,7 +449,7 @@ namespace RuneManagerModern {
     void LayoutToolbar(){if(potButton==null)return;int gap=8,rx=18;
       if(importButton!=null){importButton.PerformLayout();search.Left=importButton.Right+gap;int cx=search.Right+gap;set.Left=cx;cx+=150;slot.Left=cx;cx+=150;action.Left=cx;cx+=150;build.Left=cx;cx+=150;runeType.Left=cx;RefreshSearchHint();}
       potButton.Left=rx;rx=potButton.Right+gap;obtButton.Left=rx;rx=obtButton.Right+gap;improveButton.Left=rx;rx=improveButton.Right+gap;reevalButton.Left=rx;rx=reevalButton.Right+gap;refinementButton.Left=rx;rx=refinementButton.Right+gap;
-      if(row1Divider!=null){row1Divider.Left=rx;rx+=gap+2;}presetButton.Left=rx;rx=presetButton.Right+gap;coefficientButton.Left=rx;rx=coefficientButton.Right+gap;autoKeepButton.Left=rx;
+      if(row1Divider!=null){row1Divider.Left=rx;rx+=gap+2;}presetButton.Left=rx;rx=presetButton.Right+gap;coefficientButton.Left=rx;rx=coefficientButton.Right+gap;autoKeepButton.Left=rx;rx=autoKeepButton.Right+gap;if(spdRankButton!=null)spdRankButton.Left=rx;
       RelayoutRow2();
     }
     void RefreshFilterLabels(){
@@ -474,7 +554,7 @@ namespace RuneManagerModern {
     }
     void RefreshCurrentView(bool inventoryChanged=false){long topId=0;int top=grid.FirstDisplayedScrollingRowIndex;if(top>=0&&top<grid.Rows.Count){var visible=grid.Rows[top].DataBoundItem as RuneRow;if(visible!=null)topId=visible.Id;}if(viewMode=="obtained")SortObtained();else if(viewMode=="reeval")SortReeval();else RefreshGrid();RestoreGridPosition(inventoryChanged?0:topId,inventoryChanged?0:top);RefreshRetentionButton();QueueWorldBossRealtimeCalculation();}
     void RestoreGridPosition(long topId,int fallback){if(grid.Rows.Count==0)return;int target=-1;if(topId>0)for(int i=0;i<grid.Rows.Count;i++){var r=grid.Rows[i].DataBoundItem as RuneRow;if(r!=null&&r.Id==topId){target=i;break;}}if(target<0)target=Math.Min(Math.Max(0,fallback),grid.Rows.Count-1);try{grid.FirstDisplayedScrollingRowIndex=target;}catch{}}
-    void RefreshRetentionButton(){if(retentionButton==null)return;string baseText=RuneEngine.SeuilVenteFixe?Loc.T("seuil_fixe",RuneEngine.SeuilApres12.ToString("0.000")):Loc.T("seuil_dyn",RuneEngine.LimiteRunesConservees.ToString("N0"),RuneEngine.SeuilApres12.ToString("0.000"));retentionButton.Text=baseText+(RuneEngine.ManaSaverMode?Loc.T("eco_mana"):"");if(spdRankButton!=null)spdRankButton.Left=retentionButton.Right+Row2Gap;}
+    void RefreshRetentionButton(){if(retentionButton==null)return;string baseText=RuneEngine.SeuilVenteFixe?Loc.T("seuil_fixe",RuneEngine.SeuilApres12.ToString("0.000")):Loc.T("seuil_dyn",RuneEngine.LimiteRunesConservees.ToString("N0"),RuneEngine.SeuilApres12.ToString("0.000"));retentionButton.Text=baseText+(RuneEngine.ManaSaverMode?Loc.T("eco_mana"):"");}
     void ShowRetentionSettings(){
       var f=new Form{Text=Loc.T("retention_title"),Icon=Icon,BackColor=Bg,ForeColor=Color.White,ClientSize=new Size(540,400),FormBorderStyle=FormBorderStyle.FixedDialog,MaximizeBox=false,MinimizeBox=false,StartPosition=FormStartPosition.CenterParent};
       f.Controls.Add(new Label{Text=Loc.T("retention_mode"),AutoSize=true,Location=new Point(28,22),Font=new Font("Segoe UI Semibold",12)});
@@ -572,6 +652,7 @@ namespace RuneManagerModern {
     // Jeremy pour reperer, par set+slot, la ou le SPD manque le plus avant de reorienter la
     // recommandation de refinement (actuellement basee sur le Potential moyen) vers le SPD.
     static double SpdBase(RuneRow r){double v=0;if(r.Main=="Spd")v+=r.MainValue;if(r.Innate=="Spd")v+=r.InnateValue;foreach(var sub in r.Subs)if(sub.Stat=="Spd")v+=sub.Value;return v;}
+    static double SpdWithGrind(RuneRow r){double v=SpdBase(r);foreach(var sub in r.Subs)if(sub.Stat=="Spd")v+=sub.Grind;return v;}
     IEnumerable<RuneRow> Filter(){RefreshWorldBossSaleProtection();IEnumerable<RuneRow> q=all;bool selling=Convert.ToString(action.SelectedItem)=="Sell";string s=search.Text.Trim();int exactLevel;
       // "violent slot 1" (nom de set + "slot" + numero) : filtre ce set+slot precis et trie
       // par SPD (base, hors meule) decroissant — outil de verification manuelle demande par
@@ -598,12 +679,12 @@ namespace RuneManagerModern {
       if(s.Length>0&&s[0]=='+'&&int.TryParse(s.Substring(1),out exactLevel))q=q.Where(r=>r.Level==exactLevel);
       else if(s.Length>0)q=q.Where(r=>(r.Rune+" "+r.Main+" "+r.Innate+" "+r.Stat1+" "+r.Stat2+" "+r.Stat3+" "+r.Stat4+" "+r.Marker).IndexOf(s,StringComparison.OrdinalIgnoreCase)>=0);if(set.SelectedIndex>0)q=q.Where(r=>r.Set==(string)set.SelectedItem);if(slot.SelectedIndex>0)q=q.Where(r=>r.Slot==slot.SelectedIndex);if(action.SelectedIndex>0)q=q.Where(r=>r.Action==(string)action.SelectedItem);if(build.SelectedIndex>0)q=q.Where(r=>r.BestBuild==(string)build.SelectedItem);if(runeType.SelectedIndex==1)q=q.Where(r=>!r.Ancient);else if(runeType.SelectedIndex==2)q=q.Where(r=>r.Ancient);if(!selling&&(viewMode=="potential"||viewMode=="upgrade"))q=q.Where(r=>r.Action!="Sell");if(!selling&&viewMode=="upgrade")q=q.Where(r=>r.Potential>=RuneEngine.SeuilApres12).Where(r=>r.Level>=12).Where(r=>!hiddenUpgradeIds.Contains(r.Id)).Where(HasAvailableImprovement);if(!selling&&viewMode=="refinement")return RefinementTargetsInPriorityOrder();if(!selling&&viewMode=="reeval")return ReevalTargetsInPriorityOrder(q);return potentialDesc?q.OrderByDescending(r=>r.Potential):q.OrderBy(r=>r.Potential);}
     void RefreshGrid(){if(grid.Columns.Count==0)return;RefreshWorldBossSaleProtection();ConfigureGridForView();var q=Filter().ToList();grid.AutoGenerateColumns=false;grid.RowTemplate.Height=56;grid.DataSource=q;foreach(DataGridViewRow row in grid.Rows)row.Height=56;counters.Text=Loc.T("counters",all.Count.ToString("N0"),all.Count(x=>x.Action=="Keep").ToString("N0"),all.Count(x=>x.Action=="Pwr up").ToString("N0"),all.Count(x=>x.Action=="Sell").ToString("N0"),q.Count.ToString("N0"));FitColumns();}
-    void ConfigureGridForView(){bool refinement=viewMode=="refinement";grid.Columns[9].DataPropertyName="Potential";grid.Columns[9].HeaderText=Loc.T("col_potential");grid.Columns[10].DataPropertyName=refinement?"RefinementGainText":"Recommendation";grid.Columns[10].HeaderText=refinement?Loc.T("col_refine_gain"):Loc.T("col_gem");grid.Columns[11].DataPropertyName=refinement?"RefinementPreset":"BestBuild";grid.Columns[11].HeaderText=refinement?Loc.T("col_refine_preset"):Loc.T("col_preset");}
+    void ConfigureGridForView(){bool refinement=viewMode=="refinement";grid.Columns[9].DataPropertyName="Potential";grid.Columns[9].HeaderText=Loc.T("col_potential");grid.Columns[10].DataPropertyName="Recommendation";grid.Columns[10].HeaderText=Loc.T("col_gem");grid.Columns[11].DataPropertyName=refinement?"RefinementPreset":"BestBuild";grid.Columns[11].HeaderText=refinement?Loc.T("col_refine_preset"):Loc.T("col_preset");}
     void SortObtained(){viewMode="obtained";potentialDesc=false;ConfigureGridForView();var q=Filter().OrderByDescending(r=>r.Obtained).ThenByDescending(r=>r.Id).ToList();grid.DataSource=q;counters.Text=Loc.T("counters",all.Count.ToString("N0"),all.Count(x=>x.Action=="Keep").ToString("N0"),all.Count(x=>x.Action=="Pwr up").ToString("N0"),all.Count(x=>x.Action=="Sell").ToString("N0"),q.Count.ToString("N0"));FitColumns();status.Text=Loc.T("status_obtained",q.Count.ToString("N0"));}
     void SortReeval(){viewMode="reeval";potentialDesc=true;ConfigureGridForView();var q=Filter().ToList();grid.DataSource=q;counters.Text=Loc.T("counters_reeval",all.Count.ToString("N0"),q.Count.ToString("N0"),RuneEngine.ReappNormal,RuneEngine.ReappAncient,q.Count.ToString("N0"));FitColumns();status.Text=Loc.T("status_reeval",q.Count.ToString("N0"));}
     bool HasAvailableImprovement(RuneRow r){if(r.RecommendationInStock)return true;foreach(var s in r.Subs){bool replaced=r.RecommendSource==s.Stat&&r.RecommendTarget!=s.Stat;if(!replaced&&CanUseGrind(r,s))return true;}return false;}
     void FitColumns(){if(grid.Columns.Count==0)return;int[] caps={90,145,105,100,245,245,245,245,90,125,390,155};for(int c=0;c<grid.Columns.Count;c++){grid.Columns[c].AutoSizeMode=DataGridViewAutoSizeColumnMode.None;if(c==0){grid.Columns[c].Width=90;continue;}int w=TextRenderer.MeasureText(grid.Columns[c].HeaderText,grid.ColumnHeadersDefaultCellStyle.Font).Width+18;int limit=Math.Min(grid.Rows.Count,220);for(int r=0;r<limit;r++){object v=grid.Rows[r].Cells[c].Value;if(v!=null)w=Math.Max(w,TextRenderer.MeasureText(Convert.ToString(v),grid.DefaultCellStyle.Font).Width+12);}grid.Columns[c].Width=Math.Min(caps[c],Math.Max(62,w));}int total=grid.Columns.Cast<DataGridViewColumn>().Sum(x=>x.Width);int spare=grid.ClientSize.Width-4-total;if(spare>0){int[] grow={4,5,6,7,10};int each=spare/grow.Length;foreach(int c in grow)grid.Columns[c].Width+=each;}}
-    void FormatCell(object sender,DataGridViewCellFormattingEventArgs e){var r=grid.Rows[e.RowIndex].DataBoundItem as RuneRow;if(r==null)return;e.CellStyle.Padding=new Padding(4);bool orange=r.Grade>=5;if(r.Action=="Sell"){e.CellStyle.BackColor=Color.FromArgb(82,20,22);if(e.ColumnIndex==0)e.CellStyle.ForeColor=orange?Color.FromArgb(255,116,22):Color.FromArgb(176,58,255);}if(e.ColumnIndex==8)e.CellStyle.ForeColor=r.Action=="Sell"?Color.FromArgb(255,110,110):Color.FromArgb(22,210,119);if(e.ColumnIndex==9)e.CellStyle.ForeColor=Color.FromArgb(116,235,184);if(e.ColumnIndex==10&&viewMode=="refinement")e.CellStyle.ForeColor=Color.FromArgb(80,225,160);if(e.ColumnIndex==0&&r.Action!="Sell")e.CellStyle.ForeColor=orange?Color.FromArgb(255,126,20):Color.FromArgb(183,58,255);if(e.ColumnIndex>=4&&e.ColumnIndex<=7){int si=e.ColumnIndex-4;if(si<r.Subs.Count){var s=r.Subs[si];bool replaced=r.RecommendSource==s.Stat&&r.RecommendTarget!=s.Stat;if(!replaced&&CanUseGrind(r,s))e.CellStyle=new DataGridViewCellStyle(e.CellStyle){Padding=new Padding(3),BackColor=e.CellStyle.BackColor,ForeColor=e.CellStyle.ForeColor,SelectionBackColor=e.CellStyle.SelectionBackColor,SelectionForeColor=e.CellStyle.SelectionForeColor};}}if(e.ColumnIndex==10&&viewMode!="refinement"&&r.RecommendationInStock)e.CellStyle.ForeColor=Color.FromArgb(255,105,105);}
+    void FormatCell(object sender,DataGridViewCellFormattingEventArgs e){var r=grid.Rows[e.RowIndex].DataBoundItem as RuneRow;if(r==null)return;e.CellStyle.Padding=new Padding(4);bool orange=r.Grade>=5;if(r.Action=="Sell"){e.CellStyle.BackColor=Color.FromArgb(82,20,22);if(e.ColumnIndex==0)e.CellStyle.ForeColor=orange?Color.FromArgb(255,116,22):Color.FromArgb(176,58,255);}if(e.ColumnIndex==8)e.CellStyle.ForeColor=r.Action=="Sell"?Color.FromArgb(255,110,110):Color.FromArgb(22,210,119);if(e.ColumnIndex==9)e.CellStyle.ForeColor=Color.FromArgb(116,235,184);if(e.ColumnIndex==0&&r.Action!="Sell")e.CellStyle.ForeColor=orange?Color.FromArgb(255,126,20):Color.FromArgb(183,58,255);if(e.ColumnIndex>=4&&e.ColumnIndex<=7){int si=e.ColumnIndex-4;if(si<r.Subs.Count){var s=r.Subs[si];bool replaced=r.RecommendSource==s.Stat&&r.RecommendTarget!=s.Stat;if(!replaced&&CanUseGrind(r,s))e.CellStyle=new DataGridViewCellStyle(e.CellStyle){Padding=new Padding(3),BackColor=e.CellStyle.BackColor,ForeColor=e.CellStyle.ForeColor,SelectionBackColor=e.CellStyle.SelectionBackColor,SelectionForeColor=e.CellStyle.SelectionForeColor};}}if(e.ColumnIndex==10&&r.RecommendationInStock)e.CellStyle.ForeColor=Color.FromArgb(255,105,105);}
     bool IsGrindable(string s){return s=="HP+"||s=="HP%"||s=="Atk+"||s=="Atk%"||s=="Def+"||s=="Def%"||s=="Spd";}
     double MaxGrind(string s,bool a){if(s=="HP+")return a?610:550;if(s=="Atk+"||s=="Def+")return a?34:30;if(s=="HP%"||s=="Atk%"||s=="Def%")return a?12:10;if(s=="Spd")return a?6:5;return 0;}
     double MaxGrindViolet(string s,bool a){if(s=="HP+")return a?460:400;if(s=="Atk+"||s=="Def+")return a?22:18;if(s=="HP%"||s=="Atk%"||s=="Def%")return a?9:7;if(s=="Spd")return a?5:4;return 0;}
@@ -1716,7 +1797,29 @@ f.ShowDialog(owner);
       var save=Button("ENREGISTRER ET RECALCULER",18,9,245,Cyan);var bottom=new Panel{Dock=DockStyle.Bottom,Height=52,BackColor=Panel};bottom.Controls.Add(save);f.Controls.Add(g);f.Controls.Add(bottom);save.Click+=(s,e)=>{for(int row=0;row<RuneEngine.Presets.Count;row++){var p=RuneEngine.Presets[row];for(int i=0;i<stats.Length;i++)p.W[stats[i]]=PriorityValue(Convert.ToString(g.Rows[row].Cells[i+1].Value));ReplaceSet(p.Preferred,Convert.ToString(g.Rows[row].Cells[12].Value));ReplaceSet(p.Accepted,Convert.ToString(g.Rows[row].Cells[13].Value));ReplaceSet(p.Main[2],Convert.ToString(g.Rows[row].Cells[14].Value));ReplaceSet(p.Main[4],Convert.ToString(g.Rows[row].Cells[15].Value));ReplaceSet(p.Main[6],Convert.ToString(g.Rows[row].Cells[16].Value));}ApplySettingsAndClose(f,Loc.T("presets_saved"));};f.ShowDialog(this);
     }
     void ShowCoefficients(){
-      var f=new Form{Text=Loc.T("coeff_title"),Icon=Icon,BackColor=Bg,ForeColor=Color.White,Size=new Size(560,480),StartPosition=FormStartPosition.CenterParent,FormBorderStyle=FormBorderStyle.FixedDialog,MaximizeBox=false,MinimizeBox=false};var panel=new TableLayoutPanel{Dock=DockStyle.Top,Height=356,Padding=new Padding(24),ColumnCount=2,RowCount=7,BackColor=Bg};panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,62));panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,38));string[] names={Loc.T("coeff_p1"),Loc.T("coeff_p2"),Loc.T("coeff_p3"),Loc.T("coeff_main"),Loc.T("coeff_ok_set"),Loc.T("coeff_bad_set"),Loc.T("coeff_sim")};double[] values={RuneEngine.PoidsP1,RuneEngine.PoidsP2,RuneEngine.PoidsP3,RuneEngine.BonusStatPrincipale,RuneEngine.FacteurSetAcceptable,RuneEngine.FacteurSetExclu,RuneEngine.SeuilApres12};var boxes=new List<TextBox>();for(int i=0;i<names.Length;i++){panel.RowStyles.Add(new RowStyle(SizeType.Absolute,44));panel.Controls.Add(new Label{Text=names[i],Dock=DockStyle.Fill,TextAlign=ContentAlignment.MiddleLeft,ForeColor=Color.White,Font=new Font("Segoe UI",11)},0,i);var box=new TextBox{Text=values[i].ToString("0.###",CultureInfo.InvariantCulture),Dock=DockStyle.Fill,BackColor=Panel,ForeColor=Color.White,Font=new Font("Segoe UI",11),BorderStyle=BorderStyle.FixedSingle};boxes.Add(box);panel.Controls.Add(box,1,i);}var save=Button(Loc.T("save_recalc"),24,376,245,Cyan);f.Controls.Add(panel);f.Controls.Add(save);save.Click+=(s,e)=>{var parsed=new double[7];for(int i=0;i<7;i++)if(!TryDouble(boxes[i].Text,out parsed[i])||parsed[i]<0){MessageBox.Show(Loc.T("coeff_bad",names[i]),Loc.T("coefficient"),MessageBoxButtons.OK,MessageBoxIcon.Warning);return;}RuneEngine.PoidsP1=parsed[0];RuneEngine.PoidsP2=parsed[1];RuneEngine.PoidsP3=parsed[2];RuneEngine.BonusStatPrincipale=parsed[3];RuneEngine.FacteurSetAcceptable=parsed[4];RuneEngine.FacteurSetExclu=parsed[5];RuneEngine.SeuilApres12=parsed[6];ApplySettingsAndClose(f,Loc.T("coeff_saved"));};f.ShowDialog(this);
+      var f=new Form{Text=Loc.T("coeff_title"),Icon=Icon,BackColor=Bg,ForeColor=Color.White,ClientSize=new Size(540,430),StartPosition=FormStartPosition.CenterParent,FormBorderStyle=FormBorderStyle.FixedDialog,MaximizeBox=false,MinimizeBox=false};
+      var bar=new Panel{Dock=DockStyle.Bottom,Height=64,BackColor=Bg};f.Controls.Add(bar);
+      var panel=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(28,18,28,8),ColumnCount=2,RowCount=7,BackColor=Bg,GrowStyle=TableLayoutPanelGrowStyle.FixedSize};
+      panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,58));
+      panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,42));
+      string[] names={Loc.T("coeff_p1"),Loc.T("coeff_p2"),Loc.T("coeff_p3"),Loc.T("coeff_main"),Loc.T("coeff_ok_set"),Loc.T("coeff_bad_set"),Loc.T("coeff_sim")};
+      double[] values={RuneEngine.PoidsP1,RuneEngine.PoidsP2,RuneEngine.PoidsP3,RuneEngine.BonusStatPrincipale,RuneEngine.FacteurSetAcceptable,RuneEngine.FacteurSetExclu,RuneEngine.SeuilApres12};
+      var boxes=new List<TextBox>();
+      for(int i=0;i<names.Length;i++){
+        panel.RowStyles.Add(new RowStyle(SizeType.Percent,100f/7f));
+        panel.Controls.Add(new Label{Text=names[i],Dock=DockStyle.Fill,TextAlign=ContentAlignment.MiddleLeft,ForeColor=Color.Gainsboro,Font=new Font("Segoe UI",11),AutoSize=false,AutoEllipsis=true,Margin=new Padding(0,0,16,0)},0,i);
+        var host=new Panel{Dock=DockStyle.Fill,BackColor=Panel,Margin=new Padding(0,8,0,8)};
+        var box=new TextBox{Text=values[i].ToString("0.###",CultureInfo.InvariantCulture),BorderStyle=BorderStyle.None,BackColor=Panel,ForeColor=Color.White,Font=new Font("Segoe UI",11),TextAlign=HorizontalAlignment.Center,Height=20};
+        Action place=()=>{box.Width=Math.Max(24,host.ClientSize.Width-16);box.Left=8;box.Top=Math.Max(0,(host.ClientSize.Height-box.Height)/2);};
+        host.Resize+=(s,e)=>place();host.Click+=(s,e)=>box.Focus();
+        host.Paint+=(s,e)=>{var r=host.ClientRectangle;r.Width--;r.Height--;using(var pen=new Pen(Color.FromArgb(70,95,115)))e.Graphics.DrawRectangle(pen,r);};
+        host.Controls.Add(box);place();
+        boxes.Add(box);panel.Controls.Add(host,1,i);
+      }
+      f.Controls.Add(panel);panel.BringToFront();
+      var save=Button(Loc.T("save_recalc"),28,14,0,Cyan,36);bar.Controls.Add(save);
+      save.Click+=(s,e)=>{var parsed=new double[7];for(int i=0;i<7;i++)if(!TryDouble(boxes[i].Text,out parsed[i])||parsed[i]<0){MessageBox.Show(Loc.T("coeff_bad",names[i]),Loc.T("coefficient"),MessageBoxButtons.OK,MessageBoxIcon.Warning);return;}RuneEngine.PoidsP1=parsed[0];RuneEngine.PoidsP2=parsed[1];RuneEngine.PoidsP3=parsed[2];RuneEngine.BonusStatPrincipale=parsed[3];RuneEngine.FacteurSetAcceptable=parsed[4];RuneEngine.FacteurSetExclu=parsed[5];RuneEngine.SeuilApres12=parsed[6];ApplySettingsAndClose(f,Loc.T("coeff_saved"));};
+      f.ShowDialog(this);
     }
     // Auto-Keep : tableau set x stat. Une rune +12 est gardee (Keep) automatiquement des
     // qu'une de ses sous-stats atteint le seuil configure pour son set, meme si son
@@ -1837,10 +1940,11 @@ f.ShowDialog(owner);
     // obligatoire), SPD reelle (>0, sinon le refinement ne garantit rien sur ce stat), pas de
     // stat plate en sous-stat, pas deja dans le top 10% de ses meilleures runes (Potential), et
     // stat principale liee a celles utilisees sur les presets pour ce slot (slot 1/3/5 : pas de
-    // restriction, stat principale fixee par le jeu).
-    IEnumerable<RuneRow> RefinementCandidates(string setName,int slot,double threshold){
+    // restriction, stat principale fixee par le jeu). excludeAncient : TRI REFINEMENT seulement
+    // (Jeremy : antiques absentes du tri refinement, pas du tri reeval).
+    IEnumerable<RuneRow> RefinementCandidates(string setName,int slot,double threshold,bool excludeAncient=false){
       var allowedMain=AllowedMainStats(slot);
-      return all.Where(r=>r.Set.Equals(setName,StringComparison.OrdinalIgnoreCase)&&r.Slot==slot&&r.Grade==5&&SpdBase(r)>0&&r.Potential<threshold&&!r.Subs.Any(x=>x.Stat=="HP+"||x.Stat=="Atk+"||x.Stat=="Def+")&&(allowedMain==null||allowedMain.Count==0||allowedMain.Contains(r.Main)));
+      return all.Where(r=>r.Set.Equals(setName,StringComparison.OrdinalIgnoreCase)&&r.Slot==slot&&r.Grade==5&&(!excludeAncient||!r.Ancient)&&SpdBase(r)>0&&r.Potential<threshold&&!r.Subs.Any(x=>x.Stat=="HP+"||x.Stat=="Atk+"||x.Stat=="Def+")&&(allowedMain==null||allowedMain.Count==0||allowedMain.Contains(r.Main)));
     }
     // Cible de refinement recommandee : parcourt les slots/sets du moins bon SPD au meilleur
     // (SpdPriorityOrder). Le premier slot/set avec au moins un candidat valable gagne ; sinon on
@@ -1850,7 +1954,7 @@ f.ShowDialog(owner);
       chosenSet=null;chosenSlot=0;
       double threshold=Top10PercentPotentialThreshold();
       foreach(var combo in SpdPriorityOrder()){
-        var candidates=RefinementCandidates(combo.Item1,combo.Item2,threshold).ToList();
+        var candidates=RefinementCandidates(combo.Item1,combo.Item2,threshold,true).ToList();
         if(candidates.Count>0){chosenSet=combo.Item1;chosenSlot=combo.Item2;return candidates.OrderBy(x=>x.Potential).First();}
       }
       return null;
@@ -1858,19 +1962,24 @@ f.ShowDialog(owner);
     // Liste complete des cibles de refinement valables, dans l'ordre de priorite (moins bon SPD
     // en premier, egalite -> slot 4/6 avant), pour le bouton TRI REFINEMENT. A l'interieur d'un
     // meme slot+set, la plus mauvaise Potential Value d'abord.
-    IEnumerable<RuneRow> RefinementTargetsInPriorityOrder(){
+    IEnumerable<RuneRow> RefinementTargetsInPriorityOrder(bool excludeAncient=true){
       double threshold=Top10PercentPotentialThreshold();
       var result=new List<RuneRow>();
-      foreach(var combo in SpdPriorityOrder())result.AddRange(RefinementCandidates(combo.Item1,combo.Item2,threshold).OrderBy(x=>x.Potential));
+      foreach(var combo in SpdPriorityOrder())result.AddRange(RefinementCandidates(combo.Item1,combo.Item2,threshold,excludeAncient).OrderBy(x=>x.Potential));
       return result;
     }
-    // TRI REEVAL, meme mecanique de priorite SPD que TRI REFINEMENT (SpdPriorityOrder : slot/set
-    // avec le moins de SPD en premier, egalite -> slot 4/6 avant), mais le pool de candidats
-    // reste EXACTEMENT celui du bouton Reeval de base : runes marquees "Reeval" dans le jeu et
-    // Potential <= 10 (pas de condition legendaire/top10%/stat principale, propre au refinement).
-    // Les runes marquees Reeval hors des 4 sets/slots de refinement restent affichees, juste
-    // apres. A l'interieur d'un meme slot+set : plus basse Potential Value d'abord.
+    // Innate reevaluable : stat prefix presente et differente de SPD. Une innate SPD ne se
+    // reevalue pas (perd la SPD) ; une rune sans innate n'a rien a reevaluer. L'innate ne
+    // peut pas apparaitre en sous-stat, donc ce filtre est independant du pool refinement.
+    static bool HasReevalableInnate(RuneRow r){
+      return !string.IsNullOrEmpty(r.Innate)&&!r.Innate.Equals("Spd",StringComparison.OrdinalIgnoreCase);
+    }
+    // TRI REEVAL : si le compte a au moins un lock_type 1 (marqueur "Reeval"), pool inchange
+    // (lock + Potential <= 10, priorite SPD). Sinon meme liste que TRI REFINEMENT, restreinte
+    // aux runes avec innate non-SPD. Lock type 2 ("rune spd") n'est pas touche.
     IEnumerable<RuneRow> ReevalTargetsInPriorityOrder(IEnumerable<RuneRow> baseQuery){
+      bool hasReevalLock=all.Any(r=>r.Marker.IndexOf("Reeval",StringComparison.OrdinalIgnoreCase)>=0);
+      if(!hasReevalLock)return RefinementTargetsInPriorityOrder(false).Where(HasReevalableInnate);
       var priority=SpdPriorityOrder();
       var rank=new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);
       for(int i=0;i<priority.Count;i++){string key=priority[i].Item1+"|"+priority[i].Item2;if(!rank.ContainsKey(key))rank[key]=i;}
@@ -1909,15 +2018,16 @@ f.ShowDialog(owner);
       var improvements=ComputeSpdImprovements();
       spdSeenBest=CurrentSpdBestMap();RefreshSpdRankBadge();SaveSpdSeenBest();
       if(improvements.Count>0)ShowSpdImprovements(improvements);
-      var f=new Form{Text=Loc.T("spd_title"),Icon=Icon,BackColor=Bg,ForeColor=Color.White,Size=new Size(880,700),MinimumSize=new Size(620,420),StartPosition=FormStartPosition.CenterParent};
+      var f=new Form{Text=Loc.T("spd_title"),Icon=Icon,BackColor=Bg,ForeColor=Color.White,Size=new Size(980,700),MinimumSize=new Size(720,420),StartPosition=FormStartPosition.CenterParent};
       var info=new Label{Text=Loc.T("spd_info"),AutoSize=false,Height=40,Dock=DockStyle.Top,ForeColor=Color.Silver,Font=new Font("Segoe UI",9.5f),Padding=new Padding(14,10,14,4)};
       f.Controls.Add(info);
       var grid=new DataGridView{Dock=DockStyle.Fill,BackgroundColor=Bg,ForeColor=Color.White,GridColor=Color.FromArgb(60,70,85),BorderStyle=BorderStyle.None,ReadOnly=true,AllowUserToAddRows=false,AllowUserToDeleteRows=false,RowHeadersVisible=false,AutoSizeColumnsMode=DataGridViewAutoSizeColumnsMode.Fill,ColumnHeadersHeightSizeMode=DataGridViewColumnHeadersHeightSizeMode.AutoSize,EnableHeadersVisualStyles=false,SelectionMode=DataGridViewSelectionMode.CellSelect,RowTemplate={Height=36}};
       grid.DefaultCellStyle.BackColor=Panel;grid.DefaultCellStyle.ForeColor=Color.White;grid.DefaultCellStyle.SelectionBackColor=Color.FromArgb(60,90,120);grid.DefaultCellStyle.SelectionForeColor=Color.White;grid.ColumnHeadersDefaultCellStyle.BackColor=Color.FromArgb(30,42,58);grid.ColumnHeadersDefaultCellStyle.ForeColor=Color.White;grid.ColumnHeadersDefaultCellStyle.Font=new Font("Segoe UI Semibold",9.5f);
       grid.Columns.Add(new DataGridViewImageColumn{HeaderText="Set",ReadOnly=true,FillWeight=50,ImageLayout=DataGridViewImageCellLayout.Zoom});
       grid.Columns.Add(new DataGridViewTextBoxColumn{HeaderText="Slot",FillWeight=45});
-      grid.Columns.Add(new DataGridViewTextBoxColumn{HeaderText="SPD MAX",FillWeight=70});
-      grid.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("spd_subs"),FillWeight=260});
+      grid.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("spd_base"),FillWeight=80});
+      grid.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("spd_grind"),FillWeight=90});
+      grid.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("spd_subs"),FillWeight=240});
       // Rapport en lecture seule a ordre voulu (priorite croissante) — pas de tri par clic
       // d'en-tete qui casserait cet ordre (probleme deja rencontre : tri texte par defaut).
       foreach(DataGridViewColumn c in grid.Columns)c.SortMode=DataGridViewColumnSortMode.NotSortable;
@@ -1925,7 +2035,8 @@ f.ShowDialog(owner);
         var icon=GetSetIcon(c.Item1);
         var r=c.Item4;
         string subs=r!=null?string.Join(" | ",r.Subs.Select(x=>x.BaseDisplay)):Loc.T("spd_none");
-        int idx=grid.Rows.Add((object)icon??DBNull.Value,"Slot "+c.Item2,c.Item3.ToString("0"),subs);
+        string grind=r==null?"0":SpdWithGrind(r).ToString("0");
+        int idx=grid.Rows.Add((object)icon??DBNull.Value,"Slot "+c.Item2,c.Item3.ToString("0"),grind,subs);
         grid.Rows[idx].Cells[0].ToolTipText=c.Item1;
       }
       f.Controls.Add(grid);grid.BringToFront();
@@ -2096,7 +2207,7 @@ f.ShowDialog(owner);
         g.DrawImage(body,d,0,0,body.Width,body.Height,GraphicsUnit.Pixel,ia);
       }
     }
-    void ClosingWithSave(object sender,FormClosingEventArgs e){ancientShineTimer.Stop();SaveRetentionSetting();SaveEngineSettings();SaveSpdSeenBest();SaveRuneChoiceSeen();if(!SaveStock()||!SaveLiveChanges())e.Cancel=true;}
+    void ClosingWithSave(object sender,FormClosingEventArgs e){ancientShineTimer.Stop();updateCheckTimer.Stop();SaveRetentionSetting();SaveEngineSettings();SaveSpdSeenBest();SaveRuneChoiceSeen();if(!SaveStock()||!SaveLiveChanges())e.Cancel=true;}
     bool SaveStock(){try{var lines=RuneEngine.Stocks.Select(x=>(x.Ancient?"1":"0")+"\t"+x.Type+"\t"+x.Set+"\t"+x.Stat+"\t"+x.Grade+"\t"+x.Amount);File.WriteAllLines(StockSavePath,lines);return true;}catch(Exception ex){MessageBox.Show(Loc.T("save_stock_fail",ex.Message),"Rune Manager",MessageBoxButtons.OK,MessageBoxIcon.Error);return false;}}
     void LoadSavedStock(string jsonPath){if(!File.Exists(StockSavePath))return;try{
       // Un export plus récent contient le stock réel du compte et ne doit jamais

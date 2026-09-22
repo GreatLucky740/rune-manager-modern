@@ -114,7 +114,7 @@ public sealed class SkillUpGroup { public SkillUpMonster Target; public List<Ski
     // Regles de bonus pur (bouton "Regles") : liste ouverte, editable via RuneEnhancements.cs
     // (ShowScoreRules). Chaque regle ajoute Bonus au Potential final si la rune est d'un des
     // Sets listes (vide = tous sets) ET si sa valeur pour Stat atteint Threshold. BuiltIn=true
-    // pour les 2 regles Spd 23/25 historiques (non supprimables, mais modifiables). Projected=true
+    // pour les 3 regles Spd 23/25/27 historiques (non supprimables, mais modifiables). Projected=true
     // simule les rolls futurs restants (seulement implemente pour Stat=="Spd" pour l'instant) ;
     // sinon on lit juste la valeur actuelle de la sub (ou "toujours vrai" si c'est la stat principale).
     public sealed class ScoreRule{
@@ -129,7 +129,8 @@ public sealed class SkillUpGroup { public SkillUpMonster Target; public List<Ski
     }
     public static List<ScoreRule> ScoreRules=new List<ScoreRule>{
       new ScoreRule{Name="Spd 23+ sur Will/Despair/Violent/Swift",Sets=new List<string>{"Will","Despair","Violent","Swift"},Stat="Spd",Threshold=23,Bonus=.5,BuiltIn=true,Projected=true},
-      new ScoreRule{Name="Spd 25+ sur Will/Despair/Violent/Swift",Sets=new List<string>{"Will","Despair","Violent","Swift"},Stat="Spd",Threshold=25,Bonus=.5,BuiltIn=true,Projected=true},
+      new ScoreRule{Name="Spd 25+ sur Will/Despair/Violent/Swift",Sets=new List<string>{"Will","Despair","Violent","Swift"},Stat="Spd",Threshold=25,Bonus=1,BuiltIn=true,Projected=true},
+      new ScoreRule{Name="Spd 27+ sur Will/Despair/Violent/Swift",Sets=new List<string>{"Will","Despair","Violent","Swift"},Slots=new List<int>{1,3,4,5,6},Stat="Spd",Threshold=27,Bonus=1,BuiltIn=true,Projected=true},
     };
     // Mode économie de mana : rend l'appli plus dure sur "quelle rune vaut la peine d'etre
     // montee" (Pwr up, Level<12) SANS toucher au seuil de vente des runes deja +12

@@ -6,7 +6,7 @@ try {
   $refs=@('/r:System.dll','/r:System.Core.dll','/r:System.Drawing.dll','/r:System.Windows.Forms.dll','/r:System.Web.Extensions.dll','/r:System.Runtime.Serialization.dll','/r:System.Net.Http.dll','/r:C:\Windows\Microsoft.NET\Framework64\v4.0.30319\System.Runtime.WindowsRuntime.dll','/r:outputs\rune_manager_release\Donnees\Tesseract.dll')
   $refs+=Get-ChildItem 'C:\Windows\System32\WinMetadata' -Filter '*.winmd'|ForEach-Object {'/r:'+$_.FullName}
   foreach($name in @('System.Runtime','System.Runtime.InteropServices.WindowsRuntime','System.ObjectModel')){$refs+=Get-ChildItem ('C:\Windows\Microsoft.NET\assembly\GAC_MSIL\'+$name) -Recurse -Filter '*.dll'|ForEach-Object {'/r:'+$_.FullName}}
-  $src=@('Loc','RuneManagerApp','RuneEngine','RuneEnhancements','WorldBossOptimizer','RtaDraftAdvisor','RtaMetaRefresh','RtaPoolTracker','RtaBuildOptimizer','RtaTargetEditor','RtaDraftCapture','ScreenCaptureLens')|ForEach-Object {'rune_manager_app\'+$_+'.cs'}
+  $src=@('Loc','RuneManagerApp','RuneEngine','RuneEnhancements','WorldBossOptimizer','RtaDraftAdvisor','RtaMetaRefresh','RtaPoolTracker','RtaBuildOptimizer','RtaTargetEditor','ScreenCaptureLens')|ForEach-Object {'rune_manager_app\'+$_+'.cs'}
   $src+='rune_manager_app\WorldBossStableBridge.cs'
   $src+='rune_manager_app\PresetMenus.cs'
   $src+='rune_manager_app\PremiumRuneArt.cs'
@@ -20,4 +20,8 @@ try {
   if($LASTEXITCODE -ne 0){throw 'Compilation application failed'}
   & 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe' /nologo /target:exe /main:RuneUpdateRegressionTest /out:outputs\RuneUpdateRegressionTest.exe $refs $src rune_manager_app\RuneUpdateRegressionTest.cs
   if($LASTEXITCODE -ne 0){throw 'Compilation tests failed'}
+  if($Stable){
+    & 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe' /nologo /target:winexe $icon /out:outputs\Rune_Manager_Update.exe /resource:outputs\Rune_Manager_Principal_Update.exe,Payload.Core rune_manager_app\RuneManagerUpdater.cs
+    if($LASTEXITCODE -ne 0){throw 'Compilation updater failed'}
+  }
 } finally {Pop-Location}

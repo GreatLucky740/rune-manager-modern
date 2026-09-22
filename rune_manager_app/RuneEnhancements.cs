@@ -43,6 +43,86 @@ namespace RuneManagerModern {
       return reason;
     }
   }
+  sealed class ExplainCard:Control {
+    string[] lines=new string[0];
+    readonly Font titleFont=new Font("Segoe UI Semibold",12f);
+    readonly Font bodyFont=new Font("Segoe UI",10f);
+    readonly Font footFont=new Font("Segoe UI",8.5f);
+    readonly Font valueFont=new Font("Segoe UI Semibold",10.5f);
+    static readonly Color CardBg=Color.FromArgb(12,20,32),CardBorder=Color.FromArgb(20,184,210),Title=Color.FromArgb(255,178,55),Body=Color.FromArgb(220,228,235),Mute=Color.FromArgb(130,150,165),Value=Color.FromArgb(95,235,165),Score=Color.FromArgb(255,170,40),Row=Color.FromArgb(18,30,46);
+    const int CardW=520,Pad=16;
+    public ExplainCard(){
+      SetStyle(ControlStyles.UserPaint|ControlStyles.AllPaintingInWmPaint|ControlStyles.OptimizedDoubleBuffer|ControlStyles.ResizeRedraw,true);
+      Visible=false;BackColor=CardBg;ForeColor=Body;Cursor=Cursors.Default;
+    }
+    public void SetText(string text){
+      lines=(text??"").Replace("\r\n","\n").Split('\n');
+      Height=Math.Max(80,MeasureHeight());
+      Width=CardW;
+      Invalidate();
+    }
+    int MeasureHeight(){
+      int y=Pad,w=CardW-Pad*2;
+      for(int i=0;i<lines.Length;i++){
+        string line=lines[i]??"";
+        var font=i==0?titleFont:IsFoot(line)?footFont:bodyFont;
+        var sz=TextRenderer.MeasureText(line.Length==0?" ":line,font,new Size(w,int.MaxValue),TextFormatFlags.WordBreak|TextFormatFlags.NoPadding|TextFormatFlags.TextBoxControl);
+        y+=Math.Max(font.Height+2,sz.Height)+(i==0?10:4);
+        if(i==0)y+=8;
+      }
+      return y+Pad;
+    }
+    static bool IsFoot(string line){return line.StartsWith("Poids",StringComparison.Ordinal)||line.StartsWith("Weights",StringComparison.Ordinal)||line.StartsWith("Bonus stock",StringComparison.Ordinal)||line.StartsWith("Stock bonus",StringComparison.Ordinal);}
+    static bool IsScore(string line){return line.IndexOf("Score brut",StringComparison.Ordinal)>=0||line.IndexOf("Raw score",StringComparison.Ordinal)>=0;}
+    static bool IsStat(string line){return line.IndexOf("poids effectif",StringComparison.Ordinal)>=0||line.IndexOf("effective weight",StringComparison.Ordinal)>=0;}
+    protected override void OnPaint(PaintEventArgs e){
+      base.OnPaint(e);
+      var g=e.Graphics;g.SmoothingMode=SmoothingMode.AntiAlias;g.PixelOffsetMode=PixelOffsetMode.HighQuality;
+      var box=new Rectangle(0,0,Width-1,Height-1);
+      using(var path=Round(box,12)){
+        using(var fill=new SolidBrush(CardBg))g.FillPath(fill,path);
+        using(var pen=new Pen(CardBorder,1.6f))g.DrawPath(pen,path);
+      }
+      int y=Pad,w=CardW-Pad*2,x=Pad;
+      for(int i=0;i<lines.Length;i++){
+        string line=lines[i]??"";
+        if(i==0){
+          TextRenderer.DrawText(g,line,titleFont,new Rectangle(x,y,w,32),Title,TextFormatFlags.NoPadding|TextFormatFlags.EndEllipsis);
+          y+=titleFont.Height+8;
+          using(var pen=new Pen(Color.FromArgb(40,70,90)))g.DrawLine(pen,x,y,x+w,y);
+          y+=8;
+          continue;
+        }
+        if(line.Length==0){y+=8;continue;}
+        Color c=IsFoot(line)?Mute:IsScore(line)?Score:Body;
+        var font=IsFoot(line)?footFont:IsScore(line)?valueFont:bodyFont;
+        if(IsStat(line)){
+          using(var fill=new SolidBrush(Row))g.FillRectangle(fill,new Rectangle(x-6,y-2,w+12,bodyFont.Height+6));
+          int eq=line.LastIndexOf('=');
+          if(eq>0){
+            string left=line.Substring(0,eq).TrimEnd();
+            string right=line.Substring(eq).Trim();
+            TextRenderer.DrawText(g,left,bodyFont,new Rectangle(x,y,w-88,bodyFont.Height+4),Body,TextFormatFlags.NoPadding|TextFormatFlags.EndEllipsis);
+            TextRenderer.DrawText(g,right,valueFont,new Rectangle(x+w-88,y,88,valueFont.Height+4),Value,TextFormatFlags.NoPadding|TextFormatFlags.Right);
+            y+=bodyFont.Height+8;
+            continue;
+          }
+        }
+        var flags=TextFormatFlags.WordBreak|TextFormatFlags.NoPadding|TextFormatFlags.TextBoxControl;
+        var sz=TextRenderer.MeasureText(line,font,new Size(w,int.MaxValue),flags);
+        TextRenderer.DrawText(g,line,font,new Rectangle(x,y,w,sz.Height),c,flags);
+        y+=sz.Height+4;
+      }
+    }
+    static GraphicsPath Round(Rectangle r,int radius){
+      var p=new GraphicsPath();int d=radius*2;
+      p.AddArc(r.X,r.Y,d,d,180,90);p.AddArc(r.Right-d,r.Y,d,d,270,90);p.AddArc(r.Right-d,r.Bottom-d,d,d,0,90);p.AddArc(r.X,r.Bottom-d,d,d,90,90);p.CloseFigure();return p;
+    }
+    protected override void Dispose(bool disposing){
+      if(disposing){titleFont.Dispose();bodyFont.Dispose();footFont.Dispose();valueFont.Dispose();}
+      base.Dispose(disposing);
+    }
+  }
   sealed partial class MainForm {
     string WorldBossDataFolder(){
 #if WORLD_BOSS_STABLE
@@ -52,8 +132,8 @@ namespace RuneManagerModern {
 #endif
     }
     WorldBossResult saleProtectionPlan;
-    readonly Timer detailDelay=new Timer{Interval=2000};
-    readonly ToolTip detailTip=new ToolTip{AutoPopDelay=30000,InitialDelay=2000,ReshowDelay=2000,ShowAlways=true};
+    readonly Timer detailDelay=new Timer{Interval=2000},explainHideDelay=new Timer{Interval=220},explainAutoPop=new Timer{Interval=30000};
+    readonly ExplainCard explainCard=new ExplainCard();
     int detailRow=-1,detailColumn=-1;
     void RefreshWorldBossSaleProtection(){
       var plan=worldBossLatest??saleProtectionPlan;if(plan==null)plan=saleProtectionPlan=LoadWorldBossPlan();
@@ -76,14 +156,40 @@ namespace RuneManagerModern {
       }
       if(loaded.Count>0)RuneEngine.ScoreRules=loaded;
     }
+    void HideExplainSoon(){explainHideDelay.Stop();explainHideDelay.Start();}
+    void HideExplainNow(){explainHideDelay.Stop();explainAutoPop.Stop();if(explainCard!=null)explainCard.Visible=false;}
+    void PlaceExplainCard(Point gridClient){
+      var screen=grid.PointToScreen(gridClient);
+      var local=PointToClient(screen);
+      int x=Math.Min(local.X,Math.Max(8,ClientSize.Width-explainCard.Width-12));
+      int y=local.Y+22;
+      if(y+explainCard.Height>ClientSize.Height-8)y=Math.Max(8,local.Y-explainCard.Height-8);
+      if(x<8)x=8;
+      explainCard.Location=new Point(x,y);
+      explainCard.BringToFront();
+      explainCard.Visible=true;
+    }
     void InstallRuneEnhancements(){
       if(File.Exists(PresetFactorsPath))foreach(var line in File.ReadAllLines(PresetFactorsPath)){var a=line.Split('\t');double v;if(a.Length==2&&double.TryParse(a[1],NumberStyles.Float,CultureInfo.InvariantCulture,out v)){var p=RuneEngine.Presets.FirstOrDefault(x=>x.Name==a[0]);if(p!=null)p.ScoreFactor=Math.Max(0,Math.Min(3,v));}}
       LoadScoreRules();
+      if(explainCard.Parent==null){Controls.Add(explainCard);explainCard.MouseEnter+=(s,e)=>explainHideDelay.Stop();explainCard.MouseLeave+=(s,e)=>HideExplainSoon();}
+      explainHideDelay.Tick+=(s,e)=>{explainHideDelay.Stop();if(explainCard.Visible&&explainCard.Bounds.Contains(PointToClient(Cursor.Position)))return;var gp=grid.PointToClient(Cursor.Position);var hit=grid.HitTest(gp.X,gp.Y);if(hit.RowIndex==detailRow&&(hit.ColumnIndex==9||hit.ColumnIndex==10))return;HideExplainNow();};
+      explainAutoPop.Tick+=(s,e)=>HideExplainNow();
       grid.ShowCellToolTips=false;
-      grid.CellMouseEnter+=(s,e)=>{detailDelay.Stop();detailTip.Hide(grid);detailRow=e.RowIndex;detailColumn=e.ColumnIndex;if(e.RowIndex>=0&&(e.ColumnIndex==9||e.ColumnIndex==10))detailDelay.Start();};
-      grid.CellMouseLeave+=(s,e)=>{detailDelay.Stop();detailTip.Hide(grid);};grid.Scroll+=(s,e)=>{detailDelay.Stop();detailTip.Hide(grid);};
-      detailDelay.Tick+=(s,e)=>{detailDelay.Stop();if(detailRow<0||detailRow>=grid.Rows.Count)return;var r=grid.Rows[detailRow].DataBoundItem as RuneRow;if(r==null)return;string t=detailColumn==9?RuneEngine.ExplainPotential(r):RuneEngine.ExplainGem(r);if(viewMode=="refinement")t=Loc.T("refine_tip_head",r.RefinementPotential.ToString("0.000"),r.RefinementGain.ToString("0.000"))+t;var pt=grid.PointToClient(Cursor.Position);detailTip.Show(t,grid,Math.Min(pt.X,Math.Max(0,grid.Width-650)),pt.Y+24,30000);};
-      FormClosed+=(s,e)=>{detailDelay.Dispose();detailTip.Dispose();};
+      grid.CellMouseEnter+=(s,e)=>{detailDelay.Stop();HideExplainSoon();detailRow=e.RowIndex;detailColumn=e.ColumnIndex;if(e.RowIndex>=0&&(e.ColumnIndex==9||e.ColumnIndex==10))detailDelay.Start();};
+      grid.CellMouseLeave+=(s,e)=>{detailDelay.Stop();HideExplainSoon();};
+      grid.Scroll+=(s,e)=>{detailDelay.Stop();HideExplainNow();};
+      detailDelay.Tick+=(s,e)=>{
+        detailDelay.Stop();
+        if(detailRow<0||detailRow>=grid.Rows.Count)return;
+        var r=grid.Rows[detailRow].DataBoundItem as RuneRow;if(r==null)return;
+        string t=detailColumn==9?RuneEngine.ExplainPotential(r):RuneEngine.ExplainGem(r);
+        if(viewMode=="refinement")t=Loc.T("refine_tip_head",r.RefinementPotential.ToString("0.000"),r.RefinementGain.ToString("0.000"))+t;
+        explainCard.SetText(t);
+        PlaceExplainCard(grid.PointToClient(Cursor.Position));
+        explainAutoPop.Stop();explainAutoPop.Start();
+      };
+      FormClosed+=(s,e)=>{detailDelay.Dispose();explainHideDelay.Dispose();explainAutoPop.Dispose();explainCard.Dispose();};
     }
     void ShowPresets(){using(var f=CreatePresetWindow())f.ShowDialog(this);}
     Form CreatePresetWindow(){
@@ -118,7 +224,7 @@ namespace RuneManagerModern {
     }
     // Bouton "Règles" : liste toutes les regles de bonus/malus pur (RuneEngine.ScoreRules),
     // appliquees une fois sur le Potential final (voir RuneEngine.RuleBonus), INDEPENDANTES
-    // du preset choisi. Les 2 regles Spd 23/25 (Will/Despair/Violent/Swift) sont marquees
+    // du preset choisi. Les 3 regles Spd 23/25/27 (Will/Despair/Violent/Swift) sont marquees
     // "Système" : modifiables (seuil/bonus/sets) mais pas supprimables. Jeremy peut ajouter
     // ses propres regles "Perso" (n'importe quelle stat, seuil et bonus), modifiables et
     // supprimables librement.

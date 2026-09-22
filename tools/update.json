@@ -1,15 +1,21 @@
 {
-  "build": 3,
-  "version": "2026.09.21",
-  "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/download/v3/Rune_Manager_Update.exe",
+  "build": 4,
+  "version": "1.0",
+  "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/download/v1.0/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Mise à jour automatique : Télécharger ferme l'appli, remplace le moteur, puis relance.",
-    "Classement SPD : colonnes SPD de base et SPD + meules.",
-    "Bouton Vérifier MAJ avec icône NEW."
+    "Version 1.0.",
+    "Assistant RTA pick/ban manuel : tes picks du tour se confirment tout seuls (1er pick inclus).",
+    "Picks adverses : clique un ?, puis l'icône du monstre — c'est posé tout de suite.",
+    "Synergie d'équipe (LuckSack + SWLens) et conseil ban en 5v5.",
+    "Plus de capture d'écran RTA.",
+    "Lien Twitch. Vérifier MAJ. Classement SPD."
   ],
   "notes_en": [
-    "Auto-update: Download closes the app, replaces the engine, then relaunches.",
-    "SPD ranking: Base SPD and SPD + grind columns.",
-    "Check Update button with NEW tag."
+    "Version 1.0.",
+    "Manual RTA pick/ban advisor: your picks for the current turn auto-confirm (including first pick).",
+    "Enemy picks: click ?, then the monster icon — it is placed immediately.",
+    "Team synergy (LuckSack + SWLens) and ban advice at 5v5.",
+    "RTA screen capture removed.",
+    "Twitch link. Check for updates. SPD ranking."
   ]
 }

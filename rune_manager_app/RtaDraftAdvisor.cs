@@ -103,31 +103,167 @@ namespace RuneManagerModern {
   }
   sealed class RtaAdvisorForm:Form {
     readonly string json,catalog,icons;readonly Icon appIcon;readonly Color Bg=Color.FromArgb(7,13,22),Panel=Color.FromArgb(15,25,39),Pink=Color.FromArgb(190,68,145),Cyan=Color.FromArgb(20,184,210);
-    readonly List<RtaMonster> ownPicks=new List<RtaMonster>(),enemyPicks=new List<RtaMonster>();List<RtaMonster> stats=new List<RtaMonster>();Dictionary<int,string> owned=new Dictionary<int,string>();readonly Dictionary<int,Dictionary<int,RtaPair>> pairs=new Dictionary<int,Dictionary<int,RtaPair>>();
-    readonly FlowLayoutPanel ours=new FlowLayoutPanel(),enemies=new FlowLayoutPanel();readonly BufferedGrid grid=new BufferedGrid();readonly Label phase=new Label(),state=new Label();readonly TextBox search=new TextBox();readonly ComboBox side=new ComboBox(),poolSize=new ComboBox();Button poolButton;readonly CountBadge poolBadge=new CountBadge();RtaPoolDiff poolDiff;List<RtaRecommendation> adviceAll=new List<RtaRecommendation>();string sortCol="Score";bool sortDesc=true;readonly Timer captureTimer=new Timer();bool loading,captureBusy;string pendingCapture="";int pendingCaptureCount;
-    public RtaAdvisorForm(string jsonPath,string catalogPath,Icon icon){json=jsonPath;catalog=catalogPath;icons=Path.GetDirectoryName(catalogPath);appIcon=icon;Text="Assistant Pick / Ban RTA";Icon=icon;BackColor=Bg;ForeColor=Color.White;Size=new Size(1680,860);MinimumSize=new Size(1200,700);StartPosition=FormStartPosition.CenterParent;Build();captureTimer.Interval=900;captureTimer.Tick+=(s,e)=>ScanDraft();Shown+=(s,e)=>LoadData();FormClosed+=(s,e)=>captureTimer.Stop();}
+    readonly List<RtaMonster> ownPicks=new List<RtaMonster>(),enemyPicks=new List<RtaMonster>();List<RtaMonster> stats=new List<RtaMonster>(),pickerAll=new List<RtaMonster>();Dictionary<int,string> owned=new Dictionary<int,string>();readonly Dictionary<int,Dictionary<int,RtaPair>> pairs=new Dictionary<int,Dictionary<int,RtaPair>>();
+    readonly FlowLayoutPanel ours=new FlowLayoutPanel(),enemies=new FlowLayoutPanel();readonly BufferedGrid grid=new BufferedGrid();readonly Label phase=new Label(),state=new Label();readonly ComboBox poolSize=new ComboBox();Button poolButton;readonly CountBadge poolBadge=new CountBadge();RtaPoolDiff poolDiff;List<RtaRecommendation> adviceAll=new List<RtaRecommendation>();string sortCol="Score";bool sortDesc=true;bool loading,draftLive;    readonly Dictionary<int,Image> iconCache=new Dictionary<int,Image>();readonly Dictionary<int,Control> pickerTiles=new Dictionary<int,Control>();readonly Dictionary<int,string> pickerFold=new Dictionary<int,string>();Panel pickerOverlay;Label pickerTitle;TextBox pickerBox;BufferedFlow pickerStrip;RtaMonster pickerChosen;HashSet<int> iconFiles;Timer pickerFilterTimer;int firstSide,holdOpenId,lastTurnKey=-1,lastSide,holdEnemyN=-1,pickerIndex,lastAutoEnemyN=-1;bool pickerMine,pickerCommitted,ignoreSlotClicks,skipAuto;List<RtaMonster> holdTurn;HashSet<int> poolIdCache;int poolIdCacheN=-1;
+    public RtaAdvisorForm(string jsonPath,string catalogPath,Icon icon){json=jsonPath;catalog=catalogPath;icons=Path.GetDirectoryName(catalogPath);appIcon=icon;Text="Assistant Pick / Ban RTA";Icon=icon;BackColor=Bg;ForeColor=Color.White;Size=new Size(1680,860);MinimumSize=new Size(1200,700);StartPosition=FormStartPosition.CenterParent;KeyPreview=true;KeyDown+=(s,e)=>{if(e.KeyCode==Keys.Escape&&pickerOverlay!=null&&pickerOverlay.Visible){e.Handled=true;ClosePicker();}};Build();Shown+=(s,e)=>{LoadData();};FormClosed+=(s,e)=>{if(pickerFilterTimer!=null)pickerFilterTimer.Stop();if(pickerOverlay!=null&&!pickerOverlay.IsDisposed)pickerOverlay.Dispose();};}
     Button B(string t,int w,Color c){return new Button{Text=t,Width=w,Height=32,FlatStyle=FlatStyle.Flat,BackColor=c,ForeColor=Color.White,Font=new Font("Segoe UI Semibold",9),Cursor=Cursors.Hand};}
     void Build(){
-      var head=new Panel{Dock=DockStyle.Top,Height=192,BackColor=Panel,Padding=new Padding(18,10,18,8)};Controls.Add(head);head.Controls.Add(new Label{Text="RTA  •  ASSISTANT PICK / BAN",AutoSize=true,Location=new Point(18,8),ForeColor=Color.FromArgb(255,82,180),Font=new Font("Segoe UI Semibold",20)});
-      phase.SetBounds(18,47,900,25);phase.ForeColor=Color.FromArgb(100,235,175);phase.Font=new Font("Segoe UI Semibold",11);head.Controls.Add(phase);state.SetBounds(18,72,1180,23);state.ForeColor=Color.Silver;head.Controls.Add(state);
+      var head=new Panel{Dock=DockStyle.Top,Height=192,BackColor=Panel,Padding=new Padding(18,10,18,8)};
+      head.Controls.Add(new Label{Text="RTA  •  ASSISTANT PICK / BAN",AutoSize=true,Location=new Point(18,8),ForeColor=Color.FromArgb(255,82,180),Font=new Font("Segoe UI Semibold",20)});
+      phase.SetBounds(18,47,1400,28);phase.ForeColor=Color.FromArgb(255,210,90);phase.Font=new Font("Segoe UI Semibold",12);head.Controls.Add(phase);state.SetBounds(18,76,1180,23);state.ForeColor=Color.Silver;head.Controls.Add(state);
       var ownLabel=new Label{Text="TES PICKS",Location=new Point(18,103),Size=new Size(120,22),ForeColor=Cyan,Font=new Font("Segoe UI Semibold",10)};var enemyLabel=new Label{Text="PICKS ADVERSES",Location=new Point(650,103),Size=new Size(160,22),ForeColor=Color.FromArgb(255,105,100),Font=new Font("Segoe UI Semibold",10)};head.Controls.Add(ownLabel);head.Controls.Add(enemyLabel);
       ours.SetBounds(135,99,490,66);ours.WrapContents=false;ours.BackColor=Bg;enemies.SetBounds(810,99,490,66);enemies.WrapContents=false;enemies.BackColor=Bg;head.Controls.Add(ours);head.Controls.Add(enemies);
-      var tools=new Panel{Dock=DockStyle.Top,Height=52,BackColor=Color.FromArgb(10,20,32),Padding=new Padding(18,9,18,7)};Controls.Add(tools);var capture=B("CADRER LE DRAFT",170,Cyan);capture.SetBounds(18,9,170,32);capture.Click+=(s,e)=>{captureTimer.Stop();if(!RtaDraftCapture.ChooseRegion(this).IsEmpty){state.Text="Capture du draft active • les picks se rempliront automatiquement";captureTimer.Start();ScanDraft();}};tools.Controls.Add(capture);var live=new Label{Text="● CAPTURE AUTO",Location=new Point(198,16),AutoSize=true,ForeColor=Color.FromArgb(70,225,145),Font=new Font("Segoe UI Semibold",9)};tools.Controls.Add(live);search.SetBounds(315,10,170,30);search.BackColor=Bg;search.ForeColor=Color.White;search.BorderStyle=BorderStyle.FixedSingle;search.TextChanged+=(s,e)=>RefreshAdvice();tools.Controls.Add(search);side.Items.AddRange(new object[]{"Ajouter à mes picks","Ajouter à l'adversaire"});side.SelectedIndex=0;var reset=B("NOUVEAU DRAFT",135,Pink);reset.SetBounds(495,9,135,32);reset.Click+=(s,e)=>{ownPicks.Clear();enemyPicks.Clear();LoadData();};tools.Controls.Add(reset);poolSize.DropDownStyle=ComboBoxStyle.DropDownList;poolSize.Items.AddRange(new object[]{10,20,30,40,50,60});poolSize.SetBounds(640,10,70,30);int savedPool=RtaBuildOptimizer.LoadPoolSize();poolSize.SelectedItem=poolSize.Items.Cast<object>().FirstOrDefault(x=>Convert.ToInt32(x)==savedPool)??20;poolSize.SelectedIndexChanged+=(s,e)=>{RtaBuildOptimizer.SavePoolSize(Convert.ToInt32(poolSize.SelectedItem));RefreshPoolBadge();RefreshAdvice();};tools.Controls.Add(poolSize);poolButton=B("POOL + BUILDS",188,Color.FromArgb(36,137,112));poolButton.SetBounds(720,9,188,32);poolButton.Padding=new Padding(8,0,8,0);poolButton.Click+=(s,e)=>OpenPool();tools.Controls.Add(poolButton);poolBadge.UseNewTag=false;poolBadge.SetBounds(4,2,28,28);poolBadge.Text="0";poolBadge.Visible=false;poolBadge.Font=new Font("Segoe UI Semibold",9f);poolBadge.BadgeColor=Color.FromArgb(255,170,40);poolBadge.Click+=(s,e)=>OpenPool();poolButton.Controls.Add(poolBadge);poolBadge.BringToFront();var resetPool=B("RESET RTA",115,Color.FromArgb(125,65,65));resetPool.SetBounds(918,9,115,32);resetPool.Click+=(s,e)=>{if(MessageBox.Show("Réinitialiser la sélection et les réglages RTA ?","RTA",MessageBoxButtons.YesNo,MessageBoxIcon.Question)!=DialogResult.Yes)return;RtaBuildOptimizer.ResetSettings();poolSize.SelectedItem=20;ownPicks.Clear();enemyPicks.Clear();RefreshAll();RefreshPoolBadge();state.Text="Réglages et monstres RTA réinitialisés";};tools.Controls.Add(resetPool);var refresh=B("MAJ META",140,Color.FromArgb(76,72,155));refresh.SetBounds(1043,9,140,32);refresh.Click+=(s,e)=>LoadData(true);tools.Controls.Add(refresh);
+      var tools=new Panel{Dock=DockStyle.Top,Height=52,BackColor=Color.FromArgb(10,20,32),Padding=new Padding(18,9,18,7)};
+      var first=B("J'AI LE 1ER PICK",155,Color.FromArgb(36,137,112));first.SetBounds(18,9,155,32);first.Click+=(s,e)=>StartDraft(1);tools.Controls.Add(first);
+      var enemy=B("L'ENNEMI COMMENCE",175,Color.FromArgb(160,70,70));enemy.SetBounds(180,9,175,32);enemy.Click+=(s,e)=>StartDraft(2);tools.Controls.Add(enemy);
+      var reset=B("NOUVEAU DRAFT",135,Pink);reset.SetBounds(365,9,135,32);reset.Click+=(s,e)=>{ownPicks.Clear();enemyPicks.Clear();firstSide=0;holdOpenId=0;lastTurnKey=-1;draftLive=false;skipAuto=false;lastAutoEnemyN=-1;ClearTurnHold();LoadData();};tools.Controls.Add(reset);
+      poolSize.DropDownStyle=ComboBoxStyle.DropDownList;poolSize.Items.AddRange(new object[]{10,20,30,40,50,60});poolSize.SetBounds(510,10,70,30);int savedPool=RtaBuildOptimizer.LoadPoolSize();poolSize.SelectedItem=poolSize.Items.Cast<object>().FirstOrDefault(x=>Convert.ToInt32(x)==savedPool)??20;poolSize.SelectedIndexChanged+=(s,e)=>{RtaBuildOptimizer.SavePoolSize(Convert.ToInt32(poolSize.SelectedItem));RefreshPoolBadge();RefreshAdvice();};tools.Controls.Add(poolSize);
+      poolButton=B("POOL + BUILDS",188,Color.FromArgb(36,137,112));poolButton.SetBounds(590,9,188,32);poolButton.Padding=new Padding(8,0,8,0);poolButton.Click+=(s,e)=>OpenPool();tools.Controls.Add(poolButton);poolBadge.UseNewTag=false;poolBadge.SetBounds(4,2,28,28);poolBadge.Text="0";poolBadge.Visible=false;poolBadge.Font=new Font("Segoe UI Semibold",9f);poolBadge.BadgeColor=Color.FromArgb(255,170,40);poolBadge.Click+=(s,e)=>OpenPool();poolButton.Controls.Add(poolBadge);poolBadge.BringToFront();
+      var resetPool=B("RESET RTA",115,Color.FromArgb(125,65,65));resetPool.SetBounds(788,9,115,32);resetPool.Click+=(s,e)=>{if(MessageBox.Show("Réinitialiser la sélection et les réglages RTA ?","RTA",MessageBoxButtons.YesNo,MessageBoxIcon.Question)!=DialogResult.Yes)return;RtaBuildOptimizer.ResetSettings();poolSize.SelectedItem=20;ownPicks.Clear();enemyPicks.Clear();firstSide=0;holdOpenId=0;lastTurnKey=-1;draftLive=false;skipAuto=false;lastAutoEnemyN=-1;ClearTurnHold();RefreshAll();RefreshPoolBadge();state.Text="Réglages et monstres RTA réinitialisés";};tools.Controls.Add(resetPool);
+      var refresh=B("MAJ META",140,Color.FromArgb(76,72,155));refresh.SetBounds(913,9,140,32);refresh.Click+=(s,e)=>LoadData(true);tools.Controls.Add(refresh);
       grid.Dock=DockStyle.Fill;grid.BackgroundColor=Bg;grid.BorderStyle=BorderStyle.None;grid.ReadOnly=true;grid.AllowUserToAddRows=false;grid.AllowUserToDeleteRows=false;grid.RowHeadersVisible=false;grid.SelectionMode=DataGridViewSelectionMode.FullRowSelect;grid.RowTemplate.Height=58;grid.AutoGenerateColumns=false;grid.EnableHeadersVisualStyles=false;grid.ColumnHeadersHeight=42;grid.ColumnHeadersDefaultCellStyle=new DataGridViewCellStyle{BackColor=Color.FromArgb(138,45,117),ForeColor=Color.White,Font=new Font("Segoe UI Semibold",10),SelectionBackColor=Color.FromArgb(138,45,117)};grid.DefaultCellStyle=new DataGridViewCellStyle{BackColor=Bg,ForeColor=Color.White,Font=new Font("Segoe UI",10),SelectionBackColor=Color.FromArgb(45,55,83),SelectionForeColor=Color.White};
       grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Rank",HeaderText="#",Width=40});grid.Columns.Add(new DataGridViewImageColumn{DataPropertyName="Icon",HeaderText="Monstre",Width=58,ImageLayout=DataGridViewImageCellLayout.Zoom});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Monster",HeaderText="Nom",Width=150});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="WinRate",HeaderText="WR",Width=70});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Pick",HeaderText="Pick",Width=70});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Ban",HeaderText="Ban",Width=70});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Lead",HeaderText="Lead",Width=70});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Games",HeaderText="Games",Width=80});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Sets",HeaderText="Sets SWLens",Width=300});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Subs",HeaderText="Top subs",Width=220});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Score",HeaderText="Indice",Width=80});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Conseil",HeaderText="Pourquoi",AutoSizeMode=DataGridViewAutoSizeColumnMode.Fill});foreach(DataGridViewColumn c in grid.Columns){string p=c.DataPropertyName;c.SortMode=(p=="WinRate"||p=="Pick"||p=="Ban"||p=="Lead"||p=="Games"||p=="Score")?DataGridViewColumnSortMode.Programmatic:DataGridViewColumnSortMode.NotSortable;if(c.SortMode==DataGridViewColumnSortMode.Programmatic)c.HeaderCell.ToolTipText="Clic : du meilleur au pire, reclic pour inverser";}
       grid.CellPainting+=(s,e)=>{if(e.RowIndex<0||e.ColumnIndex<0)return;if(grid.Columns[e.ColumnIndex].DataPropertyName!="Sets")return;var rec=grid.Rows[e.RowIndex].DataBoundItem as RtaRecommendation;RtaSetIcons.Paint(e,rec==null?Convert.ToString(e.FormattedValue):rec.Sets);};
+      grid.CellFormatting+=(s,e)=>{if(e.RowIndex!=0||!draftLive||!OurTurn())return;e.CellStyle.BackColor=Color.FromArgb(42,78,48);e.CellStyle.ForeColor=Color.FromArgb(255,214,96);e.CellStyle.SelectionBackColor=Color.FromArgb(55,98,60);e.CellStyle.SelectionForeColor=Color.FromArgb(255,230,140);};
       grid.ColumnHeaderMouseClick+=(s,e)=>{if(e.ColumnIndex<0)return;string p=grid.Columns[e.ColumnIndex].DataPropertyName;if(grid.Columns[e.ColumnIndex].SortMode!=DataGridViewColumnSortMode.Programmatic)return;if(sortCol==p)sortDesc=!sortDesc;else{sortCol=p;sortDesc=true;}ApplyAdviceSort();};
-      grid.CellDoubleClick+=(s,e)=>{if(e.RowIndex>=0)AddSelected();};Controls.Add(grid);grid.BringToFront();RenderSlots();SetPhase();
+      Controls.Add(grid);Controls.Add(tools);Controls.Add(head);
+      RenderSlots();SetPhase();
     }
-    void LoadData(bool live=false){if(loading)return;loading=true;state.Text=live?"Mise à jour meta RTA (LuckSack + SWLens)…":"Chargement des statistiques RTA (LuckSack) saison 38…";grid.DataSource=null;System.Threading.ThreadPool.QueueUserWorkItem(_=>{List<RtaMonster> loaded=null;Dictionary<int,string> roster=null;Exception error=null;string note=null;try{if(live)note=RtaMetaRefresh.Run(catalog);RtaBuildOptimizer.RtaMetaBuilds.EnsureLoaded(catalog);roster=RtaData.Owned(json,catalog);loaded=RtaData.LoadSeason(catalog);}catch(Exception ex){error=ex;}try{BeginInvoke((MethodInvoker)delegate{loading=false;if(error!=null){state.Text="Données RTA indisponibles : "+error.Message;return;}owned=roster;stats=loaded;state.Text=(note??(stats.Count+" monstres LuckSack S38 • top 300 pick + builds SWLens"))+" • "+owned.Count+" possédés • capture automatique prête";RefreshAll();RefreshPoolBadge();if(RtaDraftCapture.HasRegion){captureTimer.Start();ScanDraft();}else state.Text+=" • clique CADRER LE DRAFT une seule fois";});}catch{}});}
+    void StartDraft(int side){
+      firstSide=side;draftLive=true;if(ownPicks.Count==0)holdOpenId=0;lastTurnKey=-1;skipAuto=false;lastAutoEnemyN=-1;ClearTurnHold();
+      RefreshAll();
+      if(side==1)state.Text="Tes picks du tour se confirment tout seuls. Clique un pick pour l'enlever, ? pour un autre. Place les picks adverses à droite";
+      else state.Text="Place le pick adverse avec ?. Ensuite tes picks du tour se confirment tout seuls";
+    }
+    void LoadData(bool live=false){if(loading)return;loading=true;state.Text=live?"Mise à jour meta RTA (LuckSack + SWLens)…":"Chargement des statistiques RTA (LuckSack) saison 38…";grid.DataSource=null;System.Threading.ThreadPool.QueueUserWorkItem(_=>{List<RtaMonster> loaded=null;Dictionary<int,string> roster=null;Exception error=null;string note=null;try{if(live)note=RtaMetaRefresh.Run(catalog);RtaBuildOptimizer.RtaMetaBuilds.EnsureLoaded(catalog);roster=RtaData.Owned(json,catalog);loaded=RtaData.LoadSeason(catalog);}catch(Exception ex){error=ex;}try{BeginInvoke((MethodInvoker)delegate{loading=false;if(error!=null){state.Text="Données RTA indisponibles : "+error.Message;return;}owned=roster;stats=loaded;poolIdCache=null;poolIdCacheN=-1;LoadPickerList();state.Text=(note??(stats.Count+" monstres LuckSack S38 • top 300 pick + builds SWLens"))+" • "+owned.Count+" possédés • clique une case ? pour chercher un monstre";RefreshAll();RefreshPoolBadge();});}catch{}});}
+    void LoadPickerList(){
+      var list=new List<RtaMonster>();var seen=new HashSet<int>();
+      try{
+        var js=new JavaScriptSerializer{MaxJsonLength=int.MaxValue,RecursionLimit=256};
+        var arr=js.DeserializeObject(File.ReadAllText(catalog)) as object[];
+        if(arr!=null)foreach(var raw in arr){
+          var d=raw as Dictionary<string,object>;if(d==null)continue;
+          object idObj;if(!d.TryGetValue("id",out idObj))continue;
+          int id;if(!int.TryParse(Convert.ToString(idObj,CultureInfo.InvariantCulture),out id)||id<=0)continue;
+          object nameObj;string name;name=d.TryGetValue("name",out nameObj)?Convert.ToString(nameObj):("Monstre "+id);
+          if(string.IsNullOrEmpty(name))name="Monstre "+id;
+          var hit=stats.FirstOrDefault(x=>x.Id==id);
+          list.Add(hit??new RtaMonster{Id=id,Name=name});seen.Add(id);
+        }
+      }catch{}
+      foreach(var m in stats)if(m!=null&&m.Id>0&&!seen.Contains(m.Id)){list.Add(m);seen.Add(m.Id);}
+      pickerAll=list.OrderBy(x=>x.Name??"",StringComparer.OrdinalIgnoreCase).ToList();
+      pickerFold.Clear();foreach(var m in pickerAll)if(m!=null&&m.Id>0)pickerFold[m.Id]=Fold(m.Name);
+      pickerTiles.Clear();
+      if(pickerOverlay!=null&&!pickerOverlay.IsDisposed){pickerOverlay.Dispose();pickerOverlay=null;pickerStrip=null;pickerBox=null;pickerTitle=null;}
+    }
+    static string Fold(string s){
+      if(string.IsNullOrEmpty(s))return "";
+      string n=s.ToLowerInvariant().Normalize(NormalizationForm.FormD);
+      var sb=new StringBuilder(n.Length);
+      foreach(char c in n)if(CharUnicodeInfo.GetUnicodeCategory(c)!=UnicodeCategory.NonSpacingMark)sb.Append(c);
+      return sb.ToString();
+    }
+    static bool NameMatch(string name,string q){
+      string n=Fold(name);if(n.IndexOf(q)>=0)return true;
+      int i=0;foreach(char c in n){if(i<q.Length&&c==q[i])i++;}return i==q.Length;
+    }
+    static void BindClick(Control c,EventHandler h){c.Cursor=Cursors.Hand;c.Click+=h;foreach(Control x in c.Controls)BindClick(x,h);}
+    bool PickerMatch(RtaMonster m,string q){
+      if(m==null)return false;
+      string n;if(!pickerFold.TryGetValue(m.Id,out n))n=Fold(m.Name);
+      if(n.IndexOf(q)>=0)return true;
+      int i=0;foreach(char c in n){if(i<q.Length&&c==q[i])i++;}return i==q.Length;
+    }
+    Control PickerTile(RtaMonster m){
+      Control cached;if(pickerTiles.TryGetValue(m.Id,out cached))return cached;
+      var p=new Panel{Width=64,Height=80,Margin=new Padding(3),BackColor=Color.FromArgb(20,34,49),Cursor=Cursors.Hand,Tag=m};
+      var pic=new PictureBox{Image=IconFor(m.Id),Bounds=new Rectangle(8,4,48,48),SizeMode=PictureBoxSizeMode.Zoom,Enabled=false};
+      var nm=new Label{Text=m.Name??"",Bounds=new Rectangle(2,54,60,24),ForeColor=Color.Silver,Font=new Font("Segoe UI",7),TextAlign=ContentAlignment.TopCenter,AutoEllipsis=true,Enabled=false};
+      p.Controls.Add(pic);p.Controls.Add(nm);
+      RtaMonster pick=m;
+      p.Click+=(s,e)=>AcceptPicker(pick);
+      pickerTiles[m.Id]=p;return p;
+    }
+    void FillPicker(){
+      if(pickerStrip==null||pickerBox==null)return;
+      string q=Fold(pickerBox.Text.Trim());
+      IEnumerable<RtaMonster> src;
+      if(q.Length==0){var ranked=stats.OrderByDescending(x=>x.PickRate).ThenByDescending(x=>x.Played).Take(80).ToList();src=ranked.Count>0?(IEnumerable<RtaMonster>)ranked:pickerAll.Take(80);}
+      else src=pickerAll.Where(x=>PickerMatch(x,q));
+      pickerStrip.SuspendLayout();
+      pickerStrip.Controls.Clear();
+      int n=0;foreach(var m in src){if(m==null)continue;pickerStrip.Controls.Add(PickerTile(m));if(++n>=160)break;}
+      pickerStrip.ResumeLayout();
+    }
+    void EnsurePickerOverlay(){
+      if(pickerOverlay!=null&&!pickerOverlay.IsDisposed)return;
+      pickerTiles.Clear();
+      pickerOverlay=new Panel{Dock=DockStyle.Fill,Visible=false,BackColor=Bg};
+      var top=new Panel{Dock=DockStyle.Top,Height=80,BackColor=Color.FromArgb(10,20,32)};
+      pickerTitle=new Label{Text="Choisir un monstre",Location=new Point(12,8),Size=new Size(900,22),ForeColor=Color.Silver};
+      var close=B("FERMER",90,Pink);close.Anchor=AnchorStyles.Top|AnchorStyles.Right;
+      close.Click+=(s,e)=>ClosePicker();
+      pickerBox=new TextBox{Location=new Point(12,42),Size=new Size(900,28),Font=new Font("Segoe UI",12),BackColor=Bg,ForeColor=Color.White,BorderStyle=BorderStyle.FixedSingle,Anchor=AnchorStyles.Top|AnchorStyles.Left|AnchorStyles.Right};
+      top.Controls.Add(pickerTitle);top.Controls.Add(pickerBox);top.Controls.Add(close);
+      top.Layout+=(s,e)=>{close.Location=new Point(Math.Max(12,top.ClientSize.Width-close.Width-12),8);pickerBox.Width=Math.Max(120,top.ClientSize.Width-24);};
+      pickerStrip=new BufferedFlow{Dock=DockStyle.Fill,AutoScroll=true,WrapContents=true,BackColor=Bg,Padding=new Padding(8)};
+      if(pickerFilterTimer==null){pickerFilterTimer=new Timer{Interval=35};pickerFilterTimer.Tick+=(s,e)=>{pickerFilterTimer.Stop();FillPicker();};}
+      pickerBox.TextChanged+=(s,e)=>{pickerFilterTimer.Stop();pickerFilterTimer.Start();};
+      pickerBox.KeyDown+=(s,e)=>{
+        if(e.KeyCode==Keys.Escape){e.Handled=true;ClosePicker();return;}
+        if(e.KeyCode!=Keys.Enter||pickerStrip==null||pickerStrip.Controls.Count==0)return;
+        e.Handled=true;e.SuppressKeyPress=true;
+        var first=pickerStrip.Controls[0].Tag as RtaMonster;
+        if(first!=null)AcceptPicker(first);
+      };
+      pickerOverlay.Controls.Add(pickerStrip);pickerOverlay.Controls.Add(top);
+      Controls.Add(pickerOverlay);
+    }
+    void OpenMonsterPicker(string title){
+      pickerChosen=null;pickerCommitted=false;
+      EnsurePickerOverlay();
+      pickerTitle.Text=title+"  •  clique l'icône : le pick se place tout de suite";
+      pickerFilterTimer.Stop();
+      pickerBox.Text="";
+      pickerFilterTimer.Stop();
+      FillPicker();
+      pickerOverlay.Visible=true;
+      pickerOverlay.BringToFront();
+      pickerBox.Focus();
+    }
+    void ClosePicker(){if(pickerOverlay!=null)pickerOverlay.Visible=false;}
+    void AcceptPicker(RtaMonster m){
+      if(m==null||pickerCommitted)return;
+      pickerChosen=m;pickerCommitted=true;ignoreSlotClicks=true;
+      bool mine=pickerMine;int index=pickerIndex;
+      BeginInvoke((MethodInvoker)delegate{
+        try{ClosePicker();CommitPick(mine,index,m);}
+        finally{BeginInvoke((MethodInvoker)delegate{ignoreSlotClicks=false;});}
+      });
+    }
+    void CommitPick(bool mine,int index,RtaMonster picked){
+      if(picked==null)return;
+      var placed=Resolve(picked);
+      if(placed==null)return;
+      if(Taken(placed.Id)){state.Text=placed.Name+" est déjà pick";return;}
+      if(mine){if(index<ownPicks.Count)ownPicks[index]=placed;else if(ownPicks.Count<5)ownPicks.Add(placed);}
+      else{if(index<enemyPicks.Count)enemyPicks[index]=placed;else if(enemyPicks.Count<5)enemyPicks.Add(placed);}
+      lastSide=mine?1:2;draftLive=true;
+      if(mine&&holdTurn!=null&&!holdTurn.Any(x=>x.Id==placed.Id))ClearTurnHold();
+      RefreshAll();
+    }
+    void EnsureIconIndex(){
+      if(iconFiles!=null)return;
+      iconFiles=new HashSet<int>();
+      try{foreach(string f in Directory.GetFiles(icons,"*.png")){int id;if(int.TryParse(Path.GetFileNameWithoutExtension(f),out id))iconFiles.Add(id);}}catch{}
+    }
     void RefreshPoolBadge(){
       try{
         int n=poolSize.SelectedItem==null?RtaBuildOptimizer.LoadPoolSize():Convert.ToInt32(poolSize.SelectedItem);
         poolDiff=RtaPoolTracker.Diff(json,catalog,stats,n);
         int count=poolDiff==null?0:poolDiff.Count;
-        poolBadge.UseNewTag=false;
-        poolBadge.Text=count.ToString();
-        poolBadge.Visible=count>0;
+        poolBadge.UseNewTag=false;poolBadge.Text=count.ToString();poolBadge.Visible=count>0;
         poolButton.Padding=count>0?new Padding(30,0,8,0):new Padding(8,0,8,0);
         Color c=count>0?Color.FromArgb(218,70,62):Color.FromArgb(255,170,40);
         poolBadge.BadgeColor=c;poolButton.FlatAppearance.BorderColor=c;poolBadge.Invalidate();
@@ -144,32 +280,176 @@ namespace RuneManagerModern {
       }
       RtaBuildOptimizer.Show(this,json,catalog,stats,IconFor,n);
     }
-    void ScanDraft(){if(captureBusy||stats.Count==0)return;captureBusy=true;try{var frame=RtaDraftCapture.Scan(icons,stats);if(frame==null){state.Text="Capture RTA hors écran • clique CADRER LE DRAFT";captureTimer.Stop();return;}string signature=string.Join(",",frame.Ours)+"|"+string.Join(",",frame.Enemies);if(signature!=pendingCapture){pendingCapture=signature;pendingCaptureCount=1;return;}if(++pendingCaptureCount<2)return;var byId=stats.GroupBy(x=>x.Id).ToDictionary(g=>g.Key,g=>g.OrderByDescending(x=>x.Played).First());var nextOwn=frame.Ours.Where(owned.ContainsKey).Distinct().Where(byId.ContainsKey).Select(x=>byId[x]).Take(5).ToList();var nextEnemy=frame.Enemies.Distinct().Where(byId.ContainsKey).Select(x=>byId[x]).Take(5).ToList();if(nextOwn.Select(x=>x.Id).SequenceEqual(ownPicks.Select(x=>x.Id))&&nextEnemy.Select(x=>x.Id).SequenceEqual(enemyPicks.Select(x=>x.Id)))return;ownPicks.Clear();ownPicks.AddRange(nextOwn);enemyPicks.Clear();enemyPicks.AddRange(nextEnemy);state.Text="Draft lu automatiquement • "+ownPicks.Count+" pick(s) allié(s) • "+enemyPicks.Count+" adverse(s) • confiance "+(frame.Confidence*100).ToString("0")+" %";RefreshAll();}catch(Exception ex){state.Text="Capture RTA reportée : "+ex.Message;}finally{captureBusy=false;}}
-    // Comme WorldBossMonsterIcon/MonsterPicture (RuneManagerApp.cs) : si l'id exact n'a
-    // pas de portrait local, on cherche le fichier de la même famille (préfixe id/100 —
-    // formes éveillées/non-éveillées), MAIS filtré au même élément (dernier chiffre de
-    // l'id : 1 eau, 2 feu, 3 vent, 4 lumière, 5 ténèbres). Sans ce filtre, le "plus proche
-    // numériquement" pouvait être un AUTRE élément de la même famille (ex. Nine-tailed Fox
-    // Feu affichait l'icône Eau car 11211 est plus proche de 11202 que 11212). Mieux vaut
-    // le placeholder générique qu'une icône d'un mauvais élément affichée avec assurance.
     Image IconFor(int id){
-      string p=Path.Combine(icons,id+".png");
-      if(!File.Exists(p)){try{
-        string alt=Path.Combine(icons,(id+10)+".png");if(File.Exists(alt))p=alt;
-        else{alt=Path.Combine(icons,(id-10)+".png");if(File.Exists(alt))p=alt;
-        else{int element=id%10;p=null;if(element>=1&&element<=5){string prefix=(id/100).ToString();p=Directory.GetFiles(icons,prefix+"*.png").Where(f=>{int fid;return int.TryParse(Path.GetFileNameWithoutExtension(f),out fid)&&fid%10==element;}).OrderBy(f=>{int fid;int.TryParse(Path.GetFileNameWithoutExtension(f),out fid);return Math.Abs(fid-id);}).FirstOrDefault();}}}
-      }catch{p=null;}}
-      if(p!=null&&File.Exists(p))try{using(var f=new FileStream(p,FileMode.Open,FileAccess.Read,FileShare.ReadWrite))using(var img=Image.FromStream(f))return new Bitmap(img,new Size(48,48));}catch{}
+      Image cached;if(iconCache.TryGetValue(id,out cached))return cached;
+      EnsureIconIndex();
+      int fileId=id;
+      if(!iconFiles.Contains(fileId)){if(iconFiles.Contains(id+10))fileId=id+10;else if(iconFiles.Contains(id-10))fileId=id-10;else fileId=0;}
+      if(fileId>0){string p=Path.Combine(icons,fileId+".png");try{using(var f=new FileStream(p,FileMode.Open,FileAccess.Read,FileShare.ReadWrite))using(var img=Image.FromStream(f)){var bmp=new Bitmap(img,new Size(48,48));iconCache[id]=bmp;return bmp;}}catch{}}
       var b=new Bitmap(48,48);using(var g=Graphics.FromImage(b)){g.SmoothingMode=System.Drawing.Drawing2D.SmoothingMode.AntiAlias;using(var bg=new SolidBrush(Color.FromArgb(30,40,52)))g.FillRectangle(bg,0,0,48,48);using(var fill=new SolidBrush(Color.FromArgb(90,105,120)))g.FillEllipse(fill,4,4,40,40);using(var pen=new Pen(Color.FromArgb(150,165,180),1.5f))g.DrawEllipse(pen,4,4,40,40);}
-      return b;
+      iconCache[id]=b;return b;
     }
-    void RenderSlots(){ours.Controls.Clear();enemies.Controls.Clear();for(int i=0;i<5;i++){ours.Controls.Add(Slot(i<ownPicks.Count?ownPicks[i]:null,true));enemies.Controls.Add(Slot(i<enemyPicks.Count?enemyPicks[i]:null,false));}}
-    Control Slot(RtaMonster m,bool mine){var p=new Panel{Width=90,Height=58,Margin=new Padding(3),BackColor=Color.FromArgb(20,34,49)};if(m==null){p.Controls.Add(new Label{Text="?",Dock=DockStyle.Fill,TextAlign=ContentAlignment.MiddleCenter,ForeColor=Color.DimGray,Font=new Font("Segoe UI",20)});return p;}var pic=new PictureBox{Image=IconFor(m.Id),Location=new Point(2,2),Size=new Size(48,48),SizeMode=PictureBoxSizeMode.Zoom};var name=new Label{Text=m.Name,Location=new Point(51,3),Size=new Size(37,48),ForeColor=mine?Color.FromArgb(95,220,255):Color.FromArgb(255,120,115),Font=new Font("Segoe UI",7),AutoEllipsis=true};p.Controls.Add(pic);p.Controls.Add(name);p.Tag=m;p.Cursor=Cursors.Hand;p.Click+=(s,e)=>{if(mine)ownPicks.Remove(m);else enemyPicks.Remove(m);RefreshAll();};return p;}
-    void SetPhase(){int total=ownPicks.Count+enemyPicks.Count;if(ownPicks.Count>=5&&enemyPicks.Count>=5)phase.Text="PHASE BAN  •  le premier conseil indique la cible à bannir";else if(total==0)phase.Text="PREMIER PICK  •  priorité à un monstre fort, flexible et souvent leader";else phase.Text="PROCHAIN PICK  •  adapté à tes picks et aux menaces adverses";}
-    void EnsurePairs(IEnumerable<RtaMonster> monsters){foreach(var m in monsters.Where(x=>x!=null&&!pairs.ContainsKey(x.Id)).Take(6)){try{pairs[m.Id]=RtaData.LoadPairs(m.Id);}catch{pairs[m.Id]=new Dictionary<int,RtaPair>();}}}
+    void RenderSlots(){
+      ours.Controls.Clear();enemies.Controls.Clear();
+      var recos=OurTurn()?SuggestedOurs():new List<RtaMonster>();
+      for(int i=0;i<5;i++){
+        if(i<ownPicks.Count)ours.Controls.Add(Slot(ownPicks[i],true,false,i));
+        else if(i-ownPicks.Count<recos.Count)ours.Controls.Add(Slot(recos[i-ownPicks.Count],true,true,i));
+        else ours.Controls.Add(Slot(null,true,false,i));
+        enemies.Controls.Add(Slot(i<enemyPicks.Count?enemyPicks[i]:null,false,false,i));
+      }
+    }
+    List<RtaMonster> SuggestedOurs(){
+      var list=new List<RtaMonster>();
+      if(!draftLive||adviceAll==null||adviceAll.Count==0||ownPicks.Count>=5)return list;
+      if(firstSide==0||!OurTurn())return list;
+      var takenId=new HashSet<int>(ownPicks.Concat(enemyPicks).Select(p=>p.Id).Where(id=>id>0));
+      var takenName=new HashSet<string>(ownPicks.Concat(enemyPicks).Select(p=>p.Name??"").Where(nm=>nm.Length>0&&nm!="pick"),StringComparer.OrdinalIgnoreCase);
+      int n=PicksThisTurn();
+      if(n<=0)return list;
+      if(holdTurn!=null&&holdEnemyN==enemyPicks.Count){
+        foreach(var m in holdTurn){
+          if(m==null||takenId.Contains(m.Id)||takenName.Contains(m.Name??""))continue;
+          list.Add(m);
+          if(list.Count>=n)break;
+        }
+        if(list.Count>0)return list;
+      }
+      if(firstSide==1&&ownPicks.Count==0){
+        RtaMonster locked=null;
+        foreach(var rec in adviceAll.OrderByDescending(x=>x.ScoreValue)){
+          if(rec==null||rec.Source==null)continue;
+          if(holdOpenId==0){holdOpenId=rec.Source.Id;locked=rec.Source;break;}
+          if(rec.Source.Id==holdOpenId||(rec.Source.Id/100==holdOpenId/100&&rec.Source.Id%10==holdOpenId%10)){locked=rec.Source;break;}
+        }
+        if(locked!=null)list.Add(locked);
+        holdTurn=list;holdEnemyN=enemyPicks.Count;
+        return list;
+      }
+      list=PickCombo(n,takenId,takenName);
+      holdTurn=list;holdEnemyN=enemyPicks.Count;
+      return list;
+    }
+    List<RtaMonster> PickCombo(int n,HashSet<int> takenId,HashSet<string> takenName){
+      var pool=new List<RtaMonster>();
+      foreach(var rec in adviceAll.OrderByDescending(x=>x.ScoreValue)){
+        if(rec==null||rec.Source==null)continue;
+        var m=rec.Source;
+        if(takenId.Contains(m.Id)||takenName.Contains(m.Name??""))continue;
+        if(ownPicks.Concat(enemyPicks).Any(p=>p.Id>0&&m.Id>0&&p.Id/100==m.Id/100&&p.Id%10==m.Id%10))continue;
+        pool.Add(m);if(pool.Count>=20)break;
+      }
+      if(n<=1||pool.Count<=1)return pool.Take(Math.Max(0,n)).ToList();
+      double best=-1e9;int ia=-1,ib=-1;
+      for(int i=0;i<pool.Count;i++)for(int j=i+1;j<pool.Count;j++){
+        double s=SoloScore(pool[i])+SoloScore(pool[j])+TogetherScore(pool[i],pool[j])*1.6+TeamFit(pool[i])+TeamFit(pool[j]);
+        if(s>best){best=s;ia=i;ib=j;}
+      }
+      var pair=new List<RtaMonster>();
+      if(ia<0)return pool.Take(n).ToList();
+      if(SoloScore(pool[ia])>=SoloScore(pool[ib])){pair.Add(pool[ia]);pair.Add(pool[ib]);}
+      else{pair.Add(pool[ib]);pair.Add(pool[ia]);}
+      return pair;
+    }
+    double SoloScore(RtaMonster m){
+      if(m==null||adviceAll==null)return 0;
+      foreach(var rec in adviceAll)if(rec!=null&&rec.Source!=null&&rec.Source.Id==m.Id)return rec.ScoreValue;
+      return 0;
+    }
+    double TeamFit(RtaMonster m){
+      if(m==null||ownPicks.Count==0)return 0;
+      double t=0;foreach(var ally in ownPicks)t+=TogetherScore(m,ally)*2.2;
+      return t;
+    }
+    void ClearTurnHold(){holdTurn=null;holdEnemyN=-1;}
+    Control Slot(RtaMonster m,bool mine,bool suggested,int index){
+      var p=new Panel{Width=90,Height=58,Margin=new Padding(3),BackColor=suggested?Color.FromArgb(42,58,22):Color.FromArgb(20,34,49)};
+      if(m==null){
+        p.Controls.Add(new Label{Text="?",Dock=DockStyle.Fill,TextAlign=ContentAlignment.MiddleCenter,ForeColor=Color.DimGray,Font=new Font("Segoe UI",20)});
+        BindClick(p,(s,e)=>PlaceOnSlot(mine,index,false,null));
+        return p;
+      }
+      var pic=new PictureBox{Image=IconFor(m.Id),Location=new Point(2,2),Size=new Size(48,48),SizeMode=PictureBoxSizeMode.Zoom};
+      string label=suggested?"conseil":(string.IsNullOrEmpty(m.Name)?"?":m.Name);
+      if(suggested&&!string.IsNullOrEmpty(m.Name))label=m.Name;
+      var name=new Label{Text=label,Location=new Point(51,3),Size=new Size(37,48),ForeColor=suggested?Color.FromArgb(255,214,96):(mine?Color.FromArgb(95,220,255):Color.FromArgb(255,120,115)),Font=new Font("Segoe UI",7),AutoEllipsis=true};
+      p.Controls.Add(pic);p.Controls.Add(name);
+      BindClick(p,(s,e)=>PlaceOnSlot(mine,index,suggested,m));
+      return p;
+    }
+    void PlaceOnSlot(bool mine,int index,bool suggested,RtaMonster current){
+      if(ignoreSlotClicks||(pickerOverlay!=null&&pickerOverlay.Visible))return;
+      if(current!=null&&!suggested){
+        skipAuto=true;
+        if(mine)ownPicks.Remove(current);else enemyPicks.Remove(current);
+        RefreshAll();return;
+      }
+      if(suggested&&current!=null){CommitPick(mine,index,current);return;}
+      pickerMine=mine;pickerIndex=index;pickerCommitted=false;
+      OpenMonsterPicker(mine?"Choisir un de tes picks":"Choisir un pick adverse");
+    }
+    RtaMonster Resolve(RtaMonster m){
+      if(m==null)return null;
+      var hit=stats.FirstOrDefault(x=>x.Id==m.Id);
+      return hit??m;
+    }
+    bool Taken(int id){return ownPicks.Any(x=>x.Id==id)||enemyPicks.Any(x=>x.Id==id);}
+    void RememberFirstPick(){if(firstSide!=0)return;if(ownPicks.Count==1&&enemyPicks.Count==0)firstSide=1;else if(ownPicks.Count==0&&enemyPicks.Count==1)firstSide=2;}
+    int PoolN(){return poolSize.SelectedItem==null?RtaBuildOptimizer.LoadPoolSize():Convert.ToInt32(poolSize.SelectedItem);}
+    HashSet<int> CurrentPoolIds(){
+      int n=PoolN();
+      if(poolIdCache!=null&&poolIdCacheN==n)return poolIdCache;
+      poolIdCache=stats.Count==0?new HashSet<int>():RtaPoolTracker.PickableIds(json,catalog,stats,n);
+      poolIdCacheN=n;
+      return poolIdCache;
+    }
+    string BestNames(int n){
+      if(holdTurn!=null&&holdTurn.Count>0&&OurTurn()){
+        var left=holdTurn.Where(m=>m!=null&&!ownPicks.Any(p=>p.Id==m.Id)).Take(Math.Max(1,n)).Select(x=>x.Name).ToArray();
+        if(left.Length>0)return string.Join("  +  ",left);
+      }
+      if(adviceAll==null||adviceAll.Count==0)return "—";return string.Join("  +  ",adviceAll.OrderByDescending(x=>x.ScoreValue).Take(Math.Max(1,n)).Select(x=>x.Monster).ToArray());
+    }
+    bool OurTurn(){
+      int a=ownPicks.Count,b=enemyPicks.Count;
+      if(a>=5&&b>=5)return false;
+      if(firstSide==1){if(b==0)return a==0;if(b==2)return a<3;if(b==4)return a<5;return false;}
+      if(firstSide==2){if(b==1)return a<2;if(b==3)return a<4;if(b==5)return a<5;return false;}
+      return a==0&&b==0;
+    }
+    int PicksThisTurn(){
+      int a=ownPicks.Count;
+      if(firstSide==1){if(a==0)return 1;if(a<3)return 3-a;return Math.Max(1,5-a);}
+      if(firstSide==2){if(a<2)return 2-a;if(a<4)return 4-a;return Math.Max(1,5-a);}
+      return 1;
+    }
+    void SetPhase(){
+      RememberFirstPick();
+      int a=ownPicks.Count,b=enemyPicks.Count,n=PoolN();
+      if(firstSide==0&&a==0&&b==0){phase.Text="Choisis J'AI LE 1ER PICK pour voir le conseil, ou L'ENNEMI COMMENCE puis place son pick";phase.ForeColor=Color.Silver;return;}
+      if(a>=5&&b>=5){phase.Text="PHASE BAN  •  bannis : "+BestNames(1);phase.ForeColor=Pink;return;}
+      if(firstSide==1&&a==0){phase.Text="TU AS LE 1ER PICK  •  conseil : "+BestNames(1);phase.ForeColor=Color.FromArgb(120,235,160);return;}
+      if(firstSide==2&&b==0){phase.Text="L'ENNEMI A LE 1ER PICK  •  place son pick dans PICKS ADVERSES";phase.ForeColor=Color.FromArgb(255,170,80);return;}
+      if(firstSide==2&&a==0){phase.Text="CONTRE SON PICK  •  tes "+PicksThisTurn()+" meilleurs : "+BestNames(PicksThisTurn());phase.ForeColor=Color.FromArgb(120,235,160);return;}
+      if(firstSide==1&&a>=1&&b==0){phase.Text="TU AS LE 1ER PICK  •  attends ses 2 picks, place-les à droite";phase.ForeColor=Cyan;return;}
+      if(!OurTurn()){phase.Text="TOUR ADVERSE  •  place ses picks à droite, le conseil sera recalculé après";phase.ForeColor=Color.FromArgb(255,140,130);return;}
+      int take=PicksThisTurn();
+      phase.Text=(take==1?"TON PICK":"TES "+take+" PICKS")+"  •  pool "+n+" : "+BestNames(take);phase.ForeColor=Color.FromArgb(120,235,160);
+    }
+    void EnsurePairs(IEnumerable<RtaMonster> monsters){foreach(var m in monsters.Where(x=>x!=null&&!pairs.ContainsKey(x.Id)).Take(12)){try{pairs[m.Id]=RtaData.LoadPairs(m.Id);}catch{pairs[m.Id]=new Dictionary<int,RtaPair>();}}}
     double PairValue(int a,int b,bool together,out int sample){sample=0;Dictionary<int,RtaPair> map;RtaPair p;if(!pairs.TryGetValue(a,out map)){try{map=RtaData.LoadPairs(a);}catch{map=new Dictionary<int,RtaPair>();}pairs[a]=map;}if(!map.TryGetValue(b,out p))return .5;sample=together?p.Together:p.Against;return together?p.WinTogether:p.WinAgainst;}
-    void RefreshAdvice(){if(stats.Count==0)return;EnsurePairs(ownPicks.Concat(enemyPicks));bool ban=ownPicks.Count>=5&&enemyPicks.Count>=5;var used=new HashSet<int>(ownPicks.Concat(enemyPicks).Select(x=>x.Id));bool enteringEnemy=side.SelectedIndex==1&&!ban;int poolN=poolSize.SelectedItem==null?RtaBuildOptimizer.LoadPoolSize():Convert.ToInt32(poolSize.SelectedItem);var poolIds=RtaPoolTracker.PickableIds(json,catalog,stats,poolN);if(poolIds.Count==0)poolIds=new HashSet<int>(owned.Keys);IEnumerable<RtaMonster> candidates=ban?enemyPicks:(enteringEnemy?stats.Where(x=>!used.Contains(x.Id)&&x.Played>=1):stats.Where(x=>poolIds.Contains(x.Id)&&!used.Contains(x.Id)));string find=search.Text.Trim();if(find.Length>0)candidates=candidates.Where(x=>x.Name.IndexOf(find,StringComparison.OrdinalIgnoreCase)>=0);var rows=new List<Tuple<RtaMonster,double,string>>();foreach(var m in candidates){double score=m.WinRate*100,synergy=0,counter=0;int syN=0,coN=0;foreach(var ally in ownPicks){int n;double w=PairValue(m.Id,ally.Id,true,out n);if(n>=20){synergy+=(w-.5)*100*Math.Min(1,n/300.0);syN++;}}foreach(var foe in enemyPicks){int n;double w=PairValue(m.Id,foe.Id,false,out n);if(n>=20){counter+=(w-.5)*100*Math.Min(1,n/300.0);coN++;}}if(syN>0)score+=synergy/syN*.70;if(coN>0)score+=counter/coN*1.10;score+=Math.Min(3,Math.Log10(Math.Max(1,m.Played))*.55)+m.BanRate*5;bool leaderNeeded=ownPicks.Count==0||ownPicks.Max(x=>x.LeadRate)<.25;if(leaderNeeded)score+=m.LeadRate*8+m.PickRate*2;else score+=m.LeadRate*2;if(ban)score=m.BanRate*35+m.WinRate*20-counter/Math.Max(1,coN);string why=ban?"Menace : ban "+(m.BanRate*100).ToString("0.0")+" %, force globale et matchups contre ton équipe":enteringEnemy?"Sélection du pick adverse":coN>0?"Contre les picks adverses • "+coN+" matchup(s) fiable(s)":syN>0?"Bonne synergie avec ton équipe":"Choix global solide et flexible";rows.Add(Tuple.Create(m,score,why));}
-      var view=rows.Select((x,i)=>{var m=x.Item1;var meta=RtaBuildOptimizer.RtaMetaBuilds.ForId(m.Id)??RtaBuildOptimizer.RtaMetaBuilds.For(m.Name);return new RtaRecommendation{Rank=i+1,Icon=IconFor(m.Id),Monster=m.Name,WinRate=(m.WinRate*100).ToString("0.00")+" %",Pick=(m.PickRate*100).ToString("0.00")+" %",Ban=(m.BanRate*100).ToString("0.00")+" %",Lead=(m.LeadRate*100).ToString("0")+" %",Games=m.Played.ToString("N0"),Sets=meta!=null?meta.SetsText(2):"—",Subs=meta!=null&&!string.IsNullOrEmpty(meta.SubsText)?meta.SubsText:(meta!=null&&meta.Focus!=null?string.Join(" > ",meta.Focus):"—"),Score=x.Item2.ToString("0.0"),ScoreValue=x.Item2,Conseil=x.Item3+(m.LeadRate>=.25?" • leader "+(m.LeadRate*100).ToString("0")+" %":"")+(meta!=null&&!string.IsNullOrEmpty(meta.SynergyText)?" • duo "+meta.SynergyText:"")+(meta!=null&&!string.IsNullOrEmpty(meta.SlotMains)?" • "+meta.SlotMains:""),Source=m};}).ToList();adviceAll=view;ApplyAdviceSort();}
+    double TogetherScore(RtaMonster a,RtaMonster b){
+      if(a==null||b==null||a.Id==b.Id)return 0;
+      int n;double w=PairValue(a.Id,b.Id,true,out n);
+      if(n<20){int n2;double w2=PairValue(b.Id,a.Id,true,out n2);if(n2>n){n=n2;w=w2;}}
+      double luck=n>=20?(w-.5)*100*Math.Min(1,n/300.0):0;
+      double togetherFreq=n>=80?Math.Min(7,Math.Log10(n)*2.2):0;
+      int sw=RtaBuildOptimizer.RtaMetaBuilds.SynCount(a.Id,a.Name,b.Id,b.Name);
+      double freq=sw>=200?Math.Min(8,Math.Log10(sw)*2.0):0;
+      return luck+togetherFreq+freq;
+    }
+    void RefreshAdvice(){if(stats.Count==0)return;EnsurePairs(ownPicks.Concat(enemyPicks));bool ban=ownPicks.Count>=5&&enemyPicks.Count>=5;var used=new HashSet<int>(ownPicks.Concat(enemyPicks).Select(x=>x.Id).Where(id=>id>0));var usedNames=new HashSet<string>(ownPicks.Concat(enemyPicks).Select(x=>x.Name??"").Where(nm=>nm.Length>0&&nm!="pick"&&!nm.StartsWith("#")),StringComparer.OrdinalIgnoreCase);var usedFam=new HashSet<int>(ownPicks.Concat(enemyPicks).Where(x=>x.Id>0).Select(x=>(x.Id/100)*10+(x.Id%10)));int poolN=poolSize.SelectedItem==null?RtaBuildOptimizer.LoadPoolSize():Convert.ToInt32(poolSize.SelectedItem);var poolIds=RtaPoolTracker.PickableIds(json,catalog,stats,poolN);if(poolIds.Count==0)poolIds=new HashSet<int>(owned.Keys);IEnumerable<RtaMonster> candidates=ban?enemyPicks:stats.Where(x=>poolIds.Contains(x.Id)&&!used.Contains(x.Id)&&!usedNames.Contains(x.Name)&&!usedFam.Contains((x.Id/100)*10+(x.Id%10)));var candList=candidates.ToList();if(!ban&&candList.Count==0)candList=stats.Where(x=>owned.ContainsKey(x.Id)&&!used.Contains(x.Id)&&!usedNames.Contains(x.Name)&&!usedFam.Contains((x.Id/100)*10+(x.Id%10))).ToList();candidates=candList;var rows=new List<Tuple<RtaMonster,double,string>>();foreach(var m in candidates){double score=m.WinRate*100,synergy=0,counter=0;int syN=0,coN=0;foreach(var ally in ownPicks){synergy+=TogetherScore(m,ally);syN++;}foreach(var foe in enemyPicks){int n;double w=PairValue(m.Id,foe.Id,false,out n);if(n>=20){counter+=(w-.5)*100*Math.Min(1,n/300.0);coN++;}}if(syN>0)score+=synergy*1.35;if(coN>0)score+=counter/coN*1.10;score+=Math.Min(3,Math.Log10(Math.Max(1,m.Played))*.55)+m.BanRate*5;bool leaderNeeded=ownPicks.Count==0||ownPicks.Max(x=>x.LeadRate)<.25;if(leaderNeeded)score+=m.LeadRate*8+m.PickRate*2;else score+=m.LeadRate*2;double glue=0;int gN=0;if(ban){foreach(var other in enemyPicks)if(other.Id!=m.Id){glue+=TogetherScore(m,other);gN++;}score=m.BanRate*35+m.WinRate*20-counter/Math.Max(1,coN)+(gN>0?glue/gN*1.2:0);}string with=string.Join(", ",ownPicks.Where(ally=>TogetherScore(m,ally)>1).Select(ally=>ally.Name).ToArray());string why=ban?(gN>0&&glue>0?"Ban le lien de leur équipe • ":"Menace : ")+"ban "+(m.BanRate*100).ToString("0.0")+" %, force globale et matchups contre ton équipe":with.Length>0?"Synergie avec "+with:coN>0?"Contre les picks adverses • "+coN+" matchup(s) fiable(s)":"Choix global solide et flexible";rows.Add(Tuple.Create(m,score,why));}
+      var view=rows.OrderByDescending(x=>x.Item2).ThenByDescending(x=>x.Item1.Played).Select((x,i)=>{var m=x.Item1;var meta=RtaBuildOptimizer.RtaMetaBuilds.ForId(m.Id)??RtaBuildOptimizer.RtaMetaBuilds.For(m.Name);return new RtaRecommendation{Rank=i+1,Icon=IconFor(m.Id),Monster=m.Name,WinRate=(m.WinRate*100).ToString("0.00")+" %",Pick=(m.PickRate*100).ToString("0.00")+" %",Ban=(m.BanRate*100).ToString("0.00")+" %",Lead=(m.LeadRate*100).ToString("0")+" %",Games=m.Played.ToString("N0"),Sets=meta!=null?meta.SetsText(2):"—",Subs=meta!=null&&!string.IsNullOrEmpty(meta.SubsText)?meta.SubsText:(meta!=null&&meta.Focus!=null?string.Join(" > ",meta.Focus):"—"),Score=x.Item2.ToString("0.0"),ScoreValue=x.Item2,Conseil=x.Item3+(m.LeadRate>=.25?" • leader "+(m.LeadRate*100).ToString("0")+" %":"")+(meta!=null&&!string.IsNullOrEmpty(meta.SynergyText)?" • duo "+meta.SynergyText:"")+(meta!=null&&!string.IsNullOrEmpty(meta.SlotMains)?" • "+meta.SlotMains:""),Source=m};}).ToList();adviceAll=view;ApplyAdviceSort();}
     void ApplyAdviceSort(){
       if(adviceAll==null||adviceAll.Count==0){grid.DataSource=null;return;}
       Func<RtaRecommendation,double> key=x=>{
@@ -187,14 +467,36 @@ namespace RuneManagerModern {
       foreach(DataGridViewColumn c in grid.Columns)c.HeaderCell.SortGlyphDirection=SortOrder.None;
       foreach(DataGridViewColumn c in grid.Columns)if(c.DataPropertyName==sortCol)c.HeaderCell.SortGlyphDirection=sortDesc?SortOrder.Descending:SortOrder.Ascending;
     }
-    // Ajoute le meilleur combo de sets + priorité de sous-stats connus (swlens.io RTA BUILDS)
-    // quand on a la donnée pour ce monstre, pour répondre à la demande de Jeremy d'afficher
-    // aussi les meilleurs sets/sub stats directement dans l'assistant pick/ban, pas seulement
-    // dans POOL + BUILDS.
     static string BuildHint(string name){var meta=RtaBuildOptimizer.RtaMetaBuilds.For(name);if(meta==null)return "";return " • SWLens : "+meta.SetsText(2)+" • subs "+string.Join("/",meta.Focus);}
-    void RefreshAll(){RenderSlots();SetPhase();RefreshAdvice();}
-    RtaRecommendation Selected(){return grid.CurrentRow==null?null:grid.CurrentRow.DataBoundItem as RtaRecommendation;}
-    void AddSelected(){var r=Selected();if(r==null)return;if(side.SelectedIndex==0){if(ownPicks.Count<5&&!ownPicks.Any(x=>x.Id==r.Source.Id)&&!enemyPicks.Any(x=>x.Id==r.Source.Id))ownPicks.Add(r.Source);}else{if(enemyPicks.Count<5&&!ownPicks.Any(x=>x.Id==r.Source.Id)&&!enemyPicks.Any(x=>x.Id==r.Source.Id))enemyPicks.Add(r.Source);}RefreshAll();}
-    void Undo(){if(side.SelectedIndex==0&&ownPicks.Count>0)ownPicks.RemoveAt(ownPicks.Count-1);else if(side.SelectedIndex==1&&enemyPicks.Count>0)enemyPicks.RemoveAt(enemyPicks.Count-1);RefreshAll();}
+    int TurnKey(){return firstSide*1000+ownPicks.Count*20+enemyPicks.Count*2+(OurTurn()?1:0);}
+    void AutoCommitTurn(){
+      if(!draftLive||firstSide==0||ownPicks.Count>=5||!OurTurn())return;
+      if(enemyPicks.Count!=lastAutoEnemyN){skipAuto=false;lastAutoEnemyN=enemyPicks.Count;}
+      if(skipAuto)return;
+      int n=PicksThisTurn();
+      if(n<=0)return;
+      foreach(var m in SuggestedOurs()){
+        if(n<=0||ownPicks.Count>=5)break;
+        if(m==null)continue;
+        var placed=Resolve(m);
+        if(placed==null||Taken(placed.Id))continue;
+        ownPicks.Add(placed);n--;lastSide=1;
+      }
+    }
+    void RefreshAll(){
+      int key=TurnKey();
+      bool opening=draftLive&&firstSide==1&&ownPicks.Count==0&&OurTurn();
+      bool waiting=draftLive&&firstSide!=0&&!OurTurn();
+      if(!(opening&&holdOpenId!=0&&adviceAll!=null&&adviceAll.Count>0)&&!(waiting&&lastTurnKey==key&&adviceAll!=null&&adviceAll.Count>0)){
+        RefreshAdvice();
+        lastTurnKey=key;
+      }
+      int before=ownPicks.Count;
+      AutoCommitTurn();
+      if(ownPicks.Count!=before){RefreshAdvice();lastTurnKey=TurnKey();}
+      if(ownPicks.Count>0)holdOpenId=0;
+      RenderSlots();SetPhase();
+    }
+    void Undo(){skipAuto=true;if(lastSide==2&&enemyPicks.Count>0)enemyPicks.RemoveAt(enemyPicks.Count-1);else if(ownPicks.Count>0)ownPicks.RemoveAt(ownPicks.Count-1);else if(enemyPicks.Count>0)enemyPicks.RemoveAt(enemyPicks.Count-1);RefreshAll();}
   }
 }

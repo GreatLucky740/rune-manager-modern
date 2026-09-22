@@ -53,7 +53,7 @@ namespace RuneManagerModern {
       Add("status_json_watch","Surveillance JSON active","JSON watch active");
       Add("status_json_watch_fail","Surveillance JSON indisponible : {0}","JSON watch unavailable: {0}");
       Add("status_swex_on","Mise à jour SWEX active • {0}","SWEX live update on • {0}");
-      Add("status_swex_missing","Journal SWEX introuvable dans {0}","SWEX log not found in {0}");
+      Add("status_swex_missing","Journal SWEX (full_log.txt) introuvable dans {0}. Active FullLogger dans SWEX.","SWEX log (full_log.txt) not found in {0}. Enable FullLogger in SWEX.");
       Add("status_swex_fail","Surveillance SWEX indisponible : {0}","SWEX watch unavailable: {0}");
       Add("status_swex_read","Lecture SWEX interrompue : {0}","SWEX read interrupted: {0}");
       Add("status_json_detected","Nouveau JSON détecté — attente de la fin de l'export…","New JSON detected — waiting for export to finish…");

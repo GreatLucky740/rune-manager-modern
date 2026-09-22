@@ -151,7 +151,7 @@ namespace RuneManagerModern {
     // affiche un compte > 0, revient a l'orange normal sinon. NormalActionBorder =
     // meme orange que les autres boutons "outils/fonction".
     readonly Color RedAlertBorder=Color.FromArgb(218,70,62), NormalActionBorder=Color.FromArgb(255,170,40);
-    const int AppBuild=6;
+    const int AppBuild=7;
     void SetActionBorder(Button b,bool active){SetActionBorder(b,null,active);}
     // Le cadre du badge suit la meme couleur que le contour du bouton ou il se trouve
     // (rouge si action a faire, orange sinon) au lieu d'une couleur fixe independante.
@@ -499,8 +499,51 @@ namespace RuneManagerModern {
     void AddColumns(){string[] names={Loc.T("col_rune"),Loc.T("col_main"),Loc.T("col_innate"),Loc.T("col_innate_val"),Loc.T("col_stat1"),Loc.T("col_stat2"),Loc.T("col_stat3"),Loc.T("col_stat4"),Loc.T("col_action"),Loc.T("col_potential"),Loc.T("col_gem"),Loc.T("col_preset")};string[] props={"Rune","MainDisplay","Innate","InnateValueText","Stat1","Stat2","Stat3","Stat4","Action","Potential","Recommendation","BestBuild"};for(int i=0;i<names.Length;i++)grid.Columns.Add(new DataGridViewTextBoxColumn{Name=props[i],HeaderText=names[i],DataPropertyName=props[i],SortMode=DataGridViewColumnSortMode.NotSortable});grid.Columns[9].DefaultCellStyle.Format="0.000";}
     string DefaultExportFolder(){return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),"Summoners War Exporter Files");}
     string ActiveExportFolder(){if(!string.IsNullOrWhiteSpace(currentFile)){string folder=Path.GetDirectoryName(currentFile);if(!string.IsNullOrWhiteSpace(folder)&&Directory.Exists(folder))return folder;}return DefaultExportFolder();}
+    IEnumerable<string> ExportFolderCandidates(){
+      var seen=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+      Action<string> add=p=>{
+        if(string.IsNullOrWhiteSpace(p))return;
+        try{p=Path.GetFullPath(p);}catch{return;}
+        seen.Add(p);
+      };
+      if(!string.IsNullOrWhiteSpace(currentFile))add(Path.GetDirectoryName(currentFile));
+      string name="Summoners War Exporter Files";
+      string user=Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+      add(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),name));
+      add(Path.Combine(user,"Desktop",name));
+      add(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),name));
+      try{
+        foreach(string dir in Directory.GetDirectories(user,"OneDrive*")){
+          add(Path.Combine(dir,"Desktop",name));
+          add(Path.Combine(dir,name));
+        }
+      }catch{}
+      return seen;
+    }
+    string FindFullLog(){
+      string best=null;DateTime bestTime=DateTime.MinValue;
+      foreach(string folder in ExportFolderCandidates()){
+        if(!Directory.Exists(folder))continue;
+        string p=Path.Combine(folder,"full_log.txt");
+        if(!File.Exists(p))continue;
+        DateTime t=File.GetLastWriteTimeUtc(p);
+        if(best==null||t>bestTime){best=p;bestTime=t;}
+      }
+      return best??"";
+    }
     void ChooseFile(){using(var d=new OpenFileDialog{Filter=Loc.T("filter_json"),Title=Loc.T("open_json")})if(d.ShowDialog()==DialogResult.OK){LoadFile(d.FileName);StartJsonWatcher();StartLiveLog();}}
-    void TryAutoLoad(){string folder=DefaultExportFolder();if(!Directory.Exists(folder))return;try{var f=new DirectoryInfo(folder).GetFiles("*.json").Where(x=>x.Length>100000).OrderByDescending(x=>x.LastWriteTimeUtc).FirstOrDefault();if(f!=null)LoadFile(f.FullName);}catch{}}
+    void TryAutoLoad(){
+      try{
+        FileInfo best=null;
+        foreach(string folder in ExportFolderCandidates()){
+          if(!Directory.Exists(folder))continue;
+          var f=new DirectoryInfo(folder).GetFiles("*.json").Where(x=>x.Length>100000).OrderByDescending(x=>x.LastWriteTimeUtc).FirstOrDefault();
+          if(f==null)continue;
+          if(best==null||f.LastWriteTimeUtc>best.LastWriteTimeUtc)best=f;
+        }
+        if(best!=null)LoadFile(best.FullName);
+      }catch{}
+    }
     void StartJsonWatcher(){
       string folder=ActiveExportFolder();
       if(!Directory.Exists(folder))return;
@@ -546,7 +589,10 @@ namespace RuneManagerModern {
     void LoadWorldBossOrderEvents(){try{string path=WorldBossOrderEventsPath();if(!File.Exists(path))return;foreach(string line in File.ReadAllLines(path))if(!string.IsNullOrWhiteSpace(line))liveSavedEvents.Add(line);}catch{}}
     void SaveWorldBossOrderEvent(string line){try{string path=WorldBossOrderEventsPath();Directory.CreateDirectory(Path.GetDirectoryName(path));var kept=new List<string>();if(File.Exists(path))kept.AddRange(File.ReadAllLines(path).Where(x=>!string.IsNullOrWhiteSpace(x)));kept.Add(line);while(kept.Count>3)kept.RemoveAt(0);File.WriteAllLines(path,kept);}catch{}}
     void StartLiveLog(){
-      liveLogTimer.Stop();string active=Path.Combine(ActiveExportFolder(),"full_log.txt"),fallback=Path.Combine(DefaultExportFolder(),"full_log.txt");liveLogPath=File.Exists(active)?active:fallback;try{liveLogOffset=File.Exists(liveLogPath)?new FileInfo(liveLogPath).Length:0;liveLogObservedLength=liveLogOffset;liveLogStableSince=DateTime.UtcNow;liveLogPending="";liveAwaitingResponse=false;liveAwaitingRequest=false;liveRequestCraft=liveRequestEquipment=liveRequestSkill=false;if(File.Exists(liveLogPath)){liveLogTimer.Start();status.Text=(status.Text.Length>0?status.Text+"  •  ":"")+Loc.T("status_swex_on",Path.GetFileName(ActiveExportFolder()));}else status.Text=Loc.T("status_swex_missing",ActiveExportFolder());}catch(Exception ex){status.Text=Loc.T("status_swex_fail",ex.Message);}
+      liveLogTimer.Stop();
+      string found=FindFullLog();
+      liveLogPath=found.Length>0?found:Path.Combine(ActiveExportFolder(),"full_log.txt");
+      try{liveLogOffset=File.Exists(liveLogPath)?new FileInfo(liveLogPath).Length:0;liveLogObservedLength=liveLogOffset;liveLogStableSince=DateTime.UtcNow;liveLogPending="";liveAwaitingResponse=false;liveAwaitingRequest=false;liveRequestCraft=liveRequestEquipment=liveRequestSkill=false;if(File.Exists(liveLogPath)){liveLogTimer.Start();status.Text=(status.Text.Length>0?status.Text+"  •  ":"")+Loc.T("status_swex_on",Path.GetFileName(Path.GetDirectoryName(liveLogPath)));}else status.Text=Loc.T("status_swex_missing",ActiveExportFolder());}catch(Exception ex){status.Text=Loc.T("status_swex_fail",ex.Message);}
     }
     void ReadLiveLog(){
       if(string.IsNullOrWhiteSpace(liveLogPath)||!File.Exists(liveLogPath))return;try{long observed=new FileInfo(liveLogPath).Length;if(observed!=liveLogObservedLength){liveLogObservedLength=observed;liveLogStableSince=DateTime.UtcNow;return;}if(observed==liveLogOffset||(DateTime.UtcNow-liveLogStableSince).TotalMilliseconds<400)return;using(var fs=new FileStream(liveLogPath,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete)){if(fs.Length<liveLogOffset){liveLogOffset=0;liveLogPending="";liveAwaitingResponse=false;liveAwaitingRequest=false;liveRequestCraft=liveRequestEquipment=liveRequestSkill=false;}if(fs.Length==liveLogOffset)return;fs.Seek(liveLogOffset,SeekOrigin.Begin);using(var sr=new StreamReader(fs,Encoding.UTF8,true,4096,true)){liveLogPending+=sr.ReadToEnd();liveLogOffset=fs.Position;liveLogObservedLength=liveLogOffset;}}ProcessLiveLog();}catch(IOException){}catch(UnauthorizedAccessException){}catch(Exception ex){status.Text=Loc.T("status_swex_read",ex.Message);}

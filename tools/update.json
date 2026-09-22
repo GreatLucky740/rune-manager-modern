@@ -1,15 +1,13 @@
 {
-  "build": 6,
-  "version": "1.01",
+  "build": 7,
+  "version": "1.02",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Version 1.01.",
-    "Anglais : le bouton TRI REEVAL s’affiche REAPP SORT.",
-    "VÉRIFIER MAJ : si tu as déjà la dernière version, un message Tu es à jour !"
+    "Version 1.02.",
+    "SWEX : le journal full_log.txt est aussi cherché sur le Bureau normal, OneDrive et Documents, plus seulement le Bureau OneDrive."
   ],
   "notes_en": [
-    "Version 1.01.",
-    "English: the REEVAL SORT button is now REAPP SORT.",
-    "CHECK UPDATE: if you already have the latest version, a message says You're up to date!"
+    "Version 1.02.",
+    "SWEX: full_log.txt is now also searched on the normal Desktop, OneDrive and Documents, not only the OneDrive Desktop."
   ]
 }

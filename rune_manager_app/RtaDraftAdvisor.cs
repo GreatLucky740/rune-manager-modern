@@ -101,10 +101,46 @@ namespace RuneManagerModern {
       return result;
     }
   }
+  static class RtaPickScore {
+    public static double SynergyWeight(int enemyN){
+      if(enemyN<=0)return 1.35;
+      double w=1.12-enemyN*0.16;
+      return w<0.32?0.32:w;
+    }
+    public static double CounterWeight(int enemyN){
+      if(enemyN<=0)return 0;
+      return 1.25+enemyN*0.28;
+    }
+    public static double TeamFitWeight(int enemyN){
+      if(enemyN>=4)return 0.45;
+      if(enemyN>=2)return 0.75;
+      if(enemyN>=1)return 1.0;
+      return 1.4;
+    }
+    public static double ComboTogetherWeight(int enemyN){
+      if(enemyN>=3)return 0.7;
+      if(enemyN>=1)return 1.15;
+      return 1.6;
+    }
+    public static double SampleFactor(int n){
+      if(n>=80)return 1;
+      if(n>=20)return n/80.0;
+      if(n>=8)return 0.22;
+      return 0;
+    }
+    public static double FoeThreat(double winRate,double pickRate,double banRate,double leadRate){
+      return 0.55+winRate+pickRate*2.5+banRate*1.8+leadRate;
+    }
+    public static double MatchupPoints(double winAgainst,int games,double foeWin,double foePick,double foeBan,double foeLead){
+      double sf=SampleFactor(games);
+      if(sf<=0)return 0;
+      return (winAgainst-.5)*100*sf*FoeThreat(foeWin,foePick,foeBan,foeLead);
+    }
+  }
   sealed class RtaAdvisorForm:Form {
     readonly string json,catalog,icons;readonly Icon appIcon;readonly Color Bg=Color.FromArgb(7,13,22),Panel=Color.FromArgb(15,25,39),Pink=Color.FromArgb(190,68,145),Cyan=Color.FromArgb(20,184,210);
     readonly List<RtaMonster> ownPicks=new List<RtaMonster>(),enemyPicks=new List<RtaMonster>();List<RtaMonster> stats=new List<RtaMonster>(),pickerAll=new List<RtaMonster>();Dictionary<int,string> owned=new Dictionary<int,string>();readonly Dictionary<int,Dictionary<int,RtaPair>> pairs=new Dictionary<int,Dictionary<int,RtaPair>>();
-    readonly FlowLayoutPanel ours=new FlowLayoutPanel(),enemies=new FlowLayoutPanel();readonly BufferedGrid grid=new BufferedGrid();readonly Label phase=new Label(),state=new Label();readonly ComboBox poolSize=new ComboBox();Button poolButton;readonly CountBadge poolBadge=new CountBadge();RtaPoolDiff poolDiff;List<RtaRecommendation> adviceAll=new List<RtaRecommendation>();string sortCol="Score";bool sortDesc=true;bool loading,draftLive;    readonly Dictionary<int,Image> iconCache=new Dictionary<int,Image>();readonly Dictionary<int,Control> pickerTiles=new Dictionary<int,Control>();readonly Dictionary<int,string> pickerFold=new Dictionary<int,string>();Panel pickerOverlay;Label pickerTitle;TextBox pickerBox;BufferedFlow pickerStrip;RtaMonster pickerChosen;HashSet<int> iconFiles;Timer pickerFilterTimer;int firstSide,holdOpenId,lastTurnKey=-1,lastSide,holdEnemyN=-1,pickerIndex,lastAutoEnemyN=-1;bool pickerMine,pickerCommitted,ignoreSlotClicks,skipAuto;List<RtaMonster> holdTurn;HashSet<int> poolIdCache;int poolIdCacheN=-1;
+    readonly FlowLayoutPanel ours=new FlowLayoutPanel(),enemies=new FlowLayoutPanel();readonly BufferedGrid grid=new BufferedGrid();readonly Label phase=new Label(),state=new Label();readonly ComboBox poolSize=new ComboBox();Button poolButton;readonly CountBadge poolBadge=new CountBadge();RtaPoolDiff poolDiff;List<RtaRecommendation> adviceAll=new List<RtaRecommendation>();string sortCol="Score";bool sortDesc=true;bool loading,draftLive;    readonly Dictionary<int,Image> iconCache=new Dictionary<int,Image>();readonly Dictionary<int,Image> banIconCache=new Dictionary<int,Image>();readonly Dictionary<int,Control> pickerTiles=new Dictionary<int,Control>();readonly Dictionary<int,string> pickerFold=new Dictionary<int,string>();Panel pickerOverlay;Label pickerTitle;TextBox pickerBox;BufferedFlow pickerStrip;RtaMonster pickerChosen;HashSet<int> iconFiles;Timer pickerFilterTimer;Image banMark;bool banMarkTried;int firstSide,holdOpenId,lastTurnKey=-1,lastSide,holdEnemyN=-1,pickerIndex,lastAutoEnemyN=-1,banAdviceId;bool pickerMine,pickerCommitted,ignoreSlotClicks,skipAuto;List<RtaMonster> holdTurn;HashSet<int> poolIdCache;int poolIdCacheN=-1;
     public RtaAdvisorForm(string jsonPath,string catalogPath,Icon icon){json=jsonPath;catalog=catalogPath;icons=Path.GetDirectoryName(catalogPath);appIcon=icon;Text=Loc.T("rta_win");Icon=icon;BackColor=Bg;ForeColor=Color.White;Size=new Size(1680,860);MinimumSize=new Size(1200,700);StartPosition=FormStartPosition.CenterParent;KeyPreview=true;KeyDown+=(s,e)=>{if(e.KeyCode==Keys.Escape&&pickerOverlay!=null&&pickerOverlay.Visible){e.Handled=true;ClosePicker();}};Build();Shown+=(s,e)=>{LoadData();};FormClosed+=(s,e)=>{if(pickerFilterTimer!=null)pickerFilterTimer.Stop();if(pickerOverlay!=null&&!pickerOverlay.IsDisposed)pickerOverlay.Dispose();};}
     Button B(string t,int w,Color c){return new Button{Text=t,Width=w,Height=32,FlatStyle=FlatStyle.Flat,BackColor=c,ForeColor=Color.White,Font=new Font("Segoe UI Semibold",9),Cursor=Cursors.Hand};}
     void Build(){
@@ -125,7 +161,17 @@ namespace RuneManagerModern {
       grid.Dock=DockStyle.Fill;grid.BackgroundColor=Bg;grid.BorderStyle=BorderStyle.None;grid.ReadOnly=true;grid.AllowUserToAddRows=false;grid.AllowUserToDeleteRows=false;grid.RowHeadersVisible=false;grid.SelectionMode=DataGridViewSelectionMode.FullRowSelect;grid.RowTemplate.Height=58;grid.AutoGenerateColumns=false;grid.EnableHeadersVisualStyles=false;grid.ColumnHeadersHeight=42;grid.ColumnHeadersDefaultCellStyle=new DataGridViewCellStyle{BackColor=Color.FromArgb(138,45,117),ForeColor=Color.White,Font=new Font("Segoe UI Semibold",10),SelectionBackColor=Color.FromArgb(138,45,117)};grid.DefaultCellStyle=new DataGridViewCellStyle{BackColor=Bg,ForeColor=Color.White,Font=new Font("Segoe UI",10),SelectionBackColor=Color.FromArgb(45,55,83),SelectionForeColor=Color.White};
       grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Rank",HeaderText="#",Width=40});grid.Columns.Add(new DataGridViewImageColumn{DataPropertyName="Icon",HeaderText=Loc.T("rta_col_mon"),Width=58,ImageLayout=DataGridViewImageCellLayout.Zoom});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Monster",HeaderText=Loc.T("rta_col_name"),Width=150});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="WinRate",HeaderText="WR",Width=70});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Pick",HeaderText="Pick",Width=70});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Ban",HeaderText="Ban",Width=70});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Lead",HeaderText="Lead",Width=70});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Games",HeaderText="Games",Width=80});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Sets",HeaderText="Sets SWLens",Width=300});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Subs",HeaderText="Top subs",Width=220});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Score",HeaderText=Loc.T("rta_col_score"),Width=80});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Conseil",HeaderText=Loc.T("rta_col_why"),AutoSizeMode=DataGridViewAutoSizeColumnMode.Fill});foreach(DataGridViewColumn c in grid.Columns){string p=c.DataPropertyName;c.SortMode=(p=="WinRate"||p=="Pick"||p=="Ban"||p=="Lead"||p=="Games"||p=="Score")?DataGridViewColumnSortMode.Programmatic:DataGridViewColumnSortMode.NotSortable;if(c.SortMode==DataGridViewColumnSortMode.Programmatic)c.HeaderCell.ToolTipText=Loc.T("rta_sort_tip");}
       grid.CellPainting+=(s,e)=>{if(e.RowIndex<0||e.ColumnIndex<0)return;if(grid.Columns[e.ColumnIndex].DataPropertyName!="Sets")return;var rec=grid.Rows[e.RowIndex].DataBoundItem as RtaRecommendation;RtaSetIcons.Paint(e,rec==null?Convert.ToString(e.FormattedValue):rec.Sets);};
-      grid.CellFormatting+=(s,e)=>{if(e.RowIndex!=0||!draftLive||!OurTurn())return;e.CellStyle.BackColor=Color.FromArgb(42,78,48);e.CellStyle.ForeColor=Color.FromArgb(255,214,96);e.CellStyle.SelectionBackColor=Color.FromArgb(55,98,60);e.CellStyle.SelectionForeColor=Color.FromArgb(255,230,140);};
+      grid.CellFormatting+=(s,e)=>{
+        if(e.RowIndex<0)return;
+        var rec=e.RowIndex<grid.Rows.Count?grid.Rows[e.RowIndex].DataBoundItem as RtaRecommendation:null;
+        if(BanPhase()&&rec!=null&&rec.Source!=null&&rec.Source.Id==banAdviceId){
+          e.CellStyle.BackColor=Color.FromArgb(78,28,28);e.CellStyle.ForeColor=Color.FromArgb(255,196,186);
+          e.CellStyle.SelectionBackColor=Color.FromArgb(110,40,40);e.CellStyle.SelectionForeColor=Color.FromArgb(255,220,210);return;
+        }
+        if(e.RowIndex!=0||!draftLive||!OurTurn())return;
+        e.CellStyle.BackColor=Color.FromArgb(42,78,48);e.CellStyle.ForeColor=Color.FromArgb(255,214,96);
+        e.CellStyle.SelectionBackColor=Color.FromArgb(55,98,60);e.CellStyle.SelectionForeColor=Color.FromArgb(255,230,140);
+      };
       grid.ColumnHeaderMouseClick+=(s,e)=>{if(e.ColumnIndex<0)return;string p=grid.Columns[e.ColumnIndex].DataPropertyName;if(grid.Columns[e.ColumnIndex].SortMode!=DataGridViewColumnSortMode.Programmatic)return;if(sortCol==p)sortDesc=!sortDesc;else{sortCol=p;sortDesc=true;}ApplyAdviceSort();};
       Controls.Add(grid);Controls.Add(tools);Controls.Add(head);
       RenderSlots();SetPhase();
@@ -251,7 +297,8 @@ namespace RuneManagerModern {
       if(mine){if(index<ownPicks.Count)ownPicks[index]=placed;else if(ownPicks.Count<5)ownPicks.Add(placed);}
       else{if(index<enemyPicks.Count)enemyPicks[index]=placed;else if(enemyPicks.Count<5)enemyPicks.Add(placed);}
       lastSide=mine?1:2;draftLive=true;
-      if(mine&&holdTurn!=null&&!holdTurn.Any(x=>x.Id==placed.Id))ClearTurnHold();
+      if(!mine)ClearTurnHold();
+      else if(holdTurn!=null&&!holdTurn.Any(x=>x.Id==placed.Id))ClearTurnHold();
       RefreshAll();
     }
     void EnsureIconIndex(){
@@ -323,14 +370,44 @@ namespace RuneManagerModern {
       var b=new Bitmap(48,48);using(var g=Graphics.FromImage(b)){g.SmoothingMode=System.Drawing.Drawing2D.SmoothingMode.AntiAlias;using(var bg=new SolidBrush(Color.FromArgb(30,40,52)))g.FillRectangle(bg,0,0,48,48);using(var fill=new SolidBrush(Color.FromArgb(90,105,120)))g.FillEllipse(fill,4,4,40,40);using(var pen=new Pen(Color.FromArgb(150,165,180),1.5f))g.DrawEllipse(pen,4,4,40,40);}
       iconCache[id]=b;return b;
     }
+    bool BanPhase(){return ownPicks.Count>=5&&enemyPicks.Count>=5;}
+    Image BanMark(){
+      if(banMarkTried)return banMark;
+      banMarkTried=true;
+      try{
+        string p=Path.GetFullPath(Path.Combine(icons,"..","rta","ban.png"));
+        if(!File.Exists(p))p=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"assets","rta","ban.png");
+        if(File.Exists(p)){
+          using(var fs=new FileStream(p,FileMode.Open,FileAccess.Read,FileShare.ReadWrite))
+          using(var img=Image.FromStream(fs))banMark=new Bitmap(img);
+        }
+      }catch{}
+      return banMark;
+    }
+    Image IconWithBan(int id){
+      Image cached;if(banIconCache.TryGetValue(id,out cached))return cached;
+      var bmp=new Bitmap(48,48);
+      using(var g=Graphics.FromImage(bmp)){
+        g.InterpolationMode=System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+        g.SmoothingMode=System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+        g.PixelOffsetMode=System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+        var src=IconFor(id);
+        if(src!=null)g.DrawImage(src,0,0,48,48);
+        var mark=BanMark();
+        if(mark!=null)g.DrawImage(mark,0,0,48,48);
+      }
+      banIconCache[id]=bmp;return bmp;
+    }
     void RenderSlots(){
       ours.Controls.Clear();enemies.Controls.Clear();
       var recos=OurTurn()?SuggestedOurs():new List<RtaMonster>();
+      int banId=BanPhase()?banAdviceId:0;
       for(int i=0;i<5;i++){
-        if(i<ownPicks.Count)ours.Controls.Add(Slot(ownPicks[i],true,false,i));
-        else if(i-ownPicks.Count<recos.Count)ours.Controls.Add(Slot(recos[i-ownPicks.Count],true,true,i));
-        else ours.Controls.Add(Slot(null,true,false,i));
-        enemies.Controls.Add(Slot(i<enemyPicks.Count?enemyPicks[i]:null,false,false,i));
+        if(i<ownPicks.Count)ours.Controls.Add(Slot(ownPicks[i],true,false,i,false));
+        else if(i-ownPicks.Count<recos.Count)ours.Controls.Add(Slot(recos[i-ownPicks.Count],true,true,i,false));
+        else ours.Controls.Add(Slot(null,true,false,i,false));
+        var foe=i<enemyPicks.Count?enemyPicks[i]:null;
+        enemies.Controls.Add(Slot(foe,false,false,i,banId>0&&foe!=null&&foe.Id==banId));
       }
     }
     List<RtaMonster> SuggestedOurs(){
@@ -375,8 +452,9 @@ namespace RuneManagerModern {
       }
       if(n<=1||pool.Count<=1)return pool.Take(Math.Max(0,n)).ToList();
       double best=-1e9;int ia=-1,ib=-1;
+      double togetherW=RtaPickScore.ComboTogetherWeight(enemyPicks.Count);
       for(int i=0;i<pool.Count;i++)for(int j=i+1;j<pool.Count;j++){
-        double s=SoloScore(pool[i])+SoloScore(pool[j])+TogetherScore(pool[i],pool[j])*1.6+TeamFit(pool[i])+TeamFit(pool[j]);
+        double s=SoloScore(pool[i])+SoloScore(pool[j])+TogetherScore(pool[i],pool[j])*togetherW+TeamFit(pool[i])+TeamFit(pool[j]);
         if(s>best){best=s;ia=i;ib=j;}
       }
       var pair=new List<RtaMonster>();
@@ -392,18 +470,18 @@ namespace RuneManagerModern {
     }
     double TeamFit(RtaMonster m){
       if(m==null||ownPicks.Count==0)return 0;
-      double t=0;foreach(var ally in ownPicks)t+=TogetherScore(m,ally)*2.2;
-      return t;
+      double t=0;foreach(var ally in ownPicks)t+=TogetherScore(m,ally);
+      return t*RtaPickScore.TeamFitWeight(enemyPicks.Count);
     }
     void ClearTurnHold(){holdTurn=null;holdEnemyN=-1;}
-    Control Slot(RtaMonster m,bool mine,bool suggested,int index){
-      var p=new Panel{Width=90,Height=58,Margin=new Padding(3),BackColor=suggested?Color.FromArgb(42,58,22):Color.FromArgb(20,34,49)};
+    Control Slot(RtaMonster m,bool mine,bool suggested,int index,bool banned){
+      var p=new Panel{Width=90,Height=58,Margin=new Padding(3),BackColor=banned?Color.FromArgb(72,22,22):(suggested?Color.FromArgb(42,58,22):Color.FromArgb(20,34,49))};
       if(m==null){
         p.Controls.Add(new Label{Text="?",Dock=DockStyle.Fill,TextAlign=ContentAlignment.MiddleCenter,ForeColor=Color.DimGray,Font=new Font("Segoe UI",20)});
         BindClick(p,(s,e)=>PlaceOnSlot(mine,index,false,null));
         return p;
       }
-      var pic=new PictureBox{Image=IconFor(m.Id),Location=new Point(2,2),Size=new Size(48,48),SizeMode=PictureBoxSizeMode.Zoom};
+      var pic=new PictureBox{Image=banned?IconWithBan(m.Id):IconFor(m.Id),Location=new Point(2,2),Size=new Size(48,48),SizeMode=PictureBoxSizeMode.Zoom};
       string label=suggested?Loc.T("rta_slot_advice"):(string.IsNullOrEmpty(m.Name)?"?":m.Name);
       if(suggested&&!string.IsNullOrEmpty(m.Name))label=m.Name;
       var name=new Label{Text=label,Location=new Point(51,3),Size=new Size(37,48),ForeColor=suggested?Color.FromArgb(255,214,96):(mine?Color.FromArgb(95,220,255):Color.FromArgb(255,120,115)),Font=new Font("Segoe UI",7),AutoEllipsis=true};
@@ -470,7 +548,7 @@ namespace RuneManagerModern {
       int take=PicksThisTurn();
       phase.Text=take==1?Loc.T("rta_phase_one",n,BestNames(take)):Loc.T("rta_phase_many",take,n,BestNames(take));phase.ForeColor=Color.FromArgb(120,235,160);
     }
-    void EnsurePairs(IEnumerable<RtaMonster> monsters){foreach(var m in monsters.Where(x=>x!=null&&!pairs.ContainsKey(x.Id)).Take(12)){try{pairs[m.Id]=RtaData.LoadPairs(m.Id);}catch{pairs[m.Id]=new Dictionary<int,RtaPair>();}}}
+    void EnsurePairs(IEnumerable<RtaMonster> monsters){foreach(var m in monsters.Where(x=>x!=null&&!pairs.ContainsKey(x.Id)).Take(40)){try{pairs[m.Id]=RtaData.LoadPairs(m.Id);}catch{pairs[m.Id]=new Dictionary<int,RtaPair>();}}}
     double PairValue(int a,int b,bool together,out int sample){sample=0;Dictionary<int,RtaPair> map;RtaPair p;if(!pairs.TryGetValue(a,out map)){try{map=RtaData.LoadPairs(a);}catch{map=new Dictionary<int,RtaPair>();}pairs[a]=map;}if(!map.TryGetValue(b,out p))return .5;sample=together?p.Together:p.Against;return together?p.WinTogether:p.WinAgainst;}
     double TogetherScore(RtaMonster a,RtaMonster b){
       if(a==null||b==null||a.Id==b.Id)return 0;
@@ -482,8 +560,36 @@ namespace RuneManagerModern {
       double freq=sw>=200?Math.Min(8,Math.Log10(sw)*2.0):0;
       return luck+togetherFreq+freq;
     }
-    void RefreshAdvice(){if(stats.Count==0)return;EnsurePairs(ownPicks.Concat(enemyPicks));bool ban=ownPicks.Count>=5&&enemyPicks.Count>=5;var used=new HashSet<int>(ownPicks.Concat(enemyPicks).Select(x=>x.Id).Where(id=>id>0));var usedNames=new HashSet<string>(ownPicks.Concat(enemyPicks).Select(x=>x.Name??"").Where(nm=>nm.Length>0&&nm!="pick"&&!nm.StartsWith("#")),StringComparer.OrdinalIgnoreCase);var usedFam=new HashSet<int>(ownPicks.Concat(enemyPicks).Where(x=>x.Id>0).Select(x=>(x.Id/100)*10+(x.Id%10)));int poolN=poolSize.SelectedItem==null?RtaBuildOptimizer.LoadPoolSize():Convert.ToInt32(poolSize.SelectedItem);var poolIds=RtaPoolTracker.PickableIds(json,catalog,stats,poolN);if(poolIds.Count==0)poolIds=new HashSet<int>(owned.Keys);IEnumerable<RtaMonster> candidates=ban?enemyPicks:stats.Where(x=>poolIds.Contains(x.Id)&&!used.Contains(x.Id)&&!usedNames.Contains(x.Name)&&!usedFam.Contains((x.Id/100)*10+(x.Id%10)));var candList=candidates.ToList();if(!ban&&candList.Count==0)candList=stats.Where(x=>owned.ContainsKey(x.Id)&&!used.Contains(x.Id)&&!usedNames.Contains(x.Name)&&!usedFam.Contains((x.Id/100)*10+(x.Id%10))).ToList();candidates=candList;var rows=new List<Tuple<RtaMonster,double,string>>();foreach(var m in candidates){double score=m.WinRate*100,synergy=0,counter=0;int syN=0,coN=0;foreach(var ally in ownPicks){synergy+=TogetherScore(m,ally);syN++;}foreach(var foe in enemyPicks){int n;double w=PairValue(m.Id,foe.Id,false,out n);if(n>=20){counter+=(w-.5)*100*Math.Min(1,n/300.0);coN++;}}if(syN>0)score+=synergy*1.35;if(coN>0)score+=counter/coN*1.10;score+=Math.Min(3,Math.Log10(Math.Max(1,m.Played))*.55)+m.BanRate*5;bool leaderNeeded=ownPicks.Count==0||ownPicks.Max(x=>x.LeadRate)<.25;if(leaderNeeded)score+=m.LeadRate*8+m.PickRate*2;else score+=m.LeadRate*2;double glue=0;int gN=0;if(ban){foreach(var other in enemyPicks)if(other.Id!=m.Id){glue+=TogetherScore(m,other);gN++;}score=m.BanRate*35+m.WinRate*20-counter/Math.Max(1,coN)+(gN>0?glue/gN*1.2:0);}string with=string.Join(", ",ownPicks.Where(ally=>TogetherScore(m,ally)>1).Select(ally=>ally.Name).ToArray());string why=ban?(gN>0&&glue>0?Loc.T("rta_why_glue"):Loc.T("rta_why_threat"))+Loc.T("rta_why_ban",(m.BanRate*100).ToString("0.0")):with.Length>0?Loc.T("rta_why_syn",with):coN>0?Loc.T("rta_why_vs",coN):Loc.T("rta_why_flex");rows.Add(Tuple.Create(m,score,why));}
-      var view=rows.OrderByDescending(x=>x.Item2).ThenByDescending(x=>x.Item1.Played).Select((x,i)=>{var m=x.Item1;var meta=RtaBuildOptimizer.RtaMetaBuilds.ForId(m.Id)??RtaBuildOptimizer.RtaMetaBuilds.For(m.Name);return new RtaRecommendation{Rank=i+1,Icon=IconFor(m.Id),Monster=m.Name,WinRate=(m.WinRate*100).ToString("0.00")+" %",Pick=(m.PickRate*100).ToString("0.00")+" %",Ban=(m.BanRate*100).ToString("0.00")+" %",Lead=(m.LeadRate*100).ToString("0")+" %",Games=m.Played.ToString("N0"),Sets=meta!=null?meta.SetsText(2):"—",Subs=meta!=null&&!string.IsNullOrEmpty(meta.SubsText)?meta.SubsText:(meta!=null&&meta.Focus!=null?string.Join(" > ",meta.Focus):"—"),Score=x.Item2.ToString("0.0"),ScoreValue=x.Item2,Conseil=x.Item3+(m.LeadRate>=.25?" • leader "+(m.LeadRate*100).ToString("0")+" %":"")+(meta!=null&&!string.IsNullOrEmpty(meta.SynergyText)?" • duo "+meta.SynergyText:"")+(meta!=null&&!string.IsNullOrEmpty(meta.SlotMains)?" • "+meta.SlotMains:""),Source=m};}).ToList();adviceAll=view;ApplyAdviceSort();}
+    void ScoreCandidate(RtaMonster m,bool ban,out double score,out string why){
+      double synergy=0,pickCounter=0,banCounter=0,glue=0;
+      int syN=0,coN=0,gN=0;
+      var beats=new List<string>();
+      foreach(var ally in ownPicks){synergy+=TogetherScore(m,ally);syN++;}
+      foreach(var foe in enemyPicks){
+        int n;double w=PairValue(m.Id,foe.Id,false,out n);
+        if(n>=20){banCounter+=(w-.5)*100*Math.Min(1,n/300.0);coN++;}
+        pickCounter+=RtaPickScore.MatchupPoints(w,n,foe.WinRate,foe.PickRate,foe.BanRate,foe.LeadRate);
+        if(n>=8&&w>=.52&&!string.IsNullOrEmpty(foe.Name))beats.Add(foe.Name);
+        if(ban&&foe.Id!=m.Id){glue+=TogetherScore(m,foe);gN++;}
+      }
+      int eN=enemyPicks.Count;
+      score=m.WinRate*100;
+      if(syN>0)score+=synergy*RtaPickScore.SynergyWeight(eN);
+      if(eN>0)score+=pickCounter*RtaPickScore.CounterWeight(eN);
+      score+=Math.Min(3,Math.Log10(Math.Max(1,m.Played))*.55)+m.BanRate*5;
+      bool leaderNeeded=ownPicks.Count==0||ownPicks.Max(x=>x.LeadRate)<.25;
+      if(leaderNeeded)score+=m.LeadRate*8+m.PickRate*2;else score+=m.LeadRate*2;
+      if(ban)score=m.BanRate*35+m.WinRate*20-banCounter/Math.Max(1,coN)+(gN>0?glue/gN*1.2:0);
+      string with=string.Join(", ",ownPicks.Where(ally=>TogetherScore(m,ally)>1).Select(ally=>ally.Name).ToArray());
+      string beat=string.Join(", ",beats.ToArray());
+      if(ban)why=(gN>0&&glue>0?Loc.T("rta_why_glue"):Loc.T("rta_why_threat"))+Loc.T("rta_why_ban",(m.BanRate*100).ToString("0.0"));
+      else if(eN>0&&pickCounter>2&&beat.Length>0)why=Loc.T("rta_why_vs",beats.Count)+(beat.Length>0?" • "+beat:"");
+      else if(with.Length>0)why=Loc.T("rta_why_syn",with);
+      else if(coN>0||(eN>0&&pickCounter!=0))why=Loc.T("rta_why_vs",Math.Max(1,coN));
+      else why=Loc.T("rta_why_flex");
+    }
+    void RefreshAdvice(){if(stats.Count==0){banAdviceId=0;return;}EnsurePairs(ownPicks.Concat(enemyPicks));bool ban=ownPicks.Count>=5&&enemyPicks.Count>=5;var used=new HashSet<int>(ownPicks.Concat(enemyPicks).Select(x=>x.Id).Where(id=>id>0));var usedNames=new HashSet<string>(ownPicks.Concat(enemyPicks).Select(x=>x.Name??"").Where(nm=>nm.Length>0&&nm!="pick"&&!nm.StartsWith("#")),StringComparer.OrdinalIgnoreCase);var usedFam=new HashSet<int>(ownPicks.Concat(enemyPicks).Where(x=>x.Id>0).Select(x=>(x.Id/100)*10+(x.Id%10)));int poolN=poolSize.SelectedItem==null?RtaBuildOptimizer.LoadPoolSize():Convert.ToInt32(poolSize.SelectedItem);var poolIds=RtaPoolTracker.PickableIds(json,catalog,stats,poolN);if(poolIds.Count==0)poolIds=new HashSet<int>(owned.Keys);IEnumerable<RtaMonster> candidates=ban?enemyPicks:stats.Where(x=>poolIds.Contains(x.Id)&&!used.Contains(x.Id)&&!usedNames.Contains(x.Name)&&!usedFam.Contains((x.Id/100)*10+(x.Id%10)));var candList=candidates.ToList();if(!ban&&candList.Count==0)candList=stats.Where(x=>owned.ContainsKey(x.Id)&&!used.Contains(x.Id)&&!usedNames.Contains(x.Name)&&!usedFam.Contains((x.Id/100)*10+(x.Id%10))).ToList();candidates=candList;EnsurePairs(candList.Take(40));var rows=new List<Tuple<RtaMonster,double,string>>();foreach(var m in candidates){double score;string why;ScoreCandidate(m,ban,out score,out why);rows.Add(Tuple.Create(m,score,why));}
+      var view=rows.OrderByDescending(x=>x.Item2).ThenByDescending(x=>x.Item1.Played).Select((x,i)=>{var m=x.Item1;var meta=RtaBuildOptimizer.RtaMetaBuilds.ForId(m.Id)??RtaBuildOptimizer.RtaMetaBuilds.For(m.Name);return new RtaRecommendation{Rank=i+1,Icon=(ban&&i==0)?IconWithBan(m.Id):IconFor(m.Id),Monster=m.Name,WinRate=(m.WinRate*100).ToString("0.00")+" %",Pick=(m.PickRate*100).ToString("0.00")+" %",Ban=(m.BanRate*100).ToString("0.00")+" %",Lead=(m.LeadRate*100).ToString("0")+" %",Games=m.Played.ToString("N0"),Sets=meta!=null?meta.SetsText(2):"—",Subs=meta!=null&&!string.IsNullOrEmpty(meta.SubsText)?meta.SubsText:(meta!=null&&meta.Focus!=null?string.Join(" > ",meta.Focus):"—"),Score=x.Item2.ToString("0.0"),ScoreValue=x.Item2,Conseil=x.Item3+(m.LeadRate>=.25?" • leader "+(m.LeadRate*100).ToString("0")+" %":"")+(meta!=null&&!string.IsNullOrEmpty(meta.SynergyText)?" • duo "+meta.SynergyText:"")+(meta!=null&&!string.IsNullOrEmpty(meta.SlotMains)?" • "+meta.SlotMains:""),Source=m};}).ToList();adviceAll=view;banAdviceId=(ban&&view.Count>0&&view[0].Source!=null)?view[0].Source.Id:0;ApplyAdviceSort();}
     void ApplyAdviceSort(){
       if(adviceAll==null||adviceAll.Count==0){grid.DataSource=null;return;}
       Func<RtaRecommendation,double> key=x=>{

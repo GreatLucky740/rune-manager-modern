@@ -21,8 +21,7 @@ try {
   & 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe' /nologo /target:exe /main:RuneUpdateRegressionTest /out:outputs\RuneUpdateRegressionTest.exe $refs $src rune_manager_app\RuneUpdateRegressionTest.cs
   if($LASTEXITCODE -ne 0){throw 'Compilation tests failed'}
   if($Stable){
-    & 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe' /nologo /target:winexe $icon /r:System.dll /r:System.Windows.Forms.dll /out:outputs\Rune_Manager_Update.exe rune_manager_app\RuneManagerUpdater.cs
+    & 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe' /nologo /target:winexe $icon /out:outputs\Rune_Manager_Update.exe /resource:outputs\Rune_Manager_Principal_Update.exe,Payload.Core rune_manager_app\RuneManagerUpdater.cs
     if($LASTEXITCODE -ne 0){throw 'Compilation updater failed'}
-    Copy-Item -LiteralPath 'outputs\Rune_Manager_Principal_Update.exe' -Destination 'outputs\Rune_Manager_Modern_Core.exe' -Force
   }
 } finally {Pop-Location}

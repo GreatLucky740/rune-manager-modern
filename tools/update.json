@@ -1,21 +1,21 @@
 {
-  "build": 9,
-  "version": "1.04",
+  "build": 10,
+  "version": "1.05",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Version 1.04.",
-    "Bouton CODES SW : codes actifs avec leurs récompenses (SWGT).",
-    "Les codes sont rechargés à chaque ouverture, puis toutes les 10 minutes (nouveaux / retirés).",
-    "Tu peux marquer un code comme utilisé pour le cacher, et le réafficher si besoin.",
-    "Un badge indique les codes pas encore utilisés. Clic pour copier, ou ouvrir Hive.",
-    "La vérif de mise à jour de l’appli se fait aussi toutes les 10 minutes."
+    "Version 1.05.",
+    "RTA : bouton CRÉER POOL pour composer ta draft avec les monstres que tu veux, puis voir les builds.",
+    "La recherche de la pool est instantanée : « lush » trouve aussi Lushen.",
+    "Les icônes manquantes (forme 2A / même famille) s’affichent.",
+    "Les noms des monstres sont lisibles, sans le suffixe « équivalent possédé » qui les coupait.",
+    "Tes monstres déjà runés RTA (la pool POOL + BUILDS) apparaissent en premier, avec une barre cyan."
   ],
   "notes_en": [
-    "Version 1.04.",
-    "SW CODES button: live codes with their rewards (SWGT).",
-    "Codes refresh on every launch, then every 10 minutes (new / removed).",
-    "Mark a code as used to hide it, and show it again if needed.",
-    "A badge shows unused codes. Click to copy, or open Hive.",
-    "App update checks also run every 10 minutes."
+    "Version 1.05.",
+    "RTA: CREATE POOL to build your draft with the monsters you want, then see the builds.",
+    "Pool search is instant: “lush” also finds Lushen.",
+    "Missing icons (2A / same family) now show up.",
+    "Monster names are readable, without the “owned equivalent” suffix cutting them off.",
+    "Your already-runed RTA monsters (the POOL + BUILDS pool) appear first, with a cyan bar."
   ]
 }

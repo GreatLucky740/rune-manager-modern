@@ -119,8 +119,9 @@ namespace RuneManagerModern {
       var reset=B(Loc.T("rta_new"),135,Pink);reset.SetBounds(365,9,135,32);reset.Click+=(s,e)=>{ownPicks.Clear();enemyPicks.Clear();firstSide=0;holdOpenId=0;lastTurnKey=-1;draftLive=false;skipAuto=false;lastAutoEnemyN=-1;ClearTurnHold();LoadData();};tools.Controls.Add(reset);
       poolSize.DropDownStyle=ComboBoxStyle.DropDownList;poolSize.Items.AddRange(new object[]{10,20,30,40,50,60});poolSize.SetBounds(510,10,70,30);int savedPool=RtaBuildOptimizer.LoadPoolSize();poolSize.SelectedItem=poolSize.Items.Cast<object>().FirstOrDefault(x=>Convert.ToInt32(x)==savedPool)??20;poolSize.SelectedIndexChanged+=(s,e)=>{RtaBuildOptimizer.SavePoolSize(Convert.ToInt32(poolSize.SelectedItem));RefreshPoolBadge();RefreshAdvice();};tools.Controls.Add(poolSize);
       poolButton=B(Loc.T("rta_pool"),188,Color.FromArgb(36,137,112));poolButton.SetBounds(590,9,188,32);poolButton.Padding=new Padding(8,0,8,0);poolButton.Click+=(s,e)=>OpenPool();tools.Controls.Add(poolButton);poolBadge.UseNewTag=false;poolBadge.SetBounds(4,2,28,28);poolBadge.Text="0";poolBadge.Visible=false;poolBadge.Font=new Font("Segoe UI Semibold",9f);poolBadge.BadgeColor=Color.FromArgb(255,170,40);poolBadge.Click+=(s,e)=>OpenPool();poolButton.Controls.Add(poolBadge);poolBadge.BringToFront();
-      var resetPool=B(Loc.T("rta_reset"),115,Color.FromArgb(125,65,65));resetPool.SetBounds(788,9,115,32);resetPool.Click+=(s,e)=>{if(MessageBox.Show(Loc.T("rta_reset_q"),"RTA",MessageBoxButtons.YesNo,MessageBoxIcon.Question)!=DialogResult.Yes)return;RtaBuildOptimizer.ResetSettings();poolSize.SelectedItem=20;ownPicks.Clear();enemyPicks.Clear();firstSide=0;holdOpenId=0;lastTurnKey=-1;draftLive=false;skipAuto=false;lastAutoEnemyN=-1;ClearTurnHold();RefreshAll();RefreshPoolBadge();state.Text=Loc.T("rta_reset_ok");};tools.Controls.Add(resetPool);
-      var refresh=B(Loc.T("rta_meta"),140,Color.FromArgb(76,72,155));refresh.SetBounds(913,9,140,32);refresh.Click+=(s,e)=>LoadData(true);tools.Controls.Add(refresh);
+      var editPool=B(Loc.T("rta_pool_edit"),130,Color.FromArgb(70,118,176));editPool.SetBounds(788,9,130,32);editPool.Click+=(s,e)=>EditPool();tools.Controls.Add(editPool);
+      var resetPool=B(Loc.T("rta_reset"),115,Color.FromArgb(125,65,65));resetPool.SetBounds(926,9,115,32);resetPool.Click+=(s,e)=>{if(MessageBox.Show(Loc.T("rta_reset_q"),"RTA",MessageBoxButtons.YesNo,MessageBoxIcon.Question)!=DialogResult.Yes)return;RtaBuildOptimizer.ResetSettings();poolSize.SelectedItem=20;ownPicks.Clear();enemyPicks.Clear();firstSide=0;holdOpenId=0;lastTurnKey=-1;draftLive=false;skipAuto=false;lastAutoEnemyN=-1;ClearTurnHold();RefreshAll();RefreshPoolBadge();state.Text=Loc.T("rta_reset_ok");};tools.Controls.Add(resetPool);
+      var refresh=B(Loc.T("rta_meta"),140,Color.FromArgb(76,72,155));refresh.SetBounds(1049,9,140,32);refresh.Click+=(s,e)=>LoadData(true);tools.Controls.Add(refresh);
       grid.Dock=DockStyle.Fill;grid.BackgroundColor=Bg;grid.BorderStyle=BorderStyle.None;grid.ReadOnly=true;grid.AllowUserToAddRows=false;grid.AllowUserToDeleteRows=false;grid.RowHeadersVisible=false;grid.SelectionMode=DataGridViewSelectionMode.FullRowSelect;grid.RowTemplate.Height=58;grid.AutoGenerateColumns=false;grid.EnableHeadersVisualStyles=false;grid.ColumnHeadersHeight=42;grid.ColumnHeadersDefaultCellStyle=new DataGridViewCellStyle{BackColor=Color.FromArgb(138,45,117),ForeColor=Color.White,Font=new Font("Segoe UI Semibold",10),SelectionBackColor=Color.FromArgb(138,45,117)};grid.DefaultCellStyle=new DataGridViewCellStyle{BackColor=Bg,ForeColor=Color.White,Font=new Font("Segoe UI",10),SelectionBackColor=Color.FromArgb(45,55,83),SelectionForeColor=Color.White};
       grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Rank",HeaderText="#",Width=40});grid.Columns.Add(new DataGridViewImageColumn{DataPropertyName="Icon",HeaderText=Loc.T("rta_col_mon"),Width=58,ImageLayout=DataGridViewImageCellLayout.Zoom});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Monster",HeaderText=Loc.T("rta_col_name"),Width=150});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="WinRate",HeaderText="WR",Width=70});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Pick",HeaderText="Pick",Width=70});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Ban",HeaderText="Ban",Width=70});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Lead",HeaderText="Lead",Width=70});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Games",HeaderText="Games",Width=80});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Sets",HeaderText="Sets SWLens",Width=300});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Subs",HeaderText="Top subs",Width=220});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Score",HeaderText=Loc.T("rta_col_score"),Width=80});grid.Columns.Add(new DataGridViewTextBoxColumn{DataPropertyName="Conseil",HeaderText=Loc.T("rta_col_why"),AutoSizeMode=DataGridViewAutoSizeColumnMode.Fill});foreach(DataGridViewColumn c in grid.Columns){string p=c.DataPropertyName;c.SortMode=(p=="WinRate"||p=="Pick"||p=="Ban"||p=="Lead"||p=="Games"||p=="Score")?DataGridViewColumnSortMode.Programmatic:DataGridViewColumnSortMode.NotSortable;if(c.SortMode==DataGridViewColumnSortMode.Programmatic)c.HeaderCell.ToolTipText=Loc.T("rta_sort_tip");}
       grid.CellPainting+=(s,e)=>{if(e.RowIndex<0||e.ColumnIndex<0)return;if(grid.Columns[e.ColumnIndex].DataPropertyName!="Sets")return;var rec=grid.Rows[e.RowIndex].DataBoundItem as RtaRecommendation;RtaSetIcons.Paint(e,rec==null?Convert.ToString(e.FormattedValue):rec.Sets);};
@@ -260,31 +261,64 @@ namespace RuneManagerModern {
     }
     void RefreshPoolBadge(){
       try{
-        int n=poolSize.SelectedItem==null?RtaBuildOptimizer.LoadPoolSize():Convert.ToInt32(poolSize.SelectedItem);
-        poolDiff=RtaPoolTracker.Diff(json,catalog,stats,n);
+        if(RtaPoolTracker.HasCustom()){
+          int n=RtaPoolTracker.LoadCustomIds().Count;
+          poolBadge.UseNewTag=false;poolBadge.Text=n.ToString();poolBadge.Visible=n>0;
+          poolButton.Padding=n>0?new Padding(30,0,8,0):new Padding(8,0,8,0);
+          Color c=Color.FromArgb(20,184,210);
+          poolBadge.BadgeColor=c;poolButton.FlatAppearance.BorderColor=c;poolBadge.Invalidate();
+          return;
+        }
+        int size=poolSize.SelectedItem==null?RtaBuildOptimizer.LoadPoolSize():Convert.ToInt32(poolSize.SelectedItem);
+        poolDiff=RtaPoolTracker.Diff(json,catalog,stats,size);
         int count=poolDiff==null?0:poolDiff.Count;
         poolBadge.UseNewTag=false;poolBadge.Text=count.ToString();poolBadge.Visible=count>0;
         poolButton.Padding=count>0?new Padding(30,0,8,0):new Padding(8,0,8,0);
-        Color c=count>0?Color.FromArgb(218,70,62):Color.FromArgb(255,170,40);
-        poolBadge.BadgeColor=c;poolButton.FlatAppearance.BorderColor=c;poolBadge.Invalidate();
+        Color alert=count>0?Color.FromArgb(218,70,62):Color.FromArgb(255,170,40);
+        poolBadge.BadgeColor=alert;poolButton.FlatAppearance.BorderColor=alert;poolBadge.Invalidate();
       }catch{poolBadge.Text="0";poolBadge.Visible=false;poolButton.Padding=new Padding(8,0,8,0);}
+    }
+    void EditPool(){
+      int n=poolSize.SelectedItem==null?20:Convert.ToInt32(poolSize.SelectedItem);
+      bool saved=RtaPoolTracker.ShowEditor(this,owned,IconFor,json,catalog,stats,n);
+      poolIdCache=null;poolIdCacheN=-1;
+      RefreshPoolBadge();RefreshAdvice();
+      if(!saved)return;
+      state.Text=Loc.T("rta_pool_saved",RtaPoolTracker.LoadCustomIds().Count);
+      OpenPool();
     }
     void OpenPool(){
       int n=poolSize.SelectedItem==null?20:Convert.ToInt32(poolSize.SelectedItem);
-      if(poolDiff==null)poolDiff=RtaPoolTracker.Diff(json,catalog,stats,n);
-      if(poolDiff!=null&&poolDiff.Count>0){
-        RtaPoolTracker.ShowChanges(this,poolDiff,IconFor);
-        RtaPoolTracker.SaveSnapshot(n,poolDiff.Current);
-        poolDiff.Entered.Clear();poolDiff.Left.Clear();
-        RefreshPoolBadge();
+      if(!RtaPoolTracker.HasCustom()){
+        if(poolDiff==null)poolDiff=RtaPoolTracker.Diff(json,catalog,stats,n);
+        if(poolDiff!=null&&poolDiff.Count>0){
+          RtaPoolTracker.ShowChanges(this,poolDiff,IconFor);
+          RtaPoolTracker.SaveSnapshot(n,poolDiff.Current);
+          poolDiff.Entered.Clear();poolDiff.Left.Clear();
+          RefreshPoolBadge();
+        }
       }
       RtaBuildOptimizer.Show(this,json,catalog,stats,IconFor,n);
+    }
+    int ResolveIconFile(int id){
+      if(iconFiles==null||iconFiles.Count==0)return 0;
+      if(iconFiles.Contains(id))return id;
+      int[] deltas=new int[]{10,-10,20,-20,1,-1,11,-11,21,-21};
+      for(int i=0;i<deltas.Length;i++){int cand=id+deltas[i];if(iconFiles.Contains(cand))return cand;}
+      int element=id%10;
+      if(element<1||element>5)return 0;
+      int family=id/100,best=0,bestDist=int.MaxValue;
+      foreach(int fid in iconFiles){
+        if(fid/100!=family||fid%10!=element)continue;
+        int dist=Math.Abs(fid-id);
+        if(dist<bestDist){bestDist=dist;best=fid;}
+      }
+      return best;
     }
     Image IconFor(int id){
       Image cached;if(iconCache.TryGetValue(id,out cached))return cached;
       EnsureIconIndex();
-      int fileId=id;
-      if(!iconFiles.Contains(fileId)){if(iconFiles.Contains(id+10))fileId=id+10;else if(iconFiles.Contains(id-10))fileId=id-10;else fileId=0;}
+      int fileId=ResolveIconFile(id);
       if(fileId>0){string p=Path.Combine(icons,fileId+".png");try{using(var f=new FileStream(p,FileMode.Open,FileAccess.Read,FileShare.ReadWrite))using(var img=Image.FromStream(f)){var bmp=new Bitmap(img,new Size(48,48));iconCache[id]=bmp;return bmp;}}catch{}}
       var b=new Bitmap(48,48);using(var g=Graphics.FromImage(b)){g.SmoothingMode=System.Drawing.Drawing2D.SmoothingMode.AntiAlias;using(var bg=new SolidBrush(Color.FromArgb(30,40,52)))g.FillRectangle(bg,0,0,48,48);using(var fill=new SolidBrush(Color.FromArgb(90,105,120)))g.FillEllipse(fill,4,4,40,40);using(var pen=new Pen(Color.FromArgb(150,165,180),1.5f))g.DrawEllipse(pen,4,4,40,40);}
       iconCache[id]=b;return b;

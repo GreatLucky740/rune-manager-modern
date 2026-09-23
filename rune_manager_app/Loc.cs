@@ -144,6 +144,16 @@ namespace RuneManagerModern {
       Add("rta_enemy","L'ENNEMI COMMENCE","ENEMY STARTS");
       Add("rta_new","NOUVEAU DRAFT","NEW DRAFT");
       Add("rta_pool","POOL + BUILDS","POOL + BUILDS");
+      Add("rta_pool_edit","CRÉER POOL","CREATE POOL");
+      Add("rta_pool_edit_title","Créer une pool draft","Create a draft pool");
+      Add("rta_pool_edit_hint","Tape un nom pour filtrer (lush trouve aussi Lushen). Les monstres déjà runés RTA sont en premier.","Type a name to filter (lush also finds Lushen). Already-runed RTA monsters come first.");
+      Add("rta_pool_save","ENREGISTRER","SAVE");
+      Add("rta_pool_clear","VIDER","CLEAR");
+      Add("rta_pool_count","{0} monstres dans la pool","{0} monsters in the pool");
+      Add("rta_pool_type","Tape un nom pour filtrer la liste.","Type a name to filter the list.");
+      Add("rta_pool_none","Aucun monstre ne correspond.","No matching monster.");
+      Add("rta_pool_empty","Choisis au moins un monstre que tu possèdes.","Pick at least one monster you own.");
+      Add("rta_pool_saved","Pool enregistrée : {0} monstres","Pool saved: {0} monsters");
       Add("rta_reset","RESET RTA","RESET RTA");
       Add("rta_meta","MAJ META","UPDATE META");
       Add("rta_reset_q","Réinitialiser la sélection et les réglages RTA ?","Reset the RTA selection and settings?");

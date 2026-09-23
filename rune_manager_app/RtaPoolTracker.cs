@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
@@ -17,6 +18,7 @@ namespace RuneManagerModern {
   }
   static class RtaPoolTracker {
     static string SnapPath { get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"rta-pool-snapshot.json"); } }
+    static string CustomPath { get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"rta-custom-pool.json"); } }
     static Dictionary<string,object> D(object x){ return x as Dictionary<string,object>; }
     static object[] A(object x){ return x as object[]??new object[0]; }
     static object G(Dictionary<string,object> d,string k,object z=null){ object v; return d!=null&&d.TryGetValue(k,out v)?v:z; }
@@ -27,8 +29,25 @@ namespace RuneManagerModern {
     static readonly JavaScriptSerializer Js=new JavaScriptSerializer{MaxJsonLength=int.MaxValue,RecursionLimit=128};
 
     public static void ClearSnapshot(){ try{ if(File.Exists(SnapPath)) File.Delete(SnapPath);}catch{} }
+    public static void ClearCustom(){ try{ if(File.Exists(CustomPath)) File.Delete(CustomPath);}catch{} }
+    public static bool HasCustom(){ return LoadCustomIds().Count>0; }
+    public static List<int> LoadCustomIds(){
+      var ids=new List<int>();
+      try{
+        if(!File.Exists(CustomPath)) return ids;
+        var root=D(Js.DeserializeObject(File.ReadAllText(CustomPath)));
+        foreach(var x in A(G(root,"ids"))){ int n=I(x); if(n>0&&!ids.Contains(n)) ids.Add(n); }
+      }catch{}
+      return ids;
+    }
+    public static void SaveCustomIds(List<int> ids){
+      try{
+        var list=(ids??new List<int>()).Where(x=>x>0).Distinct().ToList();
+        File.WriteAllText(CustomPath,Js.Serialize(new Dictionary<string,object>{{"ids",list.ToArray()}}));
+      }catch{}
+    }
 
-    public static List<RtaPoolMember> OwnedPool(string json,string catalog,List<RtaMonster> meta,int poolSize){
+    public static List<RtaPoolMember> OwnedPool(string json,string catalog,List<RtaMonster> meta,int poolSize,bool ignoreCustom=false){
       var result=new List<RtaPoolMember>();
       if(string.IsNullOrEmpty(json)||!File.Exists(json)||meta==null) return result;
       try{
@@ -37,18 +56,34 @@ namespace RuneManagerModern {
         if(!string.IsNullOrEmpty(catalog)&&File.Exists(catalog))
           foreach(var x in A(Js.DeserializeObject(File.ReadAllText(catalog)))){ var d=D(x); int id=I(G(d,"id")); if(id>0){ names[id]=S(G(d,"name","Monstre "+id)); groups[id]=I(G(d,"skillgroup")); elements[id]=S(G(d,"element")); } }
         var metaBy=meta.Where(x=>x.Id>0).GroupBy(x=>x.Id).ToDictionary(g=>g.Key,g=>g.OrderByDescending(x=>x.Played).First());
+        var custom=ignoreCustom?new List<int>():LoadCustomIds();
+        var customSet=new HashSet<int>(custom);
+        var ownedMasters=new HashSet<int>();
         var units=new List<RtaPoolMember>();
         foreach(var x in A(G(root,"unit_list"))){
           var d=D(x); int m=I(G(d,"unit_master_id")); if(m<=0) continue;
+          ownedMasters.Add(m);
           RtaMonster direct; metaBy.TryGetValue(m,out direct);
           int group; string element; RtaMonster groupBest=null;
           if(groups.TryGetValue(m,out group)&&group>0&&elements.TryGetValue(m,out element))
             groupBest=metaBy.Values.Where(c=>groups.ContainsKey(c.Id)&&groups[c.Id]==group&&elements.ContainsKey(c.Id)&&string.Equals(elements[c.Id],element,StringComparison.OrdinalIgnoreCase)).OrderByDescending(c=>c.Played).FirstOrDefault();
           RtaMonster rm=direct!=null&&(groupBest==null||direct.Played>=groupBest.Played)?direct:groupBest;
-          if(rm==null) continue;
+          if(rm==null){
+            if(!customSet.Contains(m)) continue;
+            units.Add(new RtaPoolMember{Id=m,Name=names.ContainsKey(m)?names[m]:("Monstre "+m)});
+            continue;
+          }
           units.Add(new RtaPoolMember{Id=m,Name=names.ContainsKey(m)?names[m]:rm.Name,Played=rm.Played,PickRate=rm.PickRate});
         }
-        result=units.GroupBy(x=>x.Id).Select(g=>g.OrderByDescending(x=>x.Played).First()).OrderByDescending(x=>x.Played).ThenByDescending(x=>x.PickRate).Take(Math.Max(10,poolSize)).ToList();
+        result=units.GroupBy(x=>x.Id).Select(g=>g.OrderByDescending(x=>x.Played).First()).ToList();
+        if(custom.Count>0){
+          var byId=result.ToDictionary(x=>x.Id,x=>x);
+          result=custom.Where(id=>ownedMasters.Contains(id)).Select(id=>{
+            RtaPoolMember m;
+            if(byId.TryGetValue(id,out m)) return m;
+            return new RtaPoolMember{Id=id,Name=names.ContainsKey(id)?names[id]:("Monstre "+id)};
+          }).ToList();
+        }else result=result.OrderByDescending(x=>x.Played).ThenByDescending(x=>x.PickRate).Take(Math.Max(10,poolSize)).ToList();
       }catch{}
       return result;
     }
@@ -75,6 +110,48 @@ namespace RuneManagerModern {
     }
 
     static string Read(string p){ using(var f=new FileStream(p,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete)) using(var r=new StreamReader(f)) return r.ReadToEnd(); }
+
+    static string Fold(string s){
+      if(string.IsNullOrEmpty(s))return "";
+      string n=s.ToLowerInvariant().Normalize(NormalizationForm.FormD);
+      var sb=new StringBuilder(n.Length);
+      foreach(char c in n)if(CharUnicodeInfo.GetUnicodeCategory(c)!=UnicodeCategory.NonSpacingMark)sb.Append(c);
+      return sb.ToString();
+    }
+    static bool NameMatch(string fold,string q){
+      if(string.IsNullOrEmpty(q))return true;
+      if(fold.IndexOf(q)>=0)return true;
+      int i=0;foreach(char c in fold){if(i<q.Length&&c==q[i])i++;}
+      return i==q.Length;
+    }
+    static int NameScore(string fold,string q){
+      if(string.IsNullOrEmpty(q))return 0;
+      if(fold.StartsWith(q,StringComparison.Ordinal))return 0;
+      int at=fold.IndexOf(q);
+      if(at>=0)return 10+at;
+      return 100;
+    }
+    static string DisplayName(string name){
+      if(string.IsNullOrEmpty(name))return "";
+      string eq=Loc.T("rta_owned_eq");
+      if(!string.IsNullOrEmpty(eq)&&name.EndsWith(eq,StringComparison.Ordinal))return name.Substring(0,name.Length-eq.Length).Trim();
+      return name;
+    }
+    static void BindClick(Control c,EventHandler h){
+      c.Cursor=Cursors.Hand;c.Click+=h;
+      foreach(Control x in c.Controls)BindClick(x,h);
+    }
+    public static Dictionary<int,int> RtaPriority(string json,string catalog,List<RtaMonster> meta,int poolSize){
+      var rank=new Dictionary<int,int>();
+      try{
+        int n=0;
+        foreach(var m in OwnedPool(json,catalog,meta,Math.Max(10,poolSize),true)){
+          if(m==null||m.Id<=0||rank.ContainsKey(m.Id))continue;
+          rank[m.Id]=n++;
+        }
+      }catch{}
+      return rank;
+    }
 
     static Dictionary<int,List<RtaPoolMember>> LoadAll(){
       var map=new Dictionary<int,List<RtaPoolMember>>();
@@ -152,6 +229,136 @@ namespace RuneManagerModern {
         row.Controls.Add(pic); row.Controls.Add(name); box.Controls.Add(row); y+=48;
       }
       return box;
+    }
+
+    static int PriorityOf(Dictionary<int,int> rank,int id){
+      int n;return rank!=null&&rank.TryGetValue(id,out n)?n:100000;
+    }
+    public static bool ShowEditor(Form owner,Dictionary<int,string> owned,Func<int,Image> icon,string json,string catalogPath,List<RtaMonster> meta,int poolSize){
+      var chosen=new List<int>(LoadCustomIds());
+      var names=owned??new Dictionary<int,string>();
+      var rtaRank=RtaPriority(json,catalogPath,meta,poolSize);
+      var roster=new List<int>(names.Keys);
+      var folds=new Dictionary<int,string>(roster.Count);
+      foreach(int id in roster){
+        string nm;if(!names.TryGetValue(id,out nm)||string.IsNullOrEmpty(nm))nm="Monstre "+id;
+        folds[id]=Fold(nm)+" "+Fold(DisplayName(nm))+" "+id.ToString(CultureInfo.InvariantCulture);
+      }
+      roster.Sort(delegate(int a,int b){
+        int c=PriorityOf(rtaRank,a).CompareTo(PriorityOf(rtaRank,b));if(c!=0)return c;
+        string na,nb;names.TryGetValue(a,out na);names.TryGetValue(b,out nb);
+        return string.Compare(DisplayName(na),DisplayName(nb),StringComparison.OrdinalIgnoreCase);
+      });
+      var f=new Form{Text=Loc.T("rta_pool_edit_title"),BackColor=Color.FromArgb(7,13,22),ForeColor=Color.White,Size=new Size(920,640),MinimumSize=new Size(720,480),StartPosition=FormStartPosition.CenterParent,Icon=owner!=null?owner.Icon:null};
+      var head=new Panel{Dock=DockStyle.Top,Height=96,BackColor=Color.FromArgb(15,25,39)};
+      var title=new Label{Text=Loc.T("rta_pool_edit_title"),Location=new Point(16,10),AutoSize=true,ForeColor=Color.FromArgb(20,184,210),Font=new Font("Segoe UI Semibold",14)};
+      var hint=new Label{Text=Loc.T("rta_pool_edit_hint"),Location=new Point(16,38),Size=new Size(880,22),ForeColor=Color.Silver};
+      var search=new TextBox{Location=new Point(16,64),Size=new Size(560,24),BackColor=Color.FromArgb(18,28,42),ForeColor=Color.White,BorderStyle=BorderStyle.FixedSingle,Font=new Font("Segoe UI",12)};
+      head.Controls.Add(title);head.Controls.Add(hint);head.Controls.Add(search);
+      var picked=new BufferedFlow{Dock=DockStyle.Top,Height=118,AutoScroll=true,WrapContents=false,BackColor=Color.FromArgb(10,20,32),Padding=new Padding(8,8,8,4)};
+      var catalog=new BufferedFlow{Dock=DockStyle.Fill,AutoScroll=true,WrapContents=true,BackColor=Color.FromArgb(7,13,22),Padding=new Padding(8)};
+      var empty=new Label{AutoSize=true,Location=new Point(16,16),ForeColor=Color.Silver,Font=new Font("Segoe UI",10)};
+      catalog.Controls.Add(empty);
+      var bar=new Panel{Dock=DockStyle.Bottom,Height=54,BackColor=Color.FromArgb(15,25,39)};
+      var count=new Label{AutoSize=true,Location=new Point(16,16),ForeColor=Color.Gainsboro,Font=new Font("Segoe UI Semibold",10)};
+      var clear=new Button{Text=Loc.T("rta_pool_clear"),AutoSize=true,Height=34,FlatStyle=FlatStyle.Flat,BackColor=Color.FromArgb(125,65,65),ForeColor=Color.White,Font=new Font("Segoe UI Semibold",9)};
+      var save=new Button{Text=Loc.T("rta_pool_save"),AutoSize=true,Height=34,FlatStyle=FlatStyle.Flat,BackColor=Color.FromArgb(36,137,112),ForeColor=Color.White,Font=new Font("Segoe UI Semibold",9)};
+      bar.Controls.Add(count);bar.Controls.Add(clear);bar.Controls.Add(save);
+      bar.Resize+=(s,e)=>{save.Location=new Point(Math.Max(count.Right+12,bar.ClientSize.Width-save.Width-16),10);clear.Location=new Point(save.Left-clear.Width-8,10);};
+      bool savedOk=false;
+      var tiles=new Dictionary<int,Control>();
+      var tips=new ToolTip{AutoPopDelay=8000,InitialDelay=400,ReshowDelay=100,ShowAlways=true};
+      var filterTimer=new Timer{Interval=35};
+      Action<int> toggle=null;
+      Action paintPicked=null;
+      Action paintCatalog=null;
+      Action mark=null;
+      mark=delegate{
+        var selected=new HashSet<int>(chosen);
+        foreach(var kv in tiles){
+          var p=kv.Value as Panel;if(p==null)continue;
+          bool on=selected.Contains(kv.Key);
+          p.BackColor=on?Color.FromArgb(18,52,48):Color.FromArgb(20,34,49);
+          foreach(Control c in p.Controls){var lb=c as Label;if(lb!=null)lb.ForeColor=on?Color.FromArgb(180,255,220):Color.White;}
+        }
+        count.Text=Loc.T("rta_pool_count",chosen.Count);
+      };
+      toggle=delegate(int id){
+        if(id<=0)return;
+        if(chosen.Contains(id))chosen.Remove(id);else chosen.Add(id);
+        paintPicked();
+        mark();
+      };
+      Func<int,bool,Control> makeTile=delegate(int id,bool inPool){
+        string raw;if(!names.TryGetValue(id,out raw)||string.IsNullOrEmpty(raw))raw="Monstre "+id;
+        string shown=DisplayName(raw);
+        bool isRta=rtaRank.ContainsKey(id);
+        var p=new Panel{Width=112,Height=104,Margin=new Padding(4,3,4,3),BackColor=inPool?Color.FromArgb(18,52,48):Color.FromArgb(20,34,49),Cursor=Cursors.Hand,Tag=id};
+        if(isRta)p.Controls.Add(new Panel{Bounds=new Rectangle(0,0,112,3),BackColor=Color.FromArgb(20,184,210)});
+        var pic=new PictureBox{Image=icon!=null?icon(id):null,Bounds=new Rectangle(32,8,48,48),SizeMode=PictureBoxSizeMode.Zoom,BackColor=Color.Transparent};
+        var nm=new Label{Text=shown,AutoSize=false,Bounds=new Rectangle(2,58,108,44),ForeColor=inPool?Color.FromArgb(180,255,220):Color.White,Font=new Font("Segoe UI Semibold",9f),TextAlign=ContentAlignment.TopCenter};
+        p.Controls.Add(pic);p.Controls.Add(nm);
+        int captured=id;
+        EventHandler click=delegate(object s,EventArgs e){toggle(captured);};
+        BindClick(p,click);
+        tips.SetToolTip(p,raw+(isRta?"  •  RTA":""));
+        tips.SetToolTip(nm,raw+(isRta?"  •  RTA":""));
+        return p;
+      };
+      Func<int,Control> catalogTile=delegate(int id){
+        Control cached;
+        if(!tiles.TryGetValue(id,out cached)){cached=makeTile(id,chosen.Contains(id));tiles[id]=cached;}
+        return cached;
+      };
+      paintPicked=delegate{
+        picked.SuspendLayout();picked.Controls.Clear();
+        foreach(int id in chosen)picked.Controls.Add(makeTile(id,true));
+        picked.ResumeLayout();
+      };
+      paintCatalog=delegate{
+        string q=Fold((search.Text??"").Trim());
+        var hits=new List<int>();
+        if(q.Length==0){
+          foreach(int id in roster){hits.Add(id);if(hits.Count>=160)break;}
+        }else{
+          var scored=new List<KeyValuePair<int,int>>();
+          foreach(int id in roster){
+            string fold;if(!folds.TryGetValue(id,out fold))fold="";
+            if(!NameMatch(fold,q))continue;
+            scored.Add(new KeyValuePair<int,int>(id,NameScore(fold,q)));
+          }
+          scored.Sort(delegate(KeyValuePair<int,int> a,KeyValuePair<int,int> b){
+            int c=PriorityOf(rtaRank,a.Key).CompareTo(PriorityOf(rtaRank,b.Key));if(c!=0)return c;
+            c=a.Value.CompareTo(b.Value);if(c!=0)return c;
+            string na,nb;names.TryGetValue(a.Key,out na);names.TryGetValue(b.Key,out nb);
+            return string.Compare(DisplayName(na),DisplayName(nb),StringComparison.OrdinalIgnoreCase);
+          });
+          int n=Math.Min(160,scored.Count);
+          for(int i=0;i<n;i++)hits.Add(scored[i].Key);
+        }
+        catalog.SuspendLayout();catalog.Controls.Clear();
+        if(hits.Count==0){
+          empty.Text=q.Length==0?Loc.T("rta_pool_type"):Loc.T("rta_pool_none");
+          catalog.Controls.Add(empty);
+        }else foreach(int id in hits)catalog.Controls.Add(catalogTile(id));
+        catalog.ResumeLayout();
+        mark();
+      };
+      filterTimer.Tick+=(s,e)=>{filterTimer.Stop();paintCatalog();};
+      search.TextChanged+=(s,e)=>{filterTimer.Stop();filterTimer.Start();};
+      clear.Click+=(s,e)=>{chosen.Clear();paintPicked();mark();};
+      save.Click+=(s,e)=>{
+        if(chosen.Count==0){ClearCustom();savedOk=false;f.DialogResult=DialogResult.OK;f.Close();return;}
+        SaveCustomIds(chosen);savedOk=true;f.DialogResult=DialogResult.OK;f.Close();
+      };
+      f.FormClosed+=(s,e)=>{filterTimer.Stop();filterTimer.Dispose();};
+      f.Controls.Add(catalog);f.Controls.Add(picked);f.Controls.Add(bar);f.Controls.Add(head);
+      count.Text=Loc.T("rta_pool_count",chosen.Count);
+      paintPicked();
+      paintCatalog();
+      f.Shown+=(s,e)=>search.Focus();
+      f.ShowDialog(owner);
+      return savedOk;
     }
   }
 }

@@ -151,8 +151,8 @@ namespace RuneManagerModern {
     // affiche un compte > 0, revient a l'orange normal sinon. NormalActionBorder =
     // meme orange que les autres boutons "outils/fonction".
     readonly Color RedAlertBorder=Color.FromArgb(218,70,62), NormalActionBorder=Color.FromArgb(255,170,40);
-    const int AppBuild=12;
-    const string AppVersion="1.06";
+    const int AppBuild=13;
+    const string AppVersion="1.07";
     void SetActionBorder(Button b,bool active){SetActionBorder(b,null,active);}
     // Le cadre du badge suit la meme couleur que le contour du bouton ou il se trouve
     // (rouge si action a faire, orange sinon) au lieu d'une couleur fixe independante.
@@ -174,7 +174,7 @@ namespace RuneManagerModern {
     static readonly Color CroquisOrange=Color.FromArgb(255,170,40),CroquisViolet=Color.FromArgb(150,90,230),CroquisBlue=Color.FromArgb(20,184,210);
     Point[] shineOuterPts,shineInnerPts; float[] shineOuterAng,shineInnerAng; int shineMapW,shineMapH;
     readonly HashSet<long> hiddenUpgradeIds=new HashSet<long>(); readonly HashSet<int> hiddenSkillTargetIds=new HashSet<int>();
-    FileSystemWatcher jsonWatcher; readonly Timer jsonDebounce=new Timer(),liveLogTimer=new Timer(),worldBossTimer=new Timer(),ancientShineTimer=new Timer(),updateCheckTimer=new Timer(); float ancientPulseT; string pendingJson="",liveLogPath="",liveLogPending=""; DateTime lastAutoImport=DateTime.MinValue,liveLogStableSince=DateTime.MinValue; long liveLogOffset=0,liveLogObservedLength=-1; Action liveStockRefresh;
+    readonly List<FileSystemWatcher> jsonWatchers=new List<FileSystemWatcher>(); readonly Timer jsonDebounce=new Timer(),jsonPollTimer=new Timer(),liveLogTimer=new Timer(),worldBossTimer=new Timer(),ancientShineTimer=new Timer(),updateCheckTimer=new Timer(); float ancientPulseT; string pendingJson="",liveLogPath="",liveLogPending="",jsonPollPath=""; DateTime lastAutoImport=DateTime.MinValue,liveLogStableSince=DateTime.MinValue; long liveLogOffset=0,liveLogObservedLength=-1,lastImportLength=0,jsonPollSize=-1; Action liveStockRefresh;
     List<RuneRow> all=new List<RuneRow>(); List<SkillUpGroup> skillGroups=new List<SkillUpGroup>(); List<SkillUpFamily> skillFamilies=new List<SkillUpFamily>(); int skillGroupsRevision,worldBossRevision; readonly List<string> liveSavedEvents=new List<string>(); readonly List<WorldBossChangeRow> worldBossChanges=new List<WorldBossChangeRow>(); string currentFile="",viewMode="normal",worldBossCalculatedFile=""; bool potentialDesc=true,liveAwaitingResponse=false,liveAwaitingRequest=false,liveRequestEquipment=false,liveRequestSkill=false,liveRequestCraft=false,showHiddenSkillTargets=false,worldBossCalculating=false; Button worldBossButton,retentionButton,rtaButton,codesButton,improveButton,skillButton,reevalButton,refinementButton,spdRankButton,importButton,potButton,obtButton,presetButton,coefficientButton,autoKeepButton,rulesButton; Panel row2Divider,row1Divider,topBar; Label titleLabel; ComboBox langCombo; PictureBox paypalButton,discordButton,twitchButton; Button updateButton; Label versionLabel; readonly ToolTip reappNormalTip=new ToolTip(),reappAncientTip=new ToolTip(),refinementTip=new ToolTip(),paypalTip=new ToolTip(),discordTip=new ToolTip(),twitchTip=new ToolTip(),searchTip=new ToolTip(),updateTip=new ToolTip(); bool applyingLang; const int Row2Gap=8; const string PaypalDonateUrl="https://www.paypal.me/greatlucky"; const string DiscordInviteUrl="https://discord.gg/YGEt9eNKuH"; const string TwitchUrl="https://www.twitch.tv/imgreatlucky"; const string UpdateManifestUrl="https://api.github.com/repos/GreatLucky740/rune-manager-modern/contents/tools/update.json"; string pendingUpdateUrl="",pendingUpdateVersion=""; string[] pendingUpdateNotes=new string[0]; bool updateAvailable,updateCheckBusy,codesRefreshBusy; WorldBossResult worldBossLatest,worldBossSeen;
     Action codesWindowFill;
     // Le bouton WORLD BOSS MAX change de largeur au runtime (Padding gauche 16->38
@@ -186,6 +186,9 @@ namespace RuneManagerModern {
     // sauter skill-up a la place theorique du bouton cache des qu'un refresh (badge, etc.)
     // redeclenchait ce calcul. Part directement de x=18 tant que le bouton reste cache.
     void RelayoutRow2(){if(worldBossButton==null||skillButton==null)return;int x=worldBossButton.Parent==null?18:worldBossButton.Right+Row2Gap;skillButton.Left=x;x=skillButton.Right+Row2Gap;if(rtaButton!=null){rtaButton.Left=x;x=rtaButton.Right+Row2Gap;}if(codesButton!=null){codesButton.Left=x;x=codesButton.Right+Row2Gap;}if(row2Divider!=null){row2Divider.Left=x;x=row2Divider.Right+Row2Gap;}if(retentionButton!=null)retentionButton.Left=x;}
+    string LastJsonPath {get{return Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"dernier-json.txt");}}
+    string LastJsonMetaPath {get{return Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"dernier-json-meta.txt");}}
+    string SnapshotJsonPath {get{return Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"dernier-import.json");}}
     string StockSavePath {get{return Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"stock-sauvegarde-v2.tsv");}}
     string SettingsSavePath {get{return Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"parametres-runes.tsv");}}
     string RetentionSavePath {get{return Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"seuil-dynamique.txt");}}
@@ -261,7 +264,7 @@ namespace RuneManagerModern {
       retentionButton=Button("",rx2,rowY2,0,SeuilColor,rh);retentionButton.Click+=(s,e)=>ShowRetentionSettings();top.Controls.Add(retentionButton);RefreshRetentionButton();
       status.Dock=DockStyle.Bottom;status.Height=22;status.ForeColor=Color.Silver;top.Controls.Add(status);
       grid.Dock=DockStyle.Fill;grid.BackgroundColor=Grid;grid.BorderStyle=BorderStyle.None;grid.GridColor=Color.Black;grid.CellBorderStyle=DataGridViewCellBorderStyle.Single;grid.RowHeadersVisible=false;grid.AllowUserToAddRows=false;grid.AllowUserToDeleteRows=false;grid.ReadOnly=true;grid.MultiSelect=false;grid.SelectionMode=DataGridViewSelectionMode.CellSelect;grid.AutoSizeRowsMode=DataGridViewAutoSizeRowsMode.None;grid.RowTemplate.Height=56;grid.EnableHeadersVisualStyles=false;grid.ColumnHeadersHeight=44;grid.ColumnHeadersHeightSizeMode=DataGridViewColumnHeadersHeightSizeMode.DisableResizing;grid.ColumnHeadersDefaultCellStyle=new DataGridViewCellStyle{BackColor=Teal,ForeColor=Color.White,Font=new Font("Segoe UI Semibold",12),SelectionBackColor=Teal};grid.DefaultCellStyle=new DataGridViewCellStyle{BackColor=Grid,ForeColor=Color.White,Font=new Font("Segoe UI",12),SelectionBackColor=Color.FromArgb(26,70,83),SelectionForeColor=Color.White,Padding=new Padding(2,0,2,0)};grid.CellFormatting+=FormatCell;grid.CellPainting+=PaintCraftBorder;grid.KeyDown+=GridKeyDown;grid.CellMouseDown+=GridMouseDown;grid.CellToolTipTextNeeded+=(s,e)=>{if(e.RowIndex>=0){var r=grid.Rows[e.RowIndex].DataBoundItem as RuneRow;if(r!=null&&e.ColumnIndex==0)e.ToolTipText=r.Rune;}};Controls.Add(grid);grid.BringToFront();
-      AddColumns();jsonDebounce.Interval=1200;jsonDebounce.Tick+=(s,e)=>ImportPendingJson();liveLogTimer.Interval=500;liveLogTimer.Tick+=(s,e)=>ReadLiveLog();worldBossTimer.Interval=700;worldBossTimer.Tick+=(s,e)=>{worldBossTimer.Stop();StartWorldBossRealtimeCalculation();};ancientShineTimer.Interval=70;ancientShineTimer.Tick+=(s,e)=>{ancientPulseT+=0.040f;if(ancientPulseT>=1f)ancientPulseT-=1f;if(grid.Columns.Count>0)grid.InvalidateColumn(0);};Shown+=(s,e)=>{LayoutToolbar();TryAutoLoad();LoadWorldBossOrderEvents();LoadWorldBossRealOrder();StartJsonWatcher();StartLiveLog();ancientShineTimer.Start();StartUpdateCheck(false);StartGameCodesRefresh();if(!updateCheckTimer.Enabled){updateCheckTimer.Interval=600000;updateCheckTimer.Tick+=(t,ev)=>{StartUpdateCheck(false);StartGameCodesRefresh();};updateCheckTimer.Start();}};      Resize+=(s,e)=>{FitColumns();PlaceLangCombo();};
+      AddColumns();jsonDebounce.Interval=1200;jsonDebounce.Tick+=(s,e)=>ImportPendingJson();jsonPollTimer.Interval=1500;jsonPollTimer.Tick+=(s,e)=>PollJsonExports();liveLogTimer.Interval=500;liveLogTimer.Tick+=(s,e)=>ReadLiveLog();worldBossTimer.Interval=700;worldBossTimer.Tick+=(s,e)=>{worldBossTimer.Stop();StartWorldBossRealtimeCalculation();};ancientShineTimer.Interval=70;ancientShineTimer.Tick+=(s,e)=>{ancientPulseT+=0.040f;if(ancientPulseT>=1f)ancientPulseT-=1f;if(grid.Columns.Count>0)grid.InvalidateColumn(0);};Shown+=(s,e)=>{LayoutToolbar();TryAutoLoad();LoadWorldBossOrderEvents();LoadWorldBossRealOrder();StartJsonWatcher();StartLiveLog();ancientShineTimer.Start();StartUpdateCheck(false);StartGameCodesRefresh();if(!updateCheckTimer.Enabled){updateCheckTimer.Interval=600000;updateCheckTimer.Tick+=(t,ev)=>{StartUpdateCheck(false);StartGameCodesRefresh();};updateCheckTimer.Start();}};      Resize+=(s,e)=>{FitColumns();PlaceLangCombo();};
       ApplyLanguage();
     }
     void PlaceLangCombo(){
@@ -663,30 +666,89 @@ namespace RuneManagerModern {
       }
       return best??"";
     }
-    void ChooseFile(){using(var d=new OpenFileDialog{Filter=Loc.T("filter_json"),Title=Loc.T("open_json")})if(d.ShowDialog()==DialogResult.OK){LoadFile(d.FileName);StartJsonWatcher();StartLiveLog();}}
+    void ChooseFile(){using(var d=new OpenFileDialog{Filter=Loc.T("filter_json"),Title=Loc.T("open_json")})if(d.ShowDialog()==DialogResult.OK){LoadFile(d.FileName,false);StartJsonWatcher();StartLiveLog();}}
+    string ReadLastJsonPath(){
+      try{
+        if(!File.Exists(LastJsonPath))return "";
+        string p=File.ReadAllText(LastJsonPath).Trim();
+        return p.Length>0&&File.Exists(p)?p:"";
+      }catch{return "";}
+    }
+    void RememberJson(string path){
+      if(string.IsNullOrWhiteSpace(path)||!File.Exists(path))return;
+      try{
+        string snap=SnapshotJsonPath;
+        if(path.Equals(snap,StringComparison.OrdinalIgnoreCase))return;
+        File.WriteAllText(LastJsonPath,path);
+        File.Copy(path,snap,true);
+        var fi=new FileInfo(path);
+        File.WriteAllText(LastJsonMetaPath,fi.LastWriteTimeUtc.Ticks.ToString(CultureInfo.InvariantCulture)+"\t"+fi.Length.ToString(CultureInfo.InvariantCulture));
+      }catch{}
+    }
+    bool JsonUnchangedSinceLastLoad(string path){
+      try{
+        if(string.IsNullOrWhiteSpace(path)||!File.Exists(path)||!File.Exists(LastJsonMetaPath))return false;
+        string[] p=File.ReadAllText(LastJsonMetaPath).Trim().Split('\t');
+        long ticks,len;
+        if(p.Length<2||!long.TryParse(p[0],NumberStyles.Integer,CultureInfo.InvariantCulture,out ticks)||!long.TryParse(p[1],NumberStyles.Integer,CultureInfo.InvariantCulture,out len))return false;
+        var fi=new FileInfo(path);
+        return fi.LastWriteTimeUtc.Ticks==ticks&&fi.Length==len;
+      }catch{return false;}
+    }
+    bool IsSnapshotJson(string path){
+      return !string.IsNullOrWhiteSpace(path)&&path.Equals(SnapshotJsonPath,StringComparison.OrdinalIgnoreCase);
+    }
+    bool IsIgnoredJson(string path){
+      if(string.IsNullOrWhiteSpace(path)||!path.EndsWith(".json",StringComparison.OrdinalIgnoreCase)||IsSnapshotJson(path))return true;
+      string name=Path.GetFileName(path);
+      return name.Equals("Artifact_Manager_Data.json",StringComparison.OrdinalIgnoreCase);
+    }
     void TryAutoLoad(){
       try{
         FileInfo best=null;
+        Action<string> consider=p=>{
+          if(string.IsNullOrWhiteSpace(p)||!File.Exists(p)||IsIgnoredJson(p))return;
+          var f=new FileInfo(p);
+          if(f.Length<=100000)return;
+          if(best==null||f.LastWriteTimeUtc>best.LastWriteTimeUtc)best=f;
+        };
+        consider(ReadLastJsonPath());
         foreach(string folder in ExportFolderCandidates()){
           if(!Directory.Exists(folder))continue;
           var f=new DirectoryInfo(folder).GetFiles("*.json").Where(x=>x.Length>100000).OrderByDescending(x=>x.LastWriteTimeUtc).FirstOrDefault();
-          if(f==null)continue;
-          if(best==null||f.LastWriteTimeUtc>best.LastWriteTimeUtc)best=f;
+          if(f!=null)consider(f.FullName);
         }
-        if(best!=null)LoadFile(best.FullName);
+        if(best==null){
+          string snap=SnapshotJsonPath;
+          if(File.Exists(snap)&&new FileInfo(snap).Length>100000)best=new FileInfo(snap);
+        }
+        if(best!=null)LoadFile(best.FullName,JsonUnchangedSinceLastLoad(best.FullName));
       }catch{}
     }
+    void StopJsonWatchers(){
+      foreach(var w in jsonWatchers){
+        try{w.EnableRaisingEvents=false;w.Created-=JsonDetected;w.Changed-=JsonDetected;w.Dispose();}catch{}
+      }
+      jsonWatchers.Clear();
+    }
+    void WatchJsonFolder(string folder){
+      if(string.IsNullOrWhiteSpace(folder)||!Directory.Exists(folder))return;
+      foreach(var w in jsonWatchers)if(string.Equals(w.Path,folder,StringComparison.OrdinalIgnoreCase))return;
+      var watcher=new FileSystemWatcher(folder,"*.json");
+      watcher.InternalBufferSize=65536;
+      watcher.NotifyFilter=NotifyFilters.FileName|NotifyFilters.LastWrite|NotifyFilters.CreationTime|NotifyFilters.Size;
+      watcher.Created+=JsonDetected;watcher.Changed+=JsonDetected;watcher.Renamed+=(s,e)=>QueueJson(e.FullPath);
+      watcher.EnableRaisingEvents=true;
+      jsonWatchers.Add(watcher);
+    }
     void StartJsonWatcher(){
-      string folder=ActiveExportFolder();
-      if(!Directory.Exists(folder))return;
-      try{
-        if(jsonWatcher!=null){jsonWatcher.EnableRaisingEvents=false;jsonWatcher.Dispose();jsonWatcher=null;}
-        jsonWatcher=new FileSystemWatcher(folder,"*.json");
-        jsonWatcher.NotifyFilter=NotifyFilters.FileName|NotifyFilters.LastWrite|NotifyFilters.CreationTime|NotifyFilters.Size;
-        jsonWatcher.Created+=JsonDetected;jsonWatcher.Changed+=JsonDetected;jsonWatcher.Renamed+=(s,e)=>QueueJson(e.FullPath);
-        jsonWatcher.EnableRaisingEvents=true;
-        status.Text=(status.Text.Length>0?status.Text+"  •  ":"")+Loc.T("status_json_watch");
-      }catch(Exception ex){status.Text=Loc.T("status_json_watch_fail",ex.Message);}
+      StopJsonWatchers();
+      WatchJsonFolder(DefaultExportFolder());
+      string last=ReadLastJsonPath();
+      if(last.Length>0)WatchJsonFolder(Path.GetDirectoryName(last));
+      if(!string.IsNullOrWhiteSpace(currentFile))WatchJsonFolder(Path.GetDirectoryName(currentFile));
+      jsonPollTimer.Stop();jsonPollTimer.Start();
+      if(jsonWatchers.Count>0)status.Text=(status.Text.Length>0?status.Text+"  •  ":"")+Loc.T("status_json_watch");
     }
     void JsonDetected(object sender,FileSystemEventArgs e){QueueJson(e.FullPath);}
     // liveSavedEvents (donc gameOrder/les 3 vraies teams World Boss) est en memoire pure et
@@ -731,8 +793,8 @@ namespace RuneManagerModern {
     }
     bool IsWorldBossSkillEvent(string line){if(string.IsNullOrEmpty(line))return false;return line.IndexOf("\"command\":\"UpgradeUnitSkill",StringComparison.OrdinalIgnoreCase)>=0||line.IndexOf("\"command\":\"PowerupUnit",StringComparison.OrdinalIgnoreCase)>=0||line.IndexOf("\"command\":\"SacrificeUnit",StringComparison.OrdinalIgnoreCase)>=0;}
     void ProcessLiveLog(){
-      string normalized=liveLogPending.Replace("\r\n","\n");int lastNewline=normalized.LastIndexOf('\n');if(lastNewline<0)return;string complete=normalized.Substring(0,lastNewline+1);liveLogPending=normalized.Substring(lastNewline+1);string[] lines=complete.Split('\n');var messages=new List<string>();var craftIds=new HashSet<long>();bool skillChanged=false,equipmentChanged=false;var before=all.ToDictionary(x=>x.Id,x=>Tuple.Create(x.Level,x.Potential));for(int i=0;i<lines.Length;i++){string line=lines[i].Trim();if(line=="Request:"){liveAwaitingRequest=true;continue;}if(line=="Response:"){liveAwaitingRequest=false;liveAwaitingResponse=true;continue;}if(liveAwaitingRequest&&line.Length>0){liveAwaitingRequest=false;DismissLiveChoice(line);bool worldBossOrder=line.IndexOf("\"command\":\"BattleWorldBossStart_v2\"",StringComparison.OrdinalIgnoreCase)>=0&&line.IndexOf("\"unit_id_list\"",StringComparison.OrdinalIgnoreCase)>=0;liveRequestEquipment=line.IndexOf("\"command\":\"UpdateUnitEquip\"",StringComparison.Ordinal)>=0;liveRequestCraft=line.IndexOf("\"command\":\"AmplifyRune_v2\"",StringComparison.Ordinal)>=0||line.IndexOf("\"command\":\"ConvertRune_v2\"",StringComparison.Ordinal)>=0;liveRequestSkill=IsWorldBossSkillEvent(line)||line.IndexOf("\"command\":\"SummonUnit\"",StringComparison.Ordinal)>=0||line.IndexOf("\"command\":\"ConvertUnitToStorage\"",StringComparison.Ordinal)>=0||line.IndexOf("\"command\":\"getUnitStorageList\"",StringComparison.Ordinal)>=0;int protectedCount=RuneEngine.ApplyLiveDeckProtection(all,line);int markerCount=RuneEngine.ApplyLiveRuneMarker(all,line);if(protectedCount>0)messages.Add(protectedCount+" rune"+(protectedCount>1?"s":"")+" protégée"+(protectedCount>1?"s":"")+" par les decks");if(markerCount>0)messages.Add("Marquage de rune mis à jour");if(worldBossOrder){liveSavedEvents.Add(line);while(liveSavedEvents.Count(x=>x.IndexOf("\"command\":\"BattleWorldBossStart_v2\"",StringComparison.OrdinalIgnoreCase)>=0)>3){int old=liveSavedEvents.FindIndex(x=>x.IndexOf("\"command\":\"BattleWorldBossStart_v2\"",StringComparison.OrdinalIgnoreCase)>=0);if(old>=0)liveSavedEvents.RemoveAt(old);else break;}SaveWorldBossOrderEvent(line);messages.Add("Ordre réel du World Boss enregistré");}else if(protectedCount>0||markerCount>0)liveSavedEvents.Add(line);continue;}if(!liveAwaitingResponse||line.Length==0)continue;liveAwaitingResponse=false;DismissLiveChoice(line);bool craft=liveRequestCraft||line.IndexOf("\"command\":\"AmplifyRune_v2\"",StringComparison.Ordinal)>=0||line.IndexOf("\"command\":\"ConvertRune_v2\"",StringComparison.Ordinal)>=0;bool equipmentEvent=liveRequestEquipment||line.IndexOf("\"command\":\"UpdateUnitEquip\"",StringComparison.Ordinal)>=0;bool skillEvent=liveRequestSkill||IsWorldBossSkillEvent(line)||line.IndexOf("\"command\":\"SummonUnit\"",StringComparison.Ordinal)>=0||line.IndexOf("\"command\":\"ConvertUnitToStorage\"",StringComparison.Ordinal)>=0||line.IndexOf("\"command\":\"getUnitStorageList\"",StringComparison.Ordinal)>=0;liveRequestCraft=liveRequestEquipment=liveRequestSkill=false;try{var refinementComparison=RuneEngine.CompareRefinement(all,line);if(refinementComparison!=null){ShowRefinementDecision(refinementComparison);messages.Add("Comparaison de raffinage calculée");}var comparison=RuneEngine.CompareReappraisal(all,line);if(comparison!=null){ShowReappraisalDecision(comparison);messages.Add("Comparaison de réévaluation calculée");}int markerCount=RuneEngine.ApplyLiveRuneMarker(all,line);string message=RuneEngine.ApplyLiveEvent(all,line);if(markerCount>0)messages.Add("Marquage de rune confirmé");if(message.Length>0)messages.Add(message);if(skillEvent)skillChanged=true;if(equipmentEvent)equipmentChanged=true;if(markerCount>0||message.Length>0||skillEvent||equipmentEvent){liveSavedEvents.Add(line);if(craft){long id=RuneEngine.LiveRuneId(line);if(id>0)craftIds.Add(id);}}}catch{}}
-      if(messages.Count==0&&!skillChanged&&!equipmentChanged)return;RuneEngine.Calculate(all);foreach(var rune in all){Tuple<int,double> old;if(before.TryGetValue(rune.Id,out old)&&rune.Level>old.Item1&&old.Item1<12){RuneEngine.CapAfterUpgrade(rune,old.Item2);upgradeCaps[rune.Id]=rune.Potential;}else if(craftIds.Contains(rune.Id)&&old!=null){RuneEngine.PreserveAfterCraft(rune,old.Item2);craftPotentials[rune.Id]=old.Item2;}}RuneEngine.ApplyRetentionRules(all);if(skillChanged)RefreshSkillUpSummary();RefreshReappBadges();RefreshUpgradeBadge();RefreshCurrentView(all.Count!=before.Count||all.Any(r=>!before.ContainsKey(r.Id)));if(equipmentChanged&&messages.Count==0)messages.Add(Loc.T("status_wb_equip"));if(liveStockRefresh!=null)try{liveStockRefresh();}catch{}if(craftIds.Count>0||messages.Any(m=>m.IndexOf("stock",StringComparison.OrdinalIgnoreCase)>=0))SaveStock();status.Text=(messages.Count>0?string.Join(" • ",messages.ToArray()):Loc.T("status_skill_updated"))+Loc.T("status_live_done");
+      string normalized=liveLogPending.Replace("\r\n","\n");int lastNewline=normalized.LastIndexOf('\n');if(lastNewline<0)return;string complete=normalized.Substring(0,lastNewline+1);liveLogPending=normalized.Substring(lastNewline+1);string[] lines=complete.Split('\n');var messages=new List<string>();var craftIds=new HashSet<long>();bool skillChanged=false,equipmentChanged=false;var before=all.ToDictionary(x=>x.Id,x=>Tuple.Create(x.Level,x.Potential));for(int i=0;i<lines.Length;i++){string line=lines[i].Trim();if(line=="Request:"){liveAwaitingRequest=true;continue;}if(line=="Response:"){liveAwaitingRequest=false;liveAwaitingResponse=true;continue;}if(liveAwaitingRequest&&line.Length>0){liveAwaitingRequest=false;DismissLiveChoice(line);bool worldBossOrder=line.IndexOf("\"command\":\"BattleWorldBossStart_v2\"",StringComparison.OrdinalIgnoreCase)>=0&&line.IndexOf("\"unit_id_list\"",StringComparison.OrdinalIgnoreCase)>=0;liveRequestEquipment=line.IndexOf("\"command\":\"UpdateUnitEquip\"",StringComparison.Ordinal)>=0;liveRequestCraft=line.IndexOf("\"command\":\"AmplifyRune_v2\"",StringComparison.Ordinal)>=0||line.IndexOf("\"command\":\"ConvertRune_v2\"",StringComparison.Ordinal)>=0;liveRequestSkill=IsWorldBossSkillEvent(line)||line.IndexOf("\"command\":\"SummonUnit\"",StringComparison.Ordinal)>=0||line.IndexOf("\"command\":\"ConvertUnitToStorage\"",StringComparison.Ordinal)>=0||line.IndexOf("\"command\":\"getUnitStorageList\"",StringComparison.Ordinal)>=0;int protectedCount=RuneEngine.ApplyLiveDeckProtection(all,line);int markerCount=RuneEngine.ApplyLiveRuneMarker(all,line);if(protectedCount>0)messages.Add(protectedCount+" rune"+(protectedCount>1?"s":"")+" protégée"+(protectedCount>1?"s":"")+" par les decks");if(markerCount>0)messages.Add("Marquage de rune mis à jour");if(worldBossOrder){liveSavedEvents.Add(line);while(liveSavedEvents.Count(x=>x.IndexOf("\"command\":\"BattleWorldBossStart_v2\"",StringComparison.OrdinalIgnoreCase)>=0)>3){int old=liveSavedEvents.FindIndex(x=>x.IndexOf("\"command\":\"BattleWorldBossStart_v2\"",StringComparison.OrdinalIgnoreCase)>=0);if(old>=0)liveSavedEvents.RemoveAt(old);else break;}SaveWorldBossOrderEvent(line);messages.Add("Ordre réel du World Boss enregistré");}else if(protectedCount>0||markerCount>0)liveSavedEvents.Add(line);continue;}if(!liveAwaitingResponse||line.Length==0)continue;liveAwaitingResponse=false;DismissLiveChoice(line);bool craft=liveRequestCraft||line.IndexOf("\"command\":\"AmplifyRune_v2\"",StringComparison.Ordinal)>=0||line.IndexOf("\"command\":\"ConvertRune_v2\"",StringComparison.Ordinal)>=0;bool equipmentEvent=liveRequestEquipment||line.IndexOf("\"command\":\"UpdateUnitEquip\"",StringComparison.Ordinal)>=0;bool skillEvent=liveRequestSkill||IsWorldBossSkillEvent(line)||line.IndexOf("\"command\":\"SummonUnit\"",StringComparison.Ordinal)>=0||line.IndexOf("\"command\":\"ConvertUnitToStorage\"",StringComparison.Ordinal)>=0||line.IndexOf("\"command\":\"getUnitStorageList\"",StringComparison.Ordinal)>=0;liveRequestCraft=liveRequestEquipment=liveRequestSkill=false;try{var refinementComparison=RuneEngine.CompareRefinement(all,line);if(refinementComparison!=null){ShowRefinementDecision(refinementComparison);messages.Add("Comparaison de raffinage calculée");}var comparison=RuneEngine.CompareReappraisal(all,line);if(comparison!=null){ShowReappraisalDecision(comparison);messages.Add("Comparaison de réévaluation calculée");}int markerCount=RuneEngine.ApplyLiveRuneMarker(all,line);string message=RuneEngine.ApplyLiveEvent(all,line);if(markerCount>0)messages.Add("Marquage de rune confirmé");if(message.Length>0)messages.Add(message);if(skillEvent)skillChanged=true;if(equipmentEvent)equipmentChanged=true;if(markerCount>0||message.Length>0||skillEvent||equipmentEvent){if(line.IndexOf("\"command\":\"HubUserLogin\"",StringComparison.OrdinalIgnoreCase)<0&&line.IndexOf("\"command\":\"GuestLogin\"",StringComparison.OrdinalIgnoreCase)<0)liveSavedEvents.Add(line);if(craft){long id=RuneEngine.LiveRuneId(line);if(id>0)craftIds.Add(id);}}}catch{}}
+      if(messages.Count==0&&!skillChanged&&!equipmentChanged)return;RuneEngine.Calculate(all);foreach(var rune in all){Tuple<int,double> old;if(before.TryGetValue(rune.Id,out old)&&rune.Level>old.Item1&&old.Item1<12){RuneEngine.CapAfterUpgrade(rune,old.Item2);upgradeCaps[rune.Id]=rune.Potential;}else if(craftIds.Contains(rune.Id)&&old!=null){RuneEngine.PreserveAfterCraft(rune,old.Item2);craftPotentials[rune.Id]=old.Item2;}}RuneEngine.ApplyRetentionRules(all);if(skillChanged)RefreshSkillUpSummary();RefreshReappBadges();RefreshUpgradeBadge();RefreshCurrentView(all.Count!=before.Count||all.Any(r=>!before.ContainsKey(r.Id)));if(equipmentChanged&&messages.Count==0)messages.Add(Loc.T("status_wb_equip"));if(liveStockRefresh!=null)try{liveStockRefresh();}catch{}if(craftIds.Count>0||messages.Any(m=>m.IndexOf("stock",StringComparison.OrdinalIgnoreCase)>=0))SaveStock();SaveLiveChanges(true);status.Text=(messages.Count>0?string.Join(" • ",messages.ToArray()):Loc.T("status_skill_updated"))+Loc.T("status_live_done");
     }
     void RefreshCurrentView(bool inventoryChanged=false){long topId=0;int top=grid.FirstDisplayedScrollingRowIndex;if(top>=0&&top<grid.Rows.Count){var visible=grid.Rows[top].DataBoundItem as RuneRow;if(visible!=null)topId=visible.Id;}if(viewMode=="obtained")SortObtained();else if(viewMode=="reeval")SortReeval();else RefreshGrid();RestoreGridPosition(inventoryChanged?0:topId,inventoryChanged?0:top);RefreshRetentionButton();QueueWorldBossRealtimeCalculation();}
     void RestoreGridPosition(long topId,int fallback){if(grid.Rows.Count==0)return;int target=-1;if(topId>0)for(int i=0;i<grid.Rows.Count;i++){var r=grid.Rows[i].DataBoundItem as RuneRow;if(r!=null&&r.Id==topId){target=i;break;}}if(target<0)target=Math.Min(Math.Max(0,fallback),grid.Rows.Count-1);try{grid.FirstDisplayedScrollingRowIndex=target;}catch{}}
@@ -783,20 +845,49 @@ namespace RuneManagerModern {
       SaveRuneChoiceSeen();if(runeChoiceForm!=null&&!runeChoiceForm.IsDisposed)runeChoiceForm.Close();
       var f=new Form{Text=Loc.T("chest_title",comparison.Choices.Count),Icon=Icon,Size=new Size(1120,520),StartPosition=FormStartPosition.CenterScreen,TopMost=true,BackColor=Bg,ForeColor=Color.White};runeChoiceForm=f;f.FormClosed+=(s,e)=>{if(runeChoiceForm==f)runeChoiceForm=null;};var title=new Label{Text=Loc.T("chest_head"),Dock=DockStyle.Top,Height=62,TextAlign=ContentAlignment.MiddleCenter,ForeColor=Color.FromArgb(255,184,45),Font=new Font("Segoe UI Semibold",18)};var g=new BufferedGrid{Dock=DockStyle.Fill,ReadOnly=true,AllowUserToAddRows=false,AllowUserToDeleteRows=false,RowHeadersVisible=false,AutoGenerateColumns=false,BackgroundColor=Bg,GridColor=Color.FromArgb(45,65,82),SelectionMode=DataGridViewSelectionMode.FullRowSelect,RowTemplate={Height=56}};g.EnableHeadersVisualStyles=false;g.ColumnHeadersHeight=42;g.ColumnHeadersDefaultCellStyle=new DataGridViewCellStyle{BackColor=Teal,ForeColor=Color.White,Font=new Font("Segoe UI Semibold",11),SelectionBackColor=Teal};g.DefaultCellStyle=new DataGridViewCellStyle{BackColor=Bg,ForeColor=Color.White,SelectionBackColor=Color.FromArgb(26,70,83),Font=new Font("Segoe UI",10)};string[] heads={Loc.T("chest_rank"),Loc.T("col_rune"),Loc.T("col_main"),Loc.T("chest_subs"),Loc.T("col_potential"),Loc.T("col_preset"),Loc.T("chest_advice")};string[] props={"Rank","Rune","Main","Subs","Potential","Preset","Advice"};int[] widths={90,190,150,330,105,150,115};for(int i=0;i<heads.Length;i++)g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=heads[i],DataPropertyName=props[i],Width=widths[i]});int rank=0;g.DataSource=comparison.Choices.Select(x=>new{Rank=++rank,Rune=x.Set+" • slot "+x.Slot+" • "+x.Quality,Main=x.MainDisplay,Subs=string.Join("  •  ",x.Subs.Select(s=>s.BaseDisplay)),Potential=x.Potential.ToString("0.000"),Preset=x.BestBuild,Advice=rank==1?Loc.T("take"):"—"}).ToList();f.Controls.Add(g);f.Controls.Add(title);f.Show(this);}
     void QueueJson(string path){
-      if(string.IsNullOrWhiteSpace(path)||!path.EndsWith(".json",StringComparison.OrdinalIgnoreCase))return;
-      try{BeginInvoke((MethodInvoker)delegate{pendingJson=path;jsonDebounce.Stop();jsonDebounce.Start();status.Text=Loc.T("status_json_detected");});}catch{}
+      if(IsIgnoredJson(path)||!File.Exists(path))return;
+      if(InvokeRequired){
+        try{BeginInvoke((MethodInvoker)delegate{QueueJson(path);});}catch{}
+        return;
+      }
+      pendingJson=path;jsonDebounce.Stop();jsonDebounce.Start();status.Text=Loc.T("status_json_detected");
+    }
+    void PollJsonExports(){
+      try{
+        FileInfo best=null;
+        Action<string> consider=p=>{
+          if(IsIgnoredJson(p)||!File.Exists(p))return;
+          var f=new FileInfo(p);
+          if(f.Length<=100000)return;
+          if(best==null||f.LastWriteTimeUtc>best.LastWriteTimeUtc||(f.LastWriteTimeUtc==best.LastWriteTimeUtc&&f.Length>best.Length))best=f;
+        };
+        consider(currentFile);consider(ReadLastJsonPath());
+        string folder=DefaultExportFolder();
+        if(Directory.Exists(folder)){
+          var f=new DirectoryInfo(folder).GetFiles("*.json").Where(x=>x.Length>100000).OrderByDescending(x=>x.LastWriteTimeUtc).FirstOrDefault();
+          if(f!=null)consider(f.FullName);
+        }
+        if(best==null)return;
+        if(best.FullName.Equals(currentFile,StringComparison.OrdinalIgnoreCase)&&best.LastWriteTimeUtc<=lastAutoImport&&best.Length==lastImportLength){jsonPollPath="";jsonPollSize=-1;return;}
+        if(!best.FullName.Equals(jsonPollPath,StringComparison.OrdinalIgnoreCase)||best.Length!=jsonPollSize){jsonPollPath=best.FullName;jsonPollSize=best.Length;return;}
+        QueueJson(best.FullName);
+      }catch{}
     }
     void ImportPendingJson(){
       jsonDebounce.Stop();string path=pendingJson;pendingJson="";
-      if(path.Length==0||!File.Exists(path))return;
+      if(IsIgnoredJson(path)||!File.Exists(path))return;
       try{
-        using(var fs=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete)){if(fs.Length==0){pendingJson=path;jsonDebounce.Start();return;}}
-        DateTime write=File.GetLastWriteTimeUtc(path);if(path.Equals(currentFile,StringComparison.OrdinalIgnoreCase)&&write<=lastAutoImport)return;
-        LoadFile(path);lastAutoImport=write;status.Text=Loc.T("status_json_imported",all.Count.ToString("N0"),Path.GetFileName(path));
+        long len;DateTime write;
+        using(var fs=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete)){len=fs.Length;if(len==0){pendingJson=path;jsonDebounce.Start();return;}}
+        write=File.GetLastWriteTimeUtc(path);
+        if(path.Equals(currentFile,StringComparison.OrdinalIgnoreCase)&&write<=lastAutoImport&&len==lastImportLength)return;
+        if(!LoadFile(path,false)){pendingJson=path;jsonDebounce.Start();return;}
+        status.Text=Loc.T("status_json_imported",all.Count.ToString("N0"),Path.GetFileName(path));
       }catch(IOException){pendingJson=path;jsonDebounce.Start();}
       catch(UnauthorizedAccessException){pendingJson=path;jsonDebounce.Start();}
     }
-    void LoadFile(string f){try{UseWaitCursor=true;status.Text=Loc.T("status_importing");Application.DoEvents();var sw=Stopwatch.StartNew();hiddenUpgradeIds.Clear();RuneEngine.ResetLiveSkillUnits();all=RuneEngine.Import(f,all);LoadSavedStock(f);LoadLiveChanges(f);RuneEngine.Calculate(all);LoadUpgradeCaps(f);RuneEngine.ApplyRetentionRules(all);currentFile=f;RefreshWorldBossSaleProtection();RefreshRtaSavedStatus(f);RefreshReappBadges();RefreshSkillUpSummary();RefreshUpgradeBadge();RefreshSpdRankBadge();FillFilters();SortObtained();QueueWorldBossRealtimeCalculation();status.Text=Loc.T("status_imported",all.Count.ToString("N0"),sw.Elapsed.TotalSeconds.ToString("0.0"),RuneEngine.LimiteRunesConservees.ToString("N0"),RuneEngine.SeuilApres12.ToString("0.###"),Path.GetFileName(f));}catch(Exception ex){MessageBox.Show(Loc.T("status_import_fail",ex.Message),"Rune Manager",MessageBoxButtons.OK,MessageBoxIcon.Error);}finally{UseWaitCursor=false;}}
+    bool LoadFile(string f){return LoadFile(f,false);}
+    bool LoadFile(string f,bool restoreLive){try{UseWaitCursor=true;status.Text=Loc.T("status_importing");Application.DoEvents();var sw=Stopwatch.StartNew();hiddenUpgradeIds.Clear();RuneEngine.ResetLiveSkillUnits();all=RuneEngine.Import(f,all);LoadSavedStock(f);LoadLiveChanges(f,restoreLive);if(!restoreLive)SaveLiveChanges(true);RuneEngine.Calculate(all);if(restoreLive)LoadUpgradeCaps(f);else{upgradeCaps.Clear();craftPotentials.Clear();}RuneEngine.ApplyRetentionRules(all);currentFile=f;RememberJson(f);try{var fi=new FileInfo(f);lastAutoImport=fi.LastWriteTimeUtc;lastImportLength=fi.Length;}catch{}RefreshWorldBossSaleProtection();RefreshRtaSavedStatus(f);RefreshReappBadges();RefreshSkillUpSummary();RefreshUpgradeBadge();RefreshSpdRankBadge();FillFilters();SortObtained();QueueWorldBossRealtimeCalculation();status.Text=Loc.T("status_imported",all.Count.ToString("N0"),sw.Elapsed.TotalSeconds.ToString("0.0"),RuneEngine.LimiteRunesConservees.ToString("N0"),RuneEngine.SeuilApres12.ToString("0.###"),Path.GetFileName(f));return true;}catch(Exception ex){MessageBox.Show(Loc.T("status_import_fail",ex.Message),"Rune Manager",MessageBoxButtons.OK,MessageBoxIcon.Error);return false;}finally{UseWaitCursor=false;}}
     void RefreshReappBadges(){reappNormalBadge.Text="x"+RuneEngine.ReappNormal;reappAncientBadge.Text="x"+RuneEngine.ReappAncient;refinementBadge.Text="x"+RuneEngine.RefinementStones;reappNormalBadge.BringToFront();reappAncientBadge.BringToFront();refinementBadge.BringToFront();SetActionBorder(reevalButton,RuneEngine.ReappNormal>0||RuneEngine.ReappAncient>0);SetActionBorder(refinementButton,RuneEngine.RefinementStones>0);}
     void RefreshSkillUpSummary(){if(string.IsNullOrWhiteSpace(currentFile)||!File.Exists(currentFile))return;string catalog=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"assets","monsters","catalog.json");if(!File.Exists(catalog))return;try{var roster=RuneEngine.LoadSkillUpRoster(currentFile,catalog);skillGroups=RuneEngine.AnalyzeSkillUps(roster);skillFamilies=RuneEngine.AnalyzeSkillUpFamilies(roster);skillGroupsRevision++;RefreshSkillUpBadge();}catch{}}
     void RefreshSkillUpBadge(){if(string.IsNullOrWhiteSpace(currentFile)||!File.Exists(currentFile)){SetCountAlert(skillButton,skillBadge,0);return;}int count=RuneEngine.SkillUpStockIncluded(currentFile)?skillGroups.Where(x=>!hiddenSkillTargetIds.Contains(x.Target.MasterId)).Sum(x=>x.UsableUpgrades):-1;SetCountAlert(skillButton,skillBadge,count>0?count:0);}
@@ -2389,15 +2480,16 @@ f.ShowDialog(owner);
         g.DrawImage(body,d,0,0,body.Width,body.Height,GraphicsUnit.Pixel,ia);
       }
     }
-    void ClosingWithSave(object sender,FormClosingEventArgs e){ancientShineTimer.Stop();updateCheckTimer.Stop();SaveRetentionSetting();SaveEngineSettings();SaveSpdSeenBest();SaveRuneChoiceSeen();if(!SaveStock()||!SaveLiveChanges())e.Cancel=true;}
+    void ClosingWithSave(object sender,FormClosingEventArgs e){ancientShineTimer.Stop();jsonPollTimer.Stop();updateCheckTimer.Stop();SaveRetentionSetting();SaveEngineSettings();SaveSpdSeenBest();SaveRuneChoiceSeen();if(!SaveStock()||!SaveLiveChanges())e.Cancel=true;}
     bool SaveStock(){try{var lines=RuneEngine.Stocks.Select(x=>(x.Ancient?"1":"0")+"\t"+x.Type+"\t"+x.Set+"\t"+x.Stat+"\t"+x.Grade+"\t"+x.Amount);File.WriteAllLines(StockSavePath,lines);return true;}catch(Exception ex){MessageBox.Show(Loc.T("save_stock_fail",ex.Message),"Rune Manager",MessageBoxButtons.OK,MessageBoxIcon.Error);return false;}}
     void LoadSavedStock(string jsonPath){if(!File.Exists(StockSavePath))return;try{
       // Un export plus récent contient le stock réel du compte et ne doit jamais
       // être écrasé par une ancienne sauvegarde locale (notamment des zéros).
       if(File.Exists(jsonPath)&&File.GetLastWriteTimeUtc(StockSavePath)<=File.GetLastWriteTimeUtc(jsonPath))return;
       var saved=new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);var extra=new List<string[]>();foreach(string line in File.ReadAllLines(StockSavePath)){string[] p=line.Split('\t');int grade,amount;if(p.Length==6&&int.TryParse(p[4],out grade)&&int.TryParse(p[5],out amount)){saved[p[0]+"|"+p[1]+"|"+p[2]+"|"+p[3]+"|"+grade]=amount;extra.Add(p);}}foreach(var x in RuneEngine.Stocks){string key=(x.Ancient?"1":"0")+"|"+x.Type+"|"+x.Set+"|"+x.Stat+"|"+x.Grade;int amount;if(saved.TryGetValue(key,out amount))x.Amount=amount;}var known=new HashSet<string>(RuneEngine.Stocks.Select(x=>(x.Ancient?"1":"0")+"|"+x.Type+"|"+x.Set+"|"+x.Stat+"|"+x.Grade),StringComparer.OrdinalIgnoreCase);foreach(var p in extra){string key=p[0]+"|"+p[1]+"|"+p[2]+"|"+p[3]+"|"+p[4];int grade,amount;if(known.Contains(key)||!int.TryParse(p[4],out grade)||!int.TryParse(p[5],out amount)||amount<=0)continue;RuneEngine.Stocks.Add(new CraftStock{Ancient=p[0]=="1",Type=p[1],Set=p[2],Stat=p[3],Grade=grade,Amount=amount});known.Add(key);}}catch(Exception ex){status.Text="Stock sauvegardé non chargé : "+ex.Message;}}
-    void LoadLiveChanges(string jsonPath){liveSavedEvents.Clear();if(!File.Exists(LiveSavePath)||File.GetLastWriteTimeUtc(LiveSavePath)<=File.GetLastWriteTimeUtc(jsonPath))return;try{foreach(string line in File.ReadAllLines(LiveSavePath)){if(string.IsNullOrWhiteSpace(line))continue;bool worldBossOrder=line.IndexOf("\"command\":\"BattleWorldBossStart_v2\"",StringComparison.OrdinalIgnoreCase)>=0&&line.IndexOf("\"unit_id_list\"",StringComparison.OrdinalIgnoreCase)>=0;int protectedCount=RuneEngine.ApplyLiveDeckProtection(all,line);int markerCount=RuneEngine.ApplyLiveRuneMarker(all,line);string message=RuneEngine.ApplyLiveEvent(all,line);if(worldBossOrder||protectedCount>0||markerCount>0||message.Length>0)liveSavedEvents.Add(line);}}catch(Exception ex){status.Text="Changements automatiques non restaurés : "+ex.Message;}}
+    void LoadLiveChanges(string jsonPath,bool restoreLive){liveSavedEvents.Clear();if(!File.Exists(LiveSavePath))return;try{foreach(string line in File.ReadAllLines(LiveSavePath)){if(string.IsNullOrWhiteSpace(line))continue;if(line.IndexOf("\"command\":\"HubUserLogin\"",StringComparison.OrdinalIgnoreCase)>=0||line.IndexOf("\"command\":\"GuestLogin\"",StringComparison.OrdinalIgnoreCase)>=0)continue;bool worldBossOrder=line.IndexOf("\"command\":\"BattleWorldBossStart_v2\"",StringComparison.OrdinalIgnoreCase)>=0&&line.IndexOf("\"unit_id_list\"",StringComparison.OrdinalIgnoreCase)>=0;int protectedCount=RuneEngine.ApplyLiveDeckProtection(all,line);int markerCount=RuneEngine.ApplyLiveRuneMarker(all,line);if(!restoreLive&&!worldBossOrder){if(protectedCount>0||markerCount>0)liveSavedEvents.Add(line);continue;}string message=RuneEngine.ApplyLiveEvent(all,line,true);if(worldBossOrder||protectedCount>0||markerCount>0||message.Length>0)liveSavedEvents.Add(line);}}catch(Exception ex){status.Text="Changements automatiques non restaurés : "+ex.Message;}}
     void LoadUpgradeCaps(string jsonPath){upgradeCaps.Clear();craftPotentials.Clear();try{if(File.Exists(CapsSavePath)&&File.GetLastWriteTimeUtc(CapsSavePath)>File.GetLastWriteTimeUtc(jsonPath))foreach(string line in File.ReadAllLines(CapsSavePath)){string[] p=line.Split('\t');long id;double cap;if(p.Length==2&&long.TryParse(p[0],out id)&&double.TryParse(p[1],NumberStyles.Any,CultureInfo.InvariantCulture,out cap))upgradeCaps[id]=cap;}if(File.Exists(CraftPotentialSavePath)&&File.GetLastWriteTimeUtc(CraftPotentialSavePath)>File.GetLastWriteTimeUtc(jsonPath))foreach(string line in File.ReadAllLines(CraftPotentialSavePath)){string[] p=line.Split('\t');long id;double value;if(p.Length==2&&long.TryParse(p[0],out id)&&double.TryParse(p[1],NumberStyles.Any,CultureInfo.InvariantCulture,out value))craftPotentials[id]=value;}foreach(var rune in all){double value;if(craftPotentials.TryGetValue(rune.Id,out value))RuneEngine.PreserveAfterCraft(rune,value);else if(upgradeCaps.TryGetValue(rune.Id,out value))RuneEngine.CapAfterUpgrade(rune,value);}}catch(Exception ex){status.Text="Potential sauvegardé non restauré : "+ex.Message;}}
-    bool SaveLiveChanges(){try{File.WriteAllLines(LiveSavePath,liveSavedEvents);File.WriteAllLines(CapsSavePath,upgradeCaps.Select(x=>x.Key+"\t"+x.Value.ToString(CultureInfo.InvariantCulture)));File.WriteAllLines(CraftPotentialSavePath,craftPotentials.Select(x=>x.Key+"\t"+x.Value.ToString(CultureInfo.InvariantCulture)));return true;}catch(Exception ex){MessageBox.Show("Sauvegarde des changements automatiques impossible : "+ex.Message,"Rune Manager",MessageBoxButtons.OK,MessageBoxIcon.Error);return false;}}
+    bool SaveLiveChanges(){return SaveLiveChanges(false);}
+    bool SaveLiveChanges(bool quiet){try{File.WriteAllLines(LiveSavePath,liveSavedEvents);File.WriteAllLines(CapsSavePath,upgradeCaps.Select(x=>x.Key+"\t"+x.Value.ToString(CultureInfo.InvariantCulture)));File.WriteAllLines(CraftPotentialSavePath,craftPotentials.Select(x=>x.Key+"\t"+x.Value.ToString(CultureInfo.InvariantCulture)));return true;}catch(Exception ex){if(!quiet)MessageBox.Show("Sauvegarde des changements automatiques impossible : "+ex.Message,"Rune Manager",MessageBoxButtons.OK,MessageBoxIcon.Error);return false;}}
   }
 }

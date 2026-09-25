@@ -320,7 +320,8 @@ public sealed class SkillUpGroup { public SkillUpMonster Target; public List<Ski
       // regler un probleme d'etoiles), ce qui faisait passer des runes Heroique(violette) en
       // Legendaire des qu'elles etaient 6 etoiles — bug d'affichage signale par Jeremy.
       int rank=I(G(d,"rank")),cls=I(G(d,"class")),quality=rank>=10?rank-10:rank,stars=cls>=10?cls-10:cls;if(stars<1)stars=1;if(stars>6)stars=6;var r=new RuneRow{Id=id,Set=SetName(I(G(d,"set_id"))),Slot=I(G(d,"slot_no")),Grade=quality,Stars=stars,Level=I(G(d,"upgrade_curr")),Ancient=rank>=10||cls>=10,Equipped=eq,EquippedUnitId=L(G(d,"occupied_id"))};DateTime dt;if(DateTime.TryParse(Convert.ToString(G(d,"date_add")),out dt))r.Obtained=dt;var p=A(G(d,"pri_eff"));if(p.Length>1){r.Main=Stat(I(p[0]));r.MainValue=F(p[1]);}var innate=A(G(d,"prefix_eff"));if(innate.Length>1&&I(innate[0])>0){r.Innate=Stat(I(innate[0]));r.InnateValue=F(innate[1]);}foreach(var sx in A(G(d,"sec_eff"))){var s=A(sx);if(s.Length>1)r.Subs.Add(new SubStat{Stat=Stat(I(s[0])),Value=F(s[1]),Gemmed=s.Length>2&&I(s[2])!=0,Grind=s.Length>3?F(s[3]):0});}string m;if(!marks.TryGetValue(id,out m)||m==null)m="";if(decks.Contains(id))m=(m+" | Deck").Trim(' ','|');r.Marker=m;rows.Add(r);}
-    public static string ApplyLiveEvent(List<RuneRow> rows,string responseJson){
+    public static string ApplyLiveEvent(List<RuneRow> rows,string responseJson){return ApplyLiveEvent(rows,responseJson,true);}
+    public static string ApplyLiveEvent(List<RuneRow> rows,string responseJson,bool allowAdd){
       if(rows==null||string.IsNullOrWhiteSpace(responseJson))return "";
       var js=new JavaScriptSerializer{MaxJsonLength=int.MaxValue,RecursionLimit=256};var root=D(js.DeserializeObject(responseJson));if(root==null||I(G(root,"ret_code"))!=0)return "";string command=Convert.ToString(G(root,"command"));int craftStockUpdates=0;
       // Le batiment de craft (meule/gemme depuis Beast Claw ou Beast Horn) n'envoie pas
@@ -344,13 +345,16 @@ public sealed class SkillUpGroup { public SkillUpMonster Target; public List<Ski
       // l'appliquait seulement a l'import fichier, pas au live log — le meme paquet etait
       // ignore a cause du filtre Hub*. GuestLogin = meme payload.
       if(string.Equals(command,"HubUserLogin",StringComparison.OrdinalIgnoreCase)||string.Equals(command,"GuestLogin",StringComparison.OrdinalIgnoreCase)){
+        if(!allowAdd)return "";
         if(A(G(root,"rune_craft_item_list")).Length>0){ReadStocks(root);ReadReappStock(root);ReadRefinementStock(root);craftStockUpdates++;}
       }else if(command.IndexOf("SellRuneCraft",StringComparison.OrdinalIgnoreCase)>=0)ApplySoldCraftStock(root,ref craftStockUpdates);else if(ShouldCollectLiveCraftDrops(command))CollectLiveCraftStocks(root,ref craftStockUpdates);
       int reappUpdates=UpdateLiveReappStock(root,command);int refinementUpdates=UpdateLiveRefinementStock(root,command);
       if(command=="UpgradeRuneList"){
+        if(!allowAdd)return "";
         int count=0;DateTime batchObtained=DateTime.Now;foreach(var x in A(G(root,"upgrade_rune_list"))){var d=D(x);if(d==null)continue;long id=L(G(d,"rune_id"));if(id<=0)continue;var existing=rows.FirstOrDefault(r=>r.Id==id);var parsed=new List<RuneRow>();AddRune(d,existing!=null&&existing.Equipped,parsed,new HashSet<long>(),new Dictionary<long,string>(),new HashSet<long>());if(parsed.Count==0)continue;var updated=parsed[0];if(existing!=null){updated.Marker=existing.Marker;updated.Obtained=existing.Obtained;updated.EquippedMasterId=existing.EquippedMasterId;updated.EquippedUnitId=existing.EquippedUnitId;rows[rows.IndexOf(existing)]=updated;}else{updated.Obtained=batchObtained;rows.Add(updated);}count++;}return count>0?Loc.T("live_hammer",count):"";
       }
       if(command=="UpgradeRune_v2"||command=="UpgradeRune"||command=="AmplifyRune_v2"||command=="ConvertRune_v2"||command=="ConfirmRune"||command=="confirmRefineRune"){
+        if(!allowAdd)return "";
         var d=D(G(root,"rune"));if(d==null)return "";long id=L(G(d,"rune_id"));if(id<=0)return "";var existing=rows.FirstOrDefault(x=>x.Id==id);var parsed=new List<RuneRow>();AddRune(d,existing!=null&&existing.Equipped,parsed,new HashSet<long>(),new Dictionary<long,string>(),new HashSet<long>());if(parsed.Count==0)return "";var updated=parsed[0];if(existing!=null){updated.Marker=existing.Marker;updated.Obtained=existing.Obtained;updated.EquippedMasterId=existing.EquippedMasterId;updated.EquippedUnitId=existing.EquippedUnitId;int index=rows.IndexOf(existing);rows[index]=updated;}else{updated.Obtained=DateTime.Now;rows.Add(updated);}if(command=="AmplifyRune_v2"||command=="ConvertRune_v2")ConsumeLiveCraftStock(D(G(root,"rune_craft_item")));return command=="AmplifyRune_v2"?Loc.T("live_grind",id):command=="ConvertRune_v2"?Loc.T("live_gem",id):command=="ConfirmRune"?Loc.T("live_reapp_pick",id):command=="confirmRefineRune"?Loc.T("live_refine_pick",id):Loc.T("live_upgrade",id,updated.Level);
       }
       if(command=="SellRune"){
@@ -365,7 +369,7 @@ public sealed class SkillUpGroup { public SkillUpMonster Target; public List<Ski
       // Les gains de runes ne passent pas par une commande unique : ils peuvent venir
       // d'un combat, d'une récompense ou d'un achat. On accepte uniquement les réponses
       // d'action et les objets qui possèdent la structure complète d'une vraie rune.
-      if(!IsReadOnlyLiveCommand(command)){
+      if(allowAdd&&!IsReadOnlyLiveCommand(command)){
         int added=0;CollectNewLiveRunes(root,rows,ref added);
         if(added>0)return Loc.T("live_new_runes",added,added>1?"s":"",added>1?"s":"")+(craftStockUpdates>0?" • "+Loc.T("live_stock_short"):"")+(reappUpdates>0?" • "+Loc.T("live_reapp_short"):"");
       }

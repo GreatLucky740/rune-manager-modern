@@ -296,6 +296,7 @@ namespace RuneManagerModern {
       Add("preset_colon","Preset : {0}","Preset: {0}");
       Add("prio_none","Non","Off");
       Add("explain_none","Aucun preset compatible avec le set et la principale : score 0.","No preset matches this set and main stat: score 0.");
+      Add("no_preset","Aucun preset","No Good Preset");
       Add("explain_proj","Projection optimiste à +12 (améliorations maximales possibles).","Optimistic +12 projection (maximum possible upgrades).");
       Add("explain_stat","{0} : ({1} + meule {2}) / {3} × poids effectif {4} = {5}","{0}: ({1} + grind {2}) / {3} × effective weight {4} = {5}");
       Add("explain_gemgain","Gain gemmage théorique : +{0}","Theoretical gem gain: +{0}");
@@ -322,6 +323,14 @@ namespace RuneManagerModern {
       Add("preset_stock_btn","RÉCAP STOCK / BONUS","STOCK / BONUS SUMMARY");
       Add("presets_globals_saved","Presets et valeurs globales enregistrés.","Presets and global values saved.");
       Add("preset_stock_title","Stock par preset / set / slot — bonus maximum +1 point","Stock by preset / set / slot — max bonus +1");
+      Add("preset_add","AJOUTER UN PRESET","ADD PRESET");
+      Add("preset_new","Preset {0}","Preset {0}");
+      Add("preset_name_empty","Chaque preset doit avoir un nom.","Every preset needs a name.");
+      Add("preset_name_dup","Deux presets ont le même nom : {0}.","Two presets share the same name: {0}.");
+      Add("preset_need_one","Il faut au moins un preset.","At least one preset is required.");
+      Add("preset_remove","ENLEVER LE PRESET","REMOVE PRESET");
+      Add("preset_remove_confirm","Enlever le preset « {0} » ?","Remove preset \"{0}\"?");
+      Add("preset_remove_pick","Clique une ligne de preset à enlever.","Click a preset row to remove.");
       Add("autokeep_title","Auto-Keep — seuils par set et par stat","Auto-Keep — thresholds by set and stat");
       Add("autokeep_info","Une rune +12 est gardée (Keep) dès qu'une sous-stat atteint le seuil ci-dessous pour son set, même sous le seuil de vente normal. Laisser vide ou 0 = désactivé pour cette case.","A +12 rune is kept as soon as a substat reaches the threshold below for its set, even under the normal sell threshold. Leave empty or 0 to disable that cell.");
       Add("save","ENREGISTRER","SAVE");

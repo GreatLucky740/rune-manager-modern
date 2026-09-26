@@ -1,13 +1,15 @@
 {
-  "build": 14,
-  "version": "1.08",
+  "build": 15,
+  "version": "1.09",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Version 1.08.",
-    "Sur un petit écran, tous les boutons restent visibles : ils passent à la ligne et la fenêtre peut être plus étroite."
+    "Version 1.09.",
+    "Tu peux renommer un preset, en ajouter, ou en enlever, sans casser le moteur.",
+    "En anglais, une rune sans preset affiche « No Good Preset »."
   ],
   "notes_en": [
-    "Version 1.08.",
-    "On a small screen, every button stays visible: they wrap to the next line and the window can be made narrower."
+    "Version 1.09.",
+    "You can rename a preset, add one, or remove one, without breaking the engine.",
+    "In English, a rune with no preset shows “No Good Preset”."
   ]
 }

@@ -196,7 +196,7 @@ namespace RuneManagerModern {
       var f=new Form{Text=Loc.T("preset_win_title"),Icon=Icon,BackColor=Color.Black,ForeColor=Color.White,Size=new Size(1450,650),StartPosition=FormStartPosition.CenterParent};
       var g=new BufferedGrid{Dock=DockStyle.Fill,AllowUserToAddRows=false,RowHeadersVisible=false,BackgroundColor=Color.Black,AutoSizeRowsMode=DataGridViewAutoSizeRowsMode.None};g.RowTemplate.Height=110;g.DefaultCellStyle=new DataGridViewCellStyle{BackColor=Color.Black,ForeColor=Color.White,SelectionBackColor=Color.Black};g.EnableHeadersVisualStyles=false;g.ColumnHeadersDefaultCellStyle=new DataGridViewCellStyle{BackColor=Color.Black,ForeColor=Color.White};
       var factor=new DataGridViewComboBoxColumn{Name="Factor",HeaderText=Loc.T("preset_global_col"),Width=115};for(int n=0;n<=30;n++)factor.Items.Add((n*10).ToString(CultureInfo.InvariantCulture)+"%");foreach(var p in RuneEngine.Presets){string v=Math.Round(p.ScoreFactor*100).ToString(CultureInfo.InvariantCulture)+"%";if(!factor.Items.Contains(v))factor.Items.Add(v);}g.Columns.Add(factor);
-      g.Columns.Add("Preset","Preset");g.Columns[1].ReadOnly=true;
+      g.Columns.Add("Preset","Preset");g.Columns[1].ReadOnly=false;g.Columns[1].Width=140;
       string[] stats={"HP%","Atk%","Def%","Spd","Res%","Acc%","CtR%","CtD%","HP+","Atk+","Def+"};foreach(string stat in stats){var c=new DataGridViewComboBoxColumn{HeaderText=stat,Width=60};c.Items.AddRange(new object[]{Loc.T("prio_none"),"P1","P2","P3"});g.Columns.Add(c);}
       g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_sets_pref"),Width=280});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_sets_ok"),Width=280});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText="Slot 2",Width=135});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText="Slot 4",Width=135});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText="Slot 6",Width=135});
       // Ligne "globale" tout en haut : ses cellules stat (colonnes 2..12) sont des menus deroulants
@@ -214,9 +214,73 @@ namespace RuneManagerModern {
       foreach(var p in RuneEngine.Presets){int i=g.Rows.Add();var cells=g.Rows[i].Cells;cells[0].Value=Math.Round(p.ScoreFactor*100).ToString(CultureInfo.InvariantCulture)+"%";cells[1].Value=p.Name;for(int n=0;n<stats.Length;n++)cells[n+2].Value=PriorityDisplay(p.W[stats[n]]);cells[13].Value=string.Join(",",p.Preferred);cells[14].Value=string.Join(",",p.Accepted);cells[15].Value=string.Join(",",p.Main[2]);cells[16].Value=string.Join(",",p.Main[4]);cells[17].Value=string.Join(",",p.Main[6]);}
       ConfigureBlackPresetGrid(g);
       g.CurrentCellDirtyStateChanged+=(s,e)=>{if(g.IsCurrentCellDirty)g.CommitEdit(DataGridViewDataErrorContexts.Commit);};
-      var bar=new FlowLayoutPanel{Dock=DockStyle.Bottom,Height=62,BackColor=Color.Black};var save=new Button{Text=Loc.T("save_recalc"),Width=260,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var stock=new Button{Text=Loc.T("preset_stock_btn"),Width=230,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};bar.Controls.Add(save);bar.Controls.Add(stock);
-      stock.Click+=(s,e)=>ShowPresetStock();save.Click+=(s,e)=>{g.EndEdit();int baseRow=controlRow+1;for(int n=0;n<stats.Length;n++){string txt=Convert.ToString(controlCells[n+2].Value);double pct;if(txt!=null&&txt.EndsWith("%")&&double.TryParse(txt.TrimEnd('%'),NumberStyles.Any,CultureInfo.InvariantCulture,out pct))RuneEngine.StatGlobalFactor[stats[n]]=pct/100.0;}for(int i=0;i<RuneEngine.Presets.Count;i++){var p=RuneEngine.Presets[i];var c=g.Rows[baseRow+i].Cells;p.ScoreFactor=ParsePresetFactor(Convert.ToString(c[0].Value));for(int n=0;n<stats.Length;n++)p.W[stats[n]]=PriorityValue(Convert.ToString(c[n+2].Value));ReplaceSet(p.Preferred,Convert.ToString(c[13].Value));ReplaceSet(p.Accepted,Convert.ToString(c[14].Value));ReplaceSet(p.Main[2],Convert.ToString(c[15].Value));ReplaceSet(p.Main[4],Convert.ToString(c[16].Value));ReplaceSet(p.Main[6],Convert.ToString(c[17].Value));}File.WriteAllLines(PresetFactorsPath,RuneEngine.Presets.Select(p=>p.Name+"\t"+p.ScoreFactor.ToString(CultureInfo.InvariantCulture)));ApplySettingsAndClose(f,Loc.T("presets_globals_saved"));};
+      var bar=new FlowLayoutPanel{Dock=DockStyle.Bottom,Height=62,BackColor=Color.Black};var save=new Button{Text=Loc.T("save_recalc"),Width=260,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var add=new Button{Text=Loc.T("preset_add"),Width=200,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var remove=new Button{Text=Loc.T("preset_remove"),Width=200,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var stock=new Button{Text=Loc.T("preset_stock_btn"),Width=230,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};bar.Controls.Add(save);bar.Controls.Add(add);bar.Controls.Add(remove);bar.Controls.Add(stock);
+      add.Click+=(s,e)=>{g.EndEdit();AddPresetGridRow(g,controlRow,stats);};
+      remove.Click+=(s,e)=>{g.EndEdit();RemovePresetGridRow(g,controlRow);};
+      stock.Click+=(s,e)=>ShowPresetStock();
+      save.Click+=(s,e)=>{g.EndEdit();if(!TryCommitPresetGrid(g,controlRow,stats,controlCells))return;File.WriteAllLines(PresetFactorsPath,RuneEngine.Presets.Select(p=>p.Name+"\t"+p.ScoreFactor.ToString(CultureInfo.InvariantCulture)));ApplySettingsAndClose(f,Loc.T("presets_globals_saved"));};
       f.Controls.Add(g);f.Controls.Add(bar);return f;
+    }
+    void AddPresetGridRow(DataGridView g,int controlRow,string[] stats){
+      if(g==null)return;
+      var used=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+      for(int i=controlRow+1;i<g.Rows.Count;i++)used.Add((Convert.ToString(g.Rows[i].Cells[1].Value)??"").Trim());
+      int n=used.Count+1;string name=Loc.T("preset_new",n);while(used.Contains(name)){n++;name=Loc.T("preset_new",n);}
+      int src=g.Rows.Count-1;if(src<=controlRow)src=-1;
+      int row=g.Rows.Add();
+      if(src>=0){for(int c=0;c<g.Columns.Count;c++)g.Rows[row].Cells[c].Value=g.Rows[src].Cells[c].Value;}
+      else{g.Rows[row].Cells[0].Value="100%";for(int i=0;i<stats.Length;i++)g.Rows[row].Cells[i+2].Value=Loc.T("prio_none");}
+      g.Rows[row].Cells[1].Value=name;g.Rows[row].Cells[1].ReadOnly=false;
+      try{g.CurrentCell=g.Rows[row].Cells[1];}catch{}
+    }
+    void RemovePresetGridRow(DataGridView g,int controlRow){RemovePresetGridRow(g,controlRow,true);}
+    void RemovePresetGridRow(DataGridView g,int controlRow,bool confirm){
+      if(g==null)return;
+      int row=g.CurrentCell==null?-1:g.CurrentCell.RowIndex;
+      if(row<=controlRow||row>=g.Rows.Count||g.Rows[row].IsNewRow){
+        if(confirm)MessageBox.Show(Loc.T("preset_remove_pick"),Loc.T("preset_win_title"),MessageBoxButtons.OK,MessageBoxIcon.Information);
+        return;
+      }
+      int dataRows=0;for(int i=controlRow+1;i<g.Rows.Count;i++)if(!g.Rows[i].IsNewRow)dataRows++;
+      if(dataRows<=1){if(confirm)MessageBox.Show(Loc.T("preset_need_one"),Loc.T("preset_win_title"),MessageBoxButtons.OK,MessageBoxIcon.Warning);return;}
+      string name=(Convert.ToString(g.Rows[row].Cells[1].Value)??"").Trim();
+      if(name.Length==0)name="#"+row.ToString(CultureInfo.InvariantCulture);
+      if(confirm&&MessageBox.Show(Loc.T("preset_remove_confirm",name),Loc.T("preset_win_title"),MessageBoxButtons.YesNo,MessageBoxIcon.Question)!=DialogResult.Yes)return;
+      g.Rows.RemoveAt(row);
+    }
+    bool TryCommitPresetGrid(DataGridView g,int controlRow,string[] stats,DataGridViewCellCollection controlCells){
+      for(int n=0;n<stats.Length;n++){string txt=Convert.ToString(controlCells[n+2].Value);double pct;if(txt!=null&&txt.EndsWith("%")&&double.TryParse(txt.TrimEnd('%'),NumberStyles.Any,CultureInfo.InvariantCulture,out pct))RuneEngine.StatGlobalFactor[stats[n]]=pct/100.0;}
+      var next=new List<Preset>();var seen=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+      for(int i=controlRow+1;i<g.Rows.Count;i++){
+        if(g.Rows[i].IsNewRow)continue;
+        var c=g.Rows[i].Cells;
+        string name=(Convert.ToString(c[1].Value)??"").Trim();
+        if(name.Length==0){MessageBox.Show(Loc.T("preset_name_empty"),Loc.T("preset_win_title"),MessageBoxButtons.OK,MessageBoxIcon.Warning);return false;}
+        if(!seen.Add(name)){MessageBox.Show(Loc.T("preset_name_dup",name),Loc.T("preset_win_title"),MessageBoxButtons.OK,MessageBoxIcon.Warning);return false;}
+        var w=new string[stats.Length];for(int n=0;n<stats.Length;n++)w[n]=PriorityLabel(PriorityValue(Convert.ToString(c[n+2].Value)));
+        var p=RuneEngine.MakePreset(name,w,Convert.ToString(c[13].Value),Convert.ToString(c[14].Value),Convert.ToString(c[15].Value),Convert.ToString(c[16].Value),Convert.ToString(c[17].Value));
+        p.ScoreFactor=ParsePresetFactor(Convert.ToString(c[0].Value));
+        next.Add(p);
+      }
+      if(next.Count==0){MessageBox.Show(Loc.T("preset_need_one"),Loc.T("preset_win_title"),MessageBoxButtons.OK,MessageBoxIcon.Warning);return false;}
+      var oldNames=RuneEngine.Presets.Select(x=>x.Name).ToList();
+      RuneEngine.ReplacePresets(next);
+      RemapRunePresetNames(oldNames);
+      return true;
+    }
+    void RemapRunePresetNames(List<string> oldNames){
+      if(oldNames==null||all==null)return;
+      if(RuneEngine.Presets.Count<oldNames.Count)return;
+      int n=oldNames.Count;
+      for(int i=0;i<n;i++){
+        string from=oldNames[i],to=RuneEngine.Presets[i].Name;
+        if(string.Equals(from,to,StringComparison.Ordinal))continue;
+        foreach(var r in all){
+          if(r.BestBuild==from)r.BestBuild=to;
+          if(r.RefinementPreset==from)r.RefinementPreset=to;
+          if(r.ReevalBestBuild==from)r.ReevalBestBuild=to;
+        }
+      }
     }
     void ShowPresetStock(){
       var f=new Form{Text=Loc.T("preset_stock_title"),Size=new Size(1150,680),StartPosition=FormStartPosition.CenterParent};var g=new BufferedGrid{Dock=DockStyle.Fill,ReadOnly=true,AllowUserToAddRows=false,RowHeadersVisible=false,AutoGenerateColumns=false};g.Columns.Add(new DataGridViewImageColumn{HeaderText="Set",Width=40,ImageLayout=DataGridViewImageCellLayout.Zoom});g.Columns.Add("Preset","Preset");g.Columns.Add("SetName","Set");for(int n=1;n<=6;n++)g.Columns.Add("S"+n,"Slot "+n+" : stock / bonus");

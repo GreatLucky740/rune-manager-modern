@@ -1,19 +1,13 @@
 {
-  "build": 13,
-  "version": "1.07",
+  "build": 14,
+  "version": "1.08",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Version 1.07.",
-    "Le dernier JSON et tes changements en jeu (montées, ventes, etc.) sont gardés : plus besoin de réimporter à chaque ouverture.",
-    "Un nouvel export SWEX met vraiment l’appli à jour (plus d’ancien état recollé par-dessus).",
-    "Une rune vendue ne revient plus dans la liste après un réimport.",
-    "Le petit exe lanceur retrouve le Core même s’il n’est pas collé au dossier Donnees."
+    "Version 1.08.",
+    "Sur un petit écran, tous les boutons restent visibles : ils passent à la ligne et la fenêtre peut être plus étroite."
   ],
   "notes_en": [
-    "Version 1.07.",
-    "Last JSON and live in-game changes (upgrades, sells, etc.) are kept, so you don’t reimport every launch.",
-    "A new SWEX export actually refreshes the app (no old overlay pasted back on top).",
-    "A sold rune no longer comes back after a reimport.",
-    "The small launcher finds Core even if it isn’t sitting right next to the Donnees folder."
+    "Version 1.08.",
+    "On a small screen, every button stays visible: they wrap to the next line and the window can be made narrower."
   ]
 }

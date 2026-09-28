@@ -132,7 +132,7 @@ namespace RuneManagerModern {
       Add("retention_mana_check","Plus strict sur les Pwr up (seuil de vente inchangé)","Stricter Pwr up (sell threshold unchanged)");
       Add("retention_margin","Marge ajoutée au seuil Pwr up","Extra margin on Pwr up threshold");
       Add("retention_fix_info","Toutes les runes avec un score ≥ {0} seront conservées.\r\nEstimation actuelle : {1} runes.","All runes with score ≥ {0} will be kept.\r\nCurrent estimate: {1} runes.");
-      Add("retention_dyn_info","Seuil calculé : {0}\r\nIl évoluera automatiquement avec la qualité de ton inventaire.","Calculated threshold: {0}\r\nIt will follow your inventory quality automatically.");
+      Add("retention_dyn_info","Seuil calculé : {0}\r\nRunes +12 classées : {1}. Le seuil ne monte que si tu conserves moins que ce nombre.","Calculated threshold: {0}\r\nRanked +12 runes: {1}. Threshold rises only if you keep fewer than that.");
       Add("msg_import_first","Importe d'abord ton JSON Summoners War.","Import your Summoners War JSON first.");
       Add("msg_catalog_missing","Le catalogue des monstres est absent de l'application.","Monster catalog is missing from the app.");
       Add("rta_title","Assistant RTA","RTA advisor");

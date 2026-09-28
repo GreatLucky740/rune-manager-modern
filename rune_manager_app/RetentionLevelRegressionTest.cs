@@ -9,6 +9,8 @@ static class RetentionLevelRegressionTest {
     var rows=new List<RuneRow>();
     for(int i=1;i<=2001;i++)rows.Add(Rune(i,12,10000-i));
     var unfinished=Rune(9000,9,99999);rows.Add(unfinished);
+    RuneEngine.LimiteRunesConservees=2000;
+    RuneEngine.SeuilVenteFixe=false;
     RuneEngine.ApplyRetentionRules(rows);
     bool completedCount=rows.Count(x=>x.Level>=12&&x.Action=="Keep")==RuneEngine.LimiteRunesConservees;
     bool weakestCompletedSold=rows.Single(x=>x.Id==2001).Action=="Sell";

@@ -151,8 +151,8 @@ namespace RuneManagerModern {
     // affiche un compte > 0, revient a l'orange normal sinon. NormalActionBorder =
     // meme orange que les autres boutons "outils/fonction".
     readonly Color RedAlertBorder=Color.FromArgb(218,70,62), NormalActionBorder=Color.FromArgb(255,170,40);
-    const int AppBuild=16;
-    const string AppVersion="1.10";
+    const int AppBuild=17;
+    const string AppVersion="1.11";
     void SetActionBorder(Button b,bool active){SetActionBorder(b,null,active);}
     // Le cadre du badge suit la meme couleur que le contour du bouton ou il se trouve
     // (rouge si action a faire, orange sinon) au lieu d'une couleur fixe independante.
@@ -2271,15 +2271,16 @@ f.ShowDialog(owner);
       foreach(var p in RuneEngine.Presets){HashSet<string> m;if(p.Main.TryGetValue(slot,out m))foreach(var stat in m)set.Add(stat);}
       return set;
     }
-    // Candidats valables pour un slot+set donne (regles Jeremy) : LEGENDAIRE (grade 6
-    // obligatoire), SPD reelle (>0, sinon le refinement ne garantit rien sur ce stat), pas de
-    // stat plate en sous-stat, pas deja dans le top 10% de ses meilleures runes (Potential), et
-    // stat principale liee a celles utilisees sur les presets pour ce slot (slot 1/3/5 : pas de
-    // restriction, stat principale fixee par le jeu). excludeAncient : TRI REFINEMENT seulement
+    // Candidats valables pour un slot+set donne (regles Jeremy) : LEGENDAIRE 6★ +12
+    // (pas les violettes / pas les runes de base), SPD reelle (>0, sinon le refinement
+    // ne garantit rien sur ce stat), pas de stat plate en sous-stat, pas deja dans le
+    // top 10% de ses meilleures runes (Potential), et stat principale liee a celles
+    // utilisees sur les presets pour ce slot (slot 1/3/5 : pas de restriction, stat
+    // principale fixee par le jeu). excludeAncient : TRI REFINEMENT seulement
     // (Jeremy : antiques absentes du tri refinement, pas du tri reeval).
     IEnumerable<RuneRow> RefinementCandidates(string setName,int slot,double threshold,bool excludeAncient=false){
       var allowedMain=AllowedMainStats(slot);
-      return all.Where(r=>r.Set.Equals(setName,StringComparison.OrdinalIgnoreCase)&&r.Slot==slot&&r.Grade==5&&(!excludeAncient||!r.Ancient)&&SpdBase(r)>0&&r.Potential<threshold&&!r.Subs.Any(x=>x.Stat=="HP+"||x.Stat=="Atk+"||x.Stat=="Def+")&&(allowedMain==null||allowedMain.Count==0||allowedMain.Contains(r.Main)));
+      return all.Where(r=>r.Set.Equals(setName,StringComparison.OrdinalIgnoreCase)&&r.Slot==slot&&RuneEngine.IsLegendSixStarPlus12(r)&&(!excludeAncient||!r.Ancient)&&SpdBase(r)>0&&r.Potential<threshold&&!r.Subs.Any(x=>x.Stat=="HP+"||x.Stat=="Atk+"||x.Stat=="Def+")&&(allowedMain==null||allowedMain.Count==0||allowedMain.Contains(r.Main)));
     }
     // Cible de refinement recommandee : parcourt les slots/sets du moins bon SPD au meilleur
     // (SpdPriorityOrder). Le premier slot/set avec au moins un candidat valable gagne ; sinon on
@@ -2319,7 +2320,7 @@ f.ShowDialog(owner);
       var rank=new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);
       for(int i=0;i<priority.Count;i++){string key=priority[i].Item1+"|"+priority[i].Item2;if(!rank.ContainsKey(key))rank[key]=i;}
       Func<RuneRow,int> rankOf=r=>{int v;return rank.TryGetValue(r.Set+"|"+r.Slot,out v)?v:int.MaxValue;};
-      return baseQuery.Where(r=>r.Marker.IndexOf("Reeval",StringComparison.OrdinalIgnoreCase)>=0&&r.Potential<=10).OrderBy(rankOf).ThenBy(r=>r.Potential).ThenBy(r=>r.Obtained);
+      return baseQuery.Where(r=>r.Marker.IndexOf("Reeval",StringComparison.OrdinalIgnoreCase)>=0&&r.Potential<=10&&RuneEngine.IsLegendSixStarPlus12(r)).OrderBy(rankOf).ThenBy(r=>r.Potential).ThenBy(r=>r.Obtained);
     }
     // Rapport en lecture seule, aucune modification de rune/action ici (demande explicite de
     // Jeremy : "avant de changer quoi que ce soit fait moi un classement"). Une seule ligne

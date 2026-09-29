@@ -38,6 +38,13 @@ static class CraftConsumeAllTypesTest {
     RuneEngine.ApplyLiveEvent(matched,Event("ConvertRune_v2",200,11,1,110804,1617699546,0));
     var hit=RuneEngine.Stocks.FirstOrDefault(x=>x.Id==1617699546);
     if(hit==null||hit.Amount!=0)return Fail("id-matched remaining not applied");
+    RuneEngine.Stocks.Clear();
+    RuneEngine.Stocks.Add(new CraftStock{Id=0,Ancient=true,Type="Meule",Set="Will",Stat="Spd",Grade=5,Amount=1});
+    RuneEngine.Stocks.Add(new CraftStock{Id=1625052306,Ancient=true,Type="Meule",Set="Will",Stat="Spd",Grade=5,Amount=1});
+    var will=new RuneRow{Set="Will",Ancient=true};
+    RuneEngine.ApplyLiveEvent(new List<RuneRow>(),Event("AmplifyRune_v2",605,15,6,150815,1625052306,0));
+    int leftover=RuneEngine.StockCountDetail(will,"Meule","Spd",false,5);
+    if(leftover!=0)return Fail("overlay+live remaining left="+leftover);
     Console.WriteLine("PASS");
     return 0;
   }

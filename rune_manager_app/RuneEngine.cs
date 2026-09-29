@@ -271,8 +271,16 @@ public sealed class SkillUpGroup { public SkillUpMonster Target; public List<Ski
     static void ReadStocks(Dictionary<string,object> root){Stocks.Clear();foreach(var x in A(G(root,"rune_craft_item_list"))){var d=D(x);int ct=I(G(d,"craft_type")),type=I(G(d,"craft_type_id")),amount=I(G(d,"amount"));if(amount<=0||ct<1||ct>6)continue;int gradeRaw=type%100,rest=type/100,statId=rest%100,setId=rest/100,grade=gradeRaw>=10?gradeRaw-10:gradeRaw;string stat=Stat(statId),set=(ct==3||ct==4||setId==99)?"Immemorial":SetName(setId);if(stat.Length>0&&set.Length>0)Stocks.Add(new CraftStock{Id=L(G(d,"craft_item_id")),Ancient=ct==5||ct==6,Type=(ct==1||ct==3||ct==5)?"Gemme":"Meule",Set=set,Stat=stat,Grade=grade,Amount=amount});}}
     static void ReadReappStock(Dictionary<string,object> root){ReappNormal=0;ReappAncient=0;foreach(var x in A(G(root,"inventory_info"))){var d=D(x);if(d==null||I(G(d,"item_master_type"))!=37)continue;int id=I(G(d,"item_master_id")),amount=Math.Max(0,I(G(d,"item_quantity")));if(id==1)ReappNormal+=amount;else if(id==2)ReappAncient+=amount;}}
     static void ReadRefinementStock(Dictionary<string,object> root){RefinementStones=0;foreach(var x in A(G(root,"inventory_info"))){var d=D(x);if(d!=null&&I(G(d,"item_master_type"))==114&&I(G(d,"item_master_id"))==1)RefinementStones=Math.Max(0,I(G(d,"item_quantity")));}}
-    public static int StockCount(RuneRow r,string type,string stat){return Stocks.Where(x=>x.Type==type&&x.Stat==stat&&x.Ancient==r.Ancient&&(x.Set==r.Set||(!r.Ancient&&x.Set=="Immemorial"))&&(x.Grade==4||x.Grade==5)).Sum(x=>x.Amount);}
-    public static int StockCountDetail(RuneRow r,string type,string stat,bool immemorial,int grade){string wanted=immemorial?"Immemorial":r.Set;if(immemorial&&r.Ancient)return 0;return Stocks.Where(x=>x.Type==type&&x.Stat==stat&&x.Set==wanted&&x.Ancient==r.Ancient&&x.Grade==grade).Sum(x=>x.Amount);}
+    public static int StockCount(RuneRow r,string type,string stat){int n=CountUsableCraft(r.Ancient,type,r.Set,stat,4)+CountUsableCraft(r.Ancient,type,r.Set,stat,5);if(!r.Ancient)n+=CountUsableCraft(false,type,"Immemorial",stat,4)+CountUsableCraft(false,type,"Immemorial",stat,5);return n;}
+    public static int StockCountDetail(RuneRow r,string type,string stat,bool immemorial,int grade){string wanted=immemorial?"Immemorial":r.Set;if(immemorial&&r.Ancient)return 0;return CountUsableCraft(r.Ancient,type,wanted,stat,grade);}
+    // Overlay TSV (Id=0) + ligne live (Id reel, amount deja 0) : un Sum brut gardait
+    // la meule fantome et HasCraftGrade/CanUseGrind recommandaient encore de meuler.
+    // S'il existe une ligne a id reel pour ce tas, on ignore les copies Id=0.
+    static int CountUsableCraft(bool ancient,string type,string set,string stat,int grade){
+      var rows=Stocks.Where(x=>x.Ancient==ancient&&x.Type==type&&x.Set==set&&x.Stat==stat&&x.Grade==grade).ToList();
+      if(rows.Any(x=>x.Id>0))rows=rows.Where(x=>x.Id>0).ToList();
+      int n=0;foreach(var x in rows)if(x.Amount>0)n+=x.Amount;return n;
+    }
     public static void ClearStock(RuneRow r,string type,string stat,bool immemorial,int grade){string wanted=immemorial?"Immemorial":r.Set;if(immemorial&&r.Ancient)return;foreach(var x in Stocks.Where(x=>x.Type==type&&x.Stat==stat&&x.Set==wanted&&x.Ancient==r.Ancient&&x.Grade==grade))x.Amount=0;}
     static void CollectDeckRunes(object o,HashSet<long> ids){var d=D(o);if(d!=null){foreach(var kv in d){if(kv.Key.Equals("rune_id_list",StringComparison.OrdinalIgnoreCase))foreach(var x in A(kv.Value)){long id=L(x);if(id>0)ids.Add(id);}CollectDeckRunes(kv.Value,ids);}return;}foreach(var x in A(o))CollectDeckRunes(x,ids);}
     static void CollectDeckArtifacts(object o,HashSet<long> ids){var d=D(o);if(d!=null){foreach(var kv in d){if(kv.Key.Equals("artifact_id_list",StringComparison.OrdinalIgnoreCase))foreach(var x in A(kv.Value)){long id=L(x);if(id>0)ids.Add(id);}CollectDeckArtifacts(kv.Value,ids);}return;}foreach(var x in A(o))CollectDeckArtifacts(x,ids);}
@@ -484,7 +492,11 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
       // Avant, on ajoutait une ligne fantome amount=0 et l'ancienne pile restait a 1 —
       // HasGemGrade voyait encore du stock, rune coincée dans Amelioration possible.
       var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;
-      if(stock!=null){stock.Amount=amount;return;}
+      if(stock!=null){
+        stock.Amount=amount;
+        foreach(var extra in Stocks)if(extra!=stock&&extra.Id==0&&extra.Ancient==ancient&&extra.Type==kind&&extra.Set==set&&extra.Stat==stat&&extra.Grade==grade)extra.Amount=0;
+        return;
+      }
       var hit=Stocks.FirstOrDefault(x=>x.Id==0&&x.Ancient==ancient&&x.Type==kind&&x.Set==set&&x.Stat==stat&&x.Grade==grade&&x.Amount>0)
            ??Stocks.FirstOrDefault(x=>x.Ancient==ancient&&x.Type==kind&&x.Set==set&&x.Stat==stat&&x.Grade==grade&&x.Amount>0);
       if(hit!=null)hit.Amount=Math.Max(0,hit.Amount-1);}
@@ -585,7 +597,7 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
     static int Rank(Preset p,string s){double priority;return p.W.TryGetValue(s,out priority)&&priority>0?(int)Math.Round(priority):4;}
     static double RollMax(string s){return s=="HP+"?375:(s=="Atk+"||s=="Def+")?20:(s=="Spd"||s=="CtR%")?6:s=="CtD%"?7:8;} static double RollAverage(string s){return s=="HP+"?255:(s=="Atk+"||s=="Def+")?15:s=="Spd"?5:s=="CtR%"?5:s=="CtD%"?5.5:6;} static double GrindMax(string s,bool a){if(s=="HP+")return a?610:550;if(s=="Atk+"||s=="Def+")return a?34:30;if(s=="HP%"||s=="Atk%"||s=="Def%")return a?12:10;if(s=="Spd")return a?6:5;return 0;} static double GemMax(string s,bool a){if(s=="HP+")return a?640:580;if(s=="Atk+"||s=="Def+")return a?44:40;if(s=="HP%"||s=="Atk%"||s=="Def%")return a?15:13;if(s=="Spd")return a?11:10;if(s=="CtR%")return a?10:9;if(s=="CtD%")return a?12:10;if(s=="Res%"||s=="Acc%")return a?13:11;return 0;}
     static double GemMaxViolet(string s,bool a){if(s=="HP+")return a?440:380;if(s=="Atk+"||s=="Def+")return a?30:26;if(s=="HP%"||s=="Atk%"||s=="Def%")return a?13:11;if(s=="Spd")return a?9:8;if(s=="CtR%")return a?8:7;if(s=="CtD%")return a?10:8;if(s=="Res%"||s=="Acc%")return a?11:9;return 0;}
-    static bool HasGemGrade(RuneRow r,string stat,int grade){return Stocks.Any(x=>x.Type=="Gemme"&&x.Stat==stat&&x.Ancient==r.Ancient&&(x.Set==r.Set||(!r.Ancient&&x.Set=="Immemorial"))&&x.Grade==grade&&x.Amount>0);}
+    static bool HasGemGrade(RuneRow r,string stat,int grade){if(CountUsableCraft(r.Ancient,"Gemme",r.Set,stat,grade)>0)return true;if(!r.Ancient&&CountUsableCraft(false,"Gemme","Immemorial",stat,grade)>0)return true;return false;}
     static double DisplayedGemMax(RuneRow r,string stat){if(HasGemGrade(r,stat,5))return GemMax(stat,r.Ancient);if(HasGemGrade(r,stat,4))return GemMaxViolet(stat,r.Ancient);return GemMax(stat,r.Ancient);}
     static bool PremiumSet(string s){return new[]{"Violent","Swift","Will","Intangible","Despair","Seal"}.Contains(s);} static double Speed(RuneRow r){var s=r.Subs.FirstOrDefault(x=>x.Stat=="Spd");return s==null?0:s.Value;}
     // Auto-Keep : grille set x stat editable par l'utilisateur (bouton "Auto-Keep" dans

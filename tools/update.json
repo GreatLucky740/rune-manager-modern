@@ -1,15 +1,17 @@
 {
-  "build": 17,
+  "build": 18,
   "version": "1.11",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
     "Version 1.11.",
     "Le tri Refinement n’affiche plus les runes violettes ni les runes de base : uniquement légendaire 6★ +12.",
-    "Même filtre sur le tri Reeval (y compris les runes lockées)."
+    "Même filtre sur le tri Reeval (y compris les runes lockées).",
+    "Le tri Amélioration ne propose plus de meuler une stat si tu n’as plus cette meule."
   ],
   "notes_en": [
     "Version 1.11.",
     "Refinement sort no longer shows hero/purple or unpowered runes: legendary 6★ +12 only.",
-    "Same filter on Reeval sort, including locked runes."
+    "Same filter on Reeval sort, including locked runes.",
+    "Upgrade sort no longer suggests grinding a stat when that grindstone is gone."
   ]
 }

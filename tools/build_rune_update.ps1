@@ -7,9 +7,11 @@ try {
   $refs+=Get-ChildItem 'C:\Windows\System32\WinMetadata' -Filter '*.winmd'|ForEach-Object {'/r:'+$_.FullName}
   foreach($name in @('System.Runtime','System.Runtime.InteropServices.WindowsRuntime','System.ObjectModel')){$refs+=Get-ChildItem ('C:\Windows\Microsoft.NET\assembly\GAC_MSIL\'+$name) -Recurse -Filter '*.dll'|ForEach-Object {'/r:'+$_.FullName}}
   $src=@('Loc','RuneManagerApp','RuneEngine','RuneEnhancements','WorldBossOptimizer','RtaDraftAdvisor','RtaMetaRefresh','RtaPoolTracker','RtaBuildOptimizer','RtaTargetEditor','ScreenCaptureLens','SwGameCodes')|ForEach-Object {'rune_manager_app\'+$_+'.cs'}
-  $src+='rune_manager_app\WorldBossStableBridge.cs'
+      $src+='rune_manager_app\WorldBossStableBridge.cs'
   $src+='rune_manager_app\PresetMenus.cs'
   $src+='rune_manager_app\PremiumRuneArt.cs'
+  $src+='rune_manager_app\Accel.cs'
+  $src+='rune_manager_app\ShellLayout.cs'
   $refs+=Get-ChildItem 'rune_manager_app\assets\runes\detailed-v1' -Filter 'glyph-*.png'|ForEach-Object {'/resource:'+$_.FullName+',RuneArt.'+$_.Name}
   $flavor=if($Stable){@('/define:WORLD_BOSS_STABLE','/out:outputs\Rune_Manager_Principal_Update.exe')}else{@('/out:outputs\Rune_Manager_Modern_Core_Test.exe')}
   # Icone embarquee dans l'exe (barre des taches / raccourci / explorateur avant meme

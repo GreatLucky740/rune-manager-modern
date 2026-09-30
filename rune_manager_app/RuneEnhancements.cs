@@ -191,7 +191,7 @@ namespace RuneManagerModern {
       };
       FormClosed+=(s,e)=>{detailDelay.Dispose();explainHideDelay.Dispose();explainAutoPop.Dispose();explainCard.Dispose();};
     }
-    void ShowPresets(){using(var f=CreatePresetWindow())f.ShowDialog(this);}
+    void ShowPresets(){if(ToggleOffTool(presetButton))return;OpenToolFrom(presetButton,CreatePresetWindow(),1680,true);}
     Form CreatePresetWindow(){
       var f=new Form{Text=Loc.T("preset_win_title"),Icon=Icon,BackColor=Color.Black,ForeColor=Color.White,Size=new Size(1680,650),StartPosition=FormStartPosition.CenterParent};
       var g=new BufferedGrid{Dock=DockStyle.Fill,AllowUserToAddRows=false,RowHeadersVisible=false,BackgroundColor=Color.Black,AutoSizeRowsMode=DataGridViewAutoSizeRowsMode.None};g.RowTemplate.Height=110;g.DefaultCellStyle=new DataGridViewCellStyle{BackColor=Color.Black,ForeColor=Color.White,SelectionBackColor=Color.Black};g.EnableHeadersVisualStyles=false;g.ColumnHeadersDefaultCellStyle=new DataGridViewCellStyle{BackColor=Color.Black,ForeColor=Color.White};

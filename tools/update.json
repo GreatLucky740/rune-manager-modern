@@ -1,17 +1,19 @@
 {
-  "build": 20,
-  "version": "1.13",
+  "build": 21,
+  "version": "1.14",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Version 1.13.",
-    "Import / export des presets (EXPORTER / IMPORTER) pour les partager.",
-    "Les sets s'affichent toujours dans le même ordre dans la fenêtre Preset.",
-    "Le zip complet installe déjà les presets de départ."
+    "Version 1.14.",
+    "Nouveau menu à gauche, sans barre de boutons en haut.",
+    "Les menus s'ouvrent dans la fenêtre principale, plus de popup.",
+    "Preset, RTA et Skill-up prennent toute la page.",
+    "Coefficient, Auto-Keep, Classement SPD, Codes et Seuil s'affichent à droite."
   ],
   "notes_en": [
-    "Version 1.13.",
-    "Import / export presets (EXPORT / IMPORT) so you can share them.",
-    "Sets always show in the same order in the Preset window.",
-    "The full zip already includes the starter presets."
+    "Version 1.14.",
+    "New left-hand menu, no more top button bar.",
+    "Menus open in the main window, no pop-up.",
+    "Preset, RTA and Skill-up take the full page.",
+    "Coefficient, Auto-Keep, SPD Ranking, Codes and Threshold open on the right."
   ]
 }

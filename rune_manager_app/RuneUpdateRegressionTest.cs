@@ -25,6 +25,22 @@ static class RuneUpdateRegressionTest {
     Check(Math.Abs(accScore/prefScore-RuneEngine.FacteurMainAcceptable)<.0000001,"acceptable main is 85 percent of preferred");
     mainPreset.MainAccepted[2].Clear();
     Check((double)scoreM.Invoke(null,new object[]{mainRune,mainPreset})==0,"main outside both lists scores 0");
+    var coverSaved=RuneEngine.Presets.ToList();
+    try{
+      var coverBase=RuneEngine.MakePreset("CoverBase",new[]{"P1","P2","Non","P1","Non","Non","P1","P2","P2","Non","Non"},"Violent","Will","HP%,Spd","CtD%","HP%");
+      var coverAcc=RuneEngine.MakePreset("CoverAcc",new[]{"P1","P2","Non","P1","Non","P1","P1","P2","P2","Non","Non"},"Violent","Will","HP%,Spd","CtD%","HP%");
+      RuneEngine.ReplacePresets(new List<Preset>{coverBase,coverAcc});
+      var coverRune=new RuneRow{Set="Violent",Slot=1,Main="Atk+",MainValue=160,Grade=5,Stars=6,Level=12};
+      coverRune.Subs.Add(new SubStat{Stat="CtR%",Value=17});
+      coverRune.Subs.Add(new SubStat{Stat="HP%",Value=18});
+      coverRune.Subs.Add(new SubStat{Stat="Spd",Value=16});
+      coverRune.Subs.Add(new SubStat{Stat="Atk%",Value=11});
+      RuneEngine.Calculate(new List<RuneRow>{coverRune});
+      Check(coverRune.BestBuild=="CoverBase","rune without Acc shows the simpler preset name");
+      coverRune.Subs[3].Stat="Acc%";coverRune.Subs[3].Value=20;coverRune.BestBuild="";
+      RuneEngine.Calculate(new List<RuneRow>{coverRune});
+      Check(coverRune.BestBuild=="CoverAcc","rune with Acc keeps the Acc P1 preset name");
+    }finally{RuneEngine.ReplacePresets(coverSaved);}
     var overlay=new List<RuneRow>();
     string hammer="{\"command\":\"UpgradeRuneList\",\"ret_code\":0,\"upgrade_rune_list\":[{\"rune_id\":65236285954,\"slot_no\":3,\"rank\":14,\"class\":16,\"set_id\":13,\"upgrade_curr\":6,\"pri_eff\":[5,70],\"prefix_eff\":[0,0],\"sec_eff\":[[11,11,0,0],[6,7,0,0],[2,14,0,0]]}]}";
     RuneEngine.ApplyLiveEvent(overlay,hammer,false);

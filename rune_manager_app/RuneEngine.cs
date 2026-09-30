@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 
 namespace RuneManagerModern {
@@ -508,15 +509,38 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
     public static void PreserveAfterCraft(RuneRow rune,double previousPotential){
       if(rune==null)return;rune.Potential=Math.Round(previousPotential,3);rune.Action=rune.Level<12?(PowerSpeed(rune)||rune.Potential>=PwrUpThreshold()?"Pwr up":"Sell"):(PremiumKeep(rune)||rune.Potential>=SeuilApres12?"Keep":"Sell");if(ForceInstantSell(rune))rune.Action="Sell";if(rune.Marker.IndexOf("Reeval",StringComparison.OrdinalIgnoreCase)>=0||rune.Marker.IndexOf("Deck",StringComparison.OrdinalIgnoreCase)>=0)rune.Action=rune.Level<12?"Pwr up":"Keep";
     }
-    public static void Calculate(List<RuneRow> rows){PresetSlotCounts.Clear();int n=Presets.Count;if(n<=0||rows==null)return;int[,] counts=new int[n,6];var setSlot=new Dictionary<string,int>();var setTotal=new Dictionary<string,int>();var raw=new double[rows.Count,n];var projected=new RuneRow[rows.Count,n];for(int i=0;i<rows.Count;i++){int bp=0;double best=-1;for(int p=0;p<n;p++){projected[i,p]=BestProjection(rows[i],Presets[p]);raw[i,p]=Score(projected[i,p],Presets[p]);if(raw[i,p]>best){best=raw[i,p];bp=p;}}// Demande Jeremy 2026-09-17 : recevoir un paquet de runes +0 en donjon faisait bouger le
+    public static void Calculate(List<RuneRow> rows){
+      PresetSlotCounts.Clear();int n=Presets.Count;if(n<=0||rows==null)return;
+      int[,] counts=new int[n,6];var setSlot=new Dictionary<string,int>();var setTotal=new Dictionary<string,int>();
+      var raw=new double[rows.Count,n];var projected=new RuneRow[rows.Count,n];
+      var bestIdx=new int[rows.Count];var bestVal=new double[rows.Count];
+      var opts=new ParallelOptions{MaxDegreeOfParallelism=Accel.Workers};
+      Parallel.For(0,rows.Count,opts,i=>{
+        int bp=0;double best=-1;
+        for(int p=0;p<n;p++){projected[i,p]=BestProjection(rows[i],Presets[p]);raw[i,p]=Score(projected[i,p],Presets[p]);if(raw[i,p]>best){best=raw[i,p];bp=p;}}
+        bestIdx[i]=bp;bestVal[i]=best;
+      });
+      // Demande Jeremy 2026-09-17 : recevoir un paquet de runes +0 en donjon faisait bouger le
       // "bonus stock" (ScarcityBonus/InventoryBonus) de runes deja finies (+12/+15), les faisant
       // passer le seuil et apparaitre/disparaitre de Tri Amelioration Disponible pour rien — la
       // rune +0 elle-meme n'avait pas change, juste le compte relatif par slot. Une rune +0 recoit
       // toujours son propre bonus stock normalement (lu depuis PresetSlotCounts plus bas via
       // InventoryBonus), mais ne doit plus ALIMENTER ce compte tant qu'elle n'est pas elle-meme
       // +12 — sinon du loot jamais touche destabilise le score de runes deja gardees.
-      if(best>0&&IsUsable(rows[i],best)&&rows[i].Level>=12){counts[bp,Math.Max(0,rows[i].Slot-1)]++;string pk=Presets[bp].Name+"|"+rows[i].Set;int[] pc;if(!PresetSlotCounts.TryGetValue(pk,out pc))PresetSlotCounts[pk]=pc=new int[6];pc[Math.Max(0,Math.Min(5,rows[i].Slot-1))]++;string s=rows[i].Set.ToLowerInvariant(),k=s+"|"+rows[i].Slot;setSlot[k]=setSlot.ContainsKey(k)?setSlot[k]+1:1;setTotal[s]=setTotal.ContainsKey(s)?setTotal[s]+1:1;}}
-      double[] avg=new double[n];for(int p=0;p<n;p++){for(int s=0;s<6;s++)avg[p]+=counts[p,s];avg[p]/=6.0;}for(int i=0;i<rows.Count;i++){var r=rows[i];if(r.Scores==null||r.Scores.Length!=n)r.Scores=new double[n];string previousBuild=r.BestBuild;double best=-1,refinementBest=0;int bp=0,refinementPreset=-1;for(int p=0;p<n;p++){double bonus=raw[i,p]>0?InventoryBonus(Presets[p],r.Set,r.Slot):0;r.Scores[p]=raw[i,p]+bonus;if(r.Scores[p]>best){best=r.Scores[p];bp=p;}if(CanRefine(r)){double rs=ExpectedRefinementScore(r,Presets[p])+bonus;if(rs>refinementBest){refinementBest=rs;refinementPreset=p;}}}CalculateReevalPriority(r,counts,avg,setSlot,setTotal);if(best<=0){SetNoPreset(r);continue;}int prevIdx=string.IsNullOrEmpty(previousBuild)?-1:Presets.FindIndex(x=>x.Name==previousBuild);if(prevIdx>=0&&prevIdx!=bp&&raw[i,prevIdx]>0&&best-r.Scores[prevIdx]<BuildStabilityMargin){bp=prevIdx;best=r.Scores[prevIdx];}var chosen=projected[i,bp];r.Potential=Math.Round(best+RuleBonus(r),3);r.BestBuild=Presets[bp].Name;r.Recommendation=Recommend(chosen,Presets[bp]);r.RecommendSource=chosen.RecommendSource;r.RecommendTarget=chosen.RecommendTarget;r.RecommendationInStock=chosen.RecommendationInStock;r.RefinementPotential=Math.Round(refinementBest,3);r.RefinementGain=Math.Round(Math.Max(0,refinementBest-best),3);r.RefinementPreset=refinementPreset>=0?Presets[refinementPreset].Name:"";}ApplyRetentionRules(rows);}
+      for(int i=0;i<rows.Count;i++){
+        int bp=bestIdx[i];double best=bestVal[i];
+        if(best>0&&IsUsable(rows[i],best)&&rows[i].Level>=12){counts[bp,Math.Max(0,rows[i].Slot-1)]++;string pk=Presets[bp].Name+"|"+rows[i].Set;int[] pc;if(!PresetSlotCounts.TryGetValue(pk,out pc))PresetSlotCounts[pk]=pc=new int[6];pc[Math.Max(0,Math.Min(5,rows[i].Slot-1))]++;string s=rows[i].Set.ToLowerInvariant(),k=s+"|"+rows[i].Slot;setSlot[k]=setSlot.ContainsKey(k)?setSlot[k]+1:1;setTotal[s]=setTotal.ContainsKey(s)?setTotal[s]+1:1;}
+      }
+      double[] avg=new double[n];for(int p=0;p<n;p++){for(int s=0;s<6;s++)avg[p]+=counts[p,s];avg[p]/=6.0;}
+      Parallel.For(0,rows.Count,opts,i=>{
+        var r=rows[i];if(r.Scores==null||r.Scores.Length!=n)r.Scores=new double[n];string previousBuild=r.BestBuild;double best=-1,refinementBest=0;int bp=0,refinementPreset=-1;
+        for(int p=0;p<n;p++){double bonus=raw[i,p]>0?InventoryBonus(Presets[p],r.Set,r.Slot):0;r.Scores[p]=raw[i,p]+bonus;if(r.Scores[p]>best){best=r.Scores[p];bp=p;}if(CanRefine(r)){double rs=ExpectedRefinementScore(r,Presets[p])+bonus;if(rs>refinementBest){refinementBest=rs;refinementPreset=p;}}}
+        CalculateReevalPriority(r,counts,avg,setSlot,setTotal);if(best<=0){SetNoPreset(r);return;}
+        int prevIdx=string.IsNullOrEmpty(previousBuild)?-1:Presets.FindIndex(x=>x.Name==previousBuild);if(prevIdx>=0&&prevIdx!=bp&&raw[i,prevIdx]>0&&best-r.Scores[prevIdx]<BuildStabilityMargin){bp=prevIdx;best=r.Scores[prevIdx];}
+        int named=PreferCoveredName(r,r.Scores,bp);var chosen=projected[i,named];r.Potential=Math.Round(best+RuleBonus(r),3);r.BestBuild=Presets[named].Name;r.Recommendation=Recommend(chosen,Presets[named]);r.RecommendSource=chosen.RecommendSource;r.RecommendTarget=chosen.RecommendTarget;r.RecommendationInStock=chosen.RecommendationInStock;r.RefinementPotential=Math.Round(refinementBest,3);r.RefinementGain=Math.Round(Math.Max(0,refinementBest-best),3);r.RefinementPreset=refinementPreset>=0?Presets[PreferCoveredName(r,r.Scores,refinementPreset)].Name:"";
+      });
+      ApplyRetentionRules(rows);
+    }
     public static void ApplyRetentionRules(List<RuneRow> rows){if(rows==null)return;var completed=rows.Where(r=>r.Level>=12).ToList();var mandatory=completed.Where(IsMandatoryProtected).OrderByDescending(r=>r.Potential).ThenByDescending(r=>r.Id).ToList();IEnumerable<RuneRow> eligible=completed.Where(r=>!IsBlue(r)&&!ForceInstantSell(r));List<RuneRow> selected;if(SeuilVenteFixe){SeuilApres12=Math.Max(0,ValeurSeuilVenteFixe);selected=eligible.Where(r=>r.Potential>=SeuilApres12).OrderByDescending(r=>r.Potential).ThenByDescending(r=>r.Obtained).ThenByDescending(r=>r.Id).ToList();}else{var ranked=eligible.OrderByDescending(r=>r.Potential).ThenByDescending(r=>r.Obtained).ThenByDescending(r=>r.Id).ToList();int n=Math.Max(1,LimiteRunesConservees);if(ranked.Count>=n){selected=ranked.Take(n).ToList();SeuilApres12=selected[selected.Count-1].Potential;}else{selected=ranked.Where(r=>r.Potential>=SeuilQualiteMinimum).ToList();SeuilApres12=SeuilQualiteMinimum;}}var keep=new HashSet<long>(mandatory.Concat(selected).Select(r=>r.Id));foreach(var r in rows){if(r.Level>=12)r.Action=keep.Contains(r.Id)?"Keep":"Sell";else r.Action=IsMandatoryProtected(r)||(!IsBlue(r)&&!ForceInstantSell(r)&&r.Potential>=PwrUpThreshold())?"Pwr up":"Sell";}}
     public static double RetentionThreshold(List<RuneRow> rows,int limit){if(rows==null||limit<1)return SeuilQualiteMinimum;var ranked=rows.Where(r=>r.Level>=12&&!IsBlue(r)&&!ForceInstantSell(r)).OrderByDescending(r=>r.Potential).ThenByDescending(r=>r.Obtained).ThenByDescending(r=>r.Id).ToList();return ranked.Count>=limit?ranked[limit-1].Potential:SeuilQualiteMinimum;}
     public static int RetentionEligibleCount(List<RuneRow> rows){return rows==null?0:rows.Count(r=>r.Level>=12&&!IsBlue(r)&&!ForceInstantSell(r));}
@@ -550,6 +574,57 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
     static bool ForceInstantSell(RuneRow r){return InvalidFlatSlot2(r)||FlatMainSlot46LowSpeed(r);}
     static bool IsUsable(RuneRow r,double score){if(ForceInstantSell(r))return false;if(IsBlue(r)&&!IsDeckProtected(r))return false;return score>0||IsDeckProtected(r);}
     static double MainFit(Preset p,int slot,string main){if(p==null||(slot!=2&&slot!=4&&slot!=6))return 1;HashSet<string> set;if(p.Main.TryGetValue(slot,out set)&&set.Contains(main))return 1;if(p.MainAccepted.TryGetValue(slot,out set)&&set.Contains(main))return FacteurMainAcceptable;return 0;}
+    // Nom affiche seulement : si deux presets ont les memes priorites sur les stats DEJA
+    // presentes sur la rune, on montre le nom sans la priorite "en trop" (Bruiser, pas
+    // Bruiser ACC sans Acc). Le score / Keep-Sell / bonus stock ne bougent pas.
+    static bool StatOnRune(RuneRow r,string stat){
+      if(r==null||string.IsNullOrEmpty(stat))return false;
+      if(string.Equals(r.Main,stat,StringComparison.OrdinalIgnoreCase))return true;
+      if(string.Equals(r.Innate,stat,StringComparison.OrdinalIgnoreCase))return true;
+      for(int i=0;i<r.Subs.Count;i++)if(string.Equals(r.Subs[i].Stat,stat,StringComparison.OrdinalIgnoreCase))return true;
+      return false;
+    }
+    static bool CanStillRollNewStat(RuneRow r){return r!=null&&r.Level<12&&r.Subs.Count<4;}
+    static double StatPriority(Preset p,string stat){double v;return p!=null&&p.W.TryGetValue(stat,out v)?v:0;}
+    static bool SameOnRunePriorities(Preset a,Preset b,RuneRow r){
+      if(a==null||b==null||r==null)return false;
+      for(int i=0;i<PresetStatOrder.Length;i++){
+        string stat=PresetStatOrder[i];
+        if(!StatOnRune(r,stat))continue;
+        if(StatPriority(a,stat)!=StatPriority(b,stat))return false;
+      }
+      return true;
+    }
+    static bool IsSimplerUnusedExtra(Preset simple,Preset extra,RuneRow r){
+      if(simple==null||extra==null||r==null)return false;
+      bool strict=false;
+      for(int i=0;i<PresetStatOrder.Length;i++){
+        string stat=PresetStatOrder[i];
+        double sw=StatPriority(simple,stat),ew=StatPriority(extra,stat);
+        if(sw>ew)return false;
+        if(ew>sw){
+          strict=true;
+          if(StatOnRune(r,stat))return false;
+        }
+      }
+      return strict;
+    }
+    static int PreferCoveredName(RuneRow r,double[] scores,int bp){
+      if(r==null||scores==null||Presets==null||bp<0||bp>=Presets.Count||CanStillRollNewStat(r))return bp;
+      int pick=bp,guard=0;
+      while(guard++<Presets.Count){
+        int next=-1;
+        for(int p=0;p<Presets.Count;p++){
+          if(p==pick||p>=scores.Length||scores[p]<=0)continue;
+          if(!SameOnRunePriorities(Presets[p],Presets[bp],r))continue;
+          if(!IsSimplerUnusedExtra(Presets[p],Presets[pick],r))continue;
+          next=p;
+        }
+        if(next<0)break;
+        pick=next;
+      }
+      return pick;
+    }
     static double Score(RuneRow r,Preset p){if(ForceInstantSell(r))return 0;if(!p.Preferred.Contains(r.Set)&&!p.Accepted.Contains(r.Set))return 0;double mainF=MainFit(p,r.Slot,r.Main);if((r.Slot==2||r.Slot==4||r.Slot==6)&&mainF<=0)return 0;double points=0,bestW=0;foreach(var s in r.Subs){double w=Weight(p,s.Stat,r.Set);bestW=Math.Max(bestW,w);points+=w*(s.Value+(r.Level>=12?GrindMax(s.Stat,r.Ancient):0))/RollMax(s.Stat);}if(r.Level>=12)points+=GemBonus(r,p);int totalRolls=r.Grade>=5?4:r.Grade==4?3:r.Grade==3?2:1;int remaining=r.Level<12?Math.Max(0,totalRolls-r.Level/3):0;points+=remaining*bestW*.75;points+=BonusStatPrincipale*((r.Slot==2||r.Slot==4||r.Slot==6)?Math.Max(Weight(p,r.Main,r.Set),.35):.35);double setF=p.Preferred.Contains(r.Set)?1:FacteurSetAcceptable;return 10*Math.Pow(Math.Max(0,points/11),1.15)*setF*mainF*p.ScoreFactor;}
     // Simule le Spd "atteignable" en projetant les rolls futurs restants sur une rune pas
     // encore +12 (ou renvoie le Spd actuel si deja +12). Utilise par les regles Stat=="Spd"

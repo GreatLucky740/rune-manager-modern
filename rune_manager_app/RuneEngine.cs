@@ -66,8 +66,13 @@ public sealed class SkillUpGroup { public SkillUpMonster Target; public List<Ski
     static readonly Dictionary<int,string> Stats=new Dictionary<int,string>{{1,"HP+"},{2,"HP%"},{3,"Atk+"},{4,"Atk%"},{5,"Def+"},{6,"Def%"},{8,"Spd"},{9,"CtR%"},{10,"CtD%"},{11,"Res%"},{12,"Acc%"}};
     public static readonly string[] PresetStatOrder={"HP%","Atk%","Def%","Spd","Res%","Acc%","CtR%","CtD%","HP+","Atk+","Def+"};
     public static readonly List<Preset> Presets=CreatePresets(); public static readonly List<CraftStock> Stocks=new List<CraftStock>(); public static readonly HashSet<long> ProtectedWorldBossRuneIds=new HashSet<long>(); public static readonly Dictionary<string,int[]> PresetSlotCounts=new Dictionary<string,int[]>();
-    public static double ScarcityBonus(int[] counts,int slot){int max=counts.Max(),min=counts.Min(),n=counts[Math.Max(0,Math.Min(5,slot-1))];return max==min?0:Math.Max(0,Math.Min(1,(max-n)/(double)(max-min)));}
-    public static double InventoryBonus(Preset p,string set,int slot){int[] c;return PresetSlotCounts.TryGetValue(p.Name+"|"+set,out c)?ScarcityBonus(c,slot):0;}
+    public static double ScarcityBonus(int[] counts,int slot){
+      if(counts==null||counts.Length==0)return 1;
+      int max=counts.Max(),min=counts.Min(),idx=Math.Max(0,Math.Min(counts.Length-1,slot-1)),n=counts[idx];
+      if(max==min)return max==0?1:0;
+      return Math.Max(0,Math.Min(1,(max-n)/(double)(max-min)));
+    }
+    public static double InventoryBonus(Preset p,string set,int slot){int[] c;if(p==null||!PresetSlotCounts.TryGetValue(p.Name+"|"+set,out c)||c==null)c=new int[6];return ScarcityBonus(c,slot);}
     public static readonly HashSet<long> ProtectedArtifactIds=new HashSet<long>(); public static int ReappNormal,ReappAncient,RefinementStones;
     // Seuls 3 donjons a runes existent (confirme par Jeremy) : chacun donne un pool
     // fixe de sets. Sets hors de ces 3 pools = pas farmables en donjon (craft/boutique/rift).
@@ -577,6 +582,9 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
     // Nom affiche seulement : si deux presets ont les memes priorites sur les stats DEJA
     // presentes sur la rune, on montre le nom sans la priorite "en trop" (Bruiser, pas
     // Bruiser ACC sans Acc). Le score / Keep-Sell / bonus stock ne bougent pas.
+    // Exception : si la stat "en trop" peut encore arriver en gemmant une sub a poids 0
+    // (Def+ mort → Spd Fast DD), on garde le preset qui gagne. Sinon le gem suit le nom
+    // simplifie et propose d'encore plus d'Atk au lieu de la Spd.
     static bool StatOnRune(RuneRow r,string stat){
       if(r==null||string.IsNullOrEmpty(stat))return false;
       if(string.Equals(r.Main,stat,StringComparison.OrdinalIgnoreCase))return true;
@@ -586,11 +594,28 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
     }
     static bool CanStillRollNewStat(RuneRow r){return r!=null&&r.Level<12&&r.Subs.Count<4;}
     static double StatPriority(Preset p,string stat){double v;return p!=null&&p.W.TryGetValue(stat,out v)?v:0;}
+    static bool CanGemFromJunk(RuneRow r,Preset p,string target){
+      if(r==null||p==null||string.IsNullOrEmpty(target)||StatOnRune(r,target))return false;
+      if(StatPriority(p,target)<=0)return false;
+      if(target==r.Main||target==r.Innate||!SlotPossible(r.Slot,target)||!AccResCompatible(r,target))return false;
+      bool hasGem=false;
+      for(int i=0;i<r.Subs.Count;i++)if(r.Subs[i].Gemmed){hasGem=true;break;}
+      for(int i=0;i<r.Subs.Count;i++){
+        var src=r.Subs[i];
+        if(hasGem&&!src.Gemmed)continue;
+        if(PercentMustBeKept(r,src,hasGem))continue;
+        if(StatPriority(p,src.Stat)>0)continue;
+        if(Rank(p,target)>Rank(p,src.Stat))continue;
+        if(IsFlat(target)&&!IsFlat(src.Stat)&&Rank(p,target)>=Rank(p,src.Stat))continue;
+        return true;
+      }
+      return false;
+    }
     static bool SameOnRunePriorities(Preset a,Preset b,RuneRow r){
       if(a==null||b==null||r==null)return false;
       for(int i=0;i<PresetStatOrder.Length;i++){
         string stat=PresetStatOrder[i];
-        if(!StatOnRune(r,stat))continue;
+        if(!StatOnRune(r,stat)&&!CanGemFromJunk(r,a,stat)&&!CanGemFromJunk(r,b,stat))continue;
         if(StatPriority(a,stat)!=StatPriority(b,stat))return false;
       }
       return true;
@@ -604,7 +629,7 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
         if(sw>ew)return false;
         if(ew>sw){
           strict=true;
-          if(StatOnRune(r,stat))return false;
+          if(StatOnRune(r,stat)||CanGemFromJunk(r,extra,stat))return false;
         }
       }
       return strict;

@@ -7,7 +7,7 @@ using RuneManagerModern;
 static class RuneUpdateRegressionTest {
   static void Check(bool ok,string message){if(!ok)throw new Exception(message);Console.WriteLine("PASS "+message);}
   [STAThread] static int Main(string[] args){try{
-    var counts=new[]{10,5,10,7,11,6};Check(Math.Abs(RuneEngine.ScarcityBonus(counts,2)-1)<.00001,"least populated slot +1");Check(RuneEngine.ScarcityBonus(counts,5)==0,"most populated slot no penalty");Check(RuneEngine.ScarcityBonus(new[]{5,5,5,5,5,5},1)==0,"equal slots zero bonus");
+    var counts=new[]{10,5,10,7,11,6};Check(Math.Abs(RuneEngine.ScarcityBonus(counts,2)-1)<.00001,"least populated slot +1");Check(RuneEngine.ScarcityBonus(counts,5)==0,"most populated slot no penalty");Check(RuneEngine.ScarcityBonus(new[]{5,5,5,5,5,5},1)==0,"equal slots zero bonus");Check(Math.Abs(RuneEngine.ScarcityBonus(new[]{0,0,0,0,0,0},3)-1)<.00001,"empty stock aims for 1 per slot");Check(RuneEngine.ScarcityBonus(new[]{1,1,1,1,1,1},2)==0,"one rune per slot is filled");RuneEngine.PresetSlotCounts.Clear();Check(Math.Abs(RuneEngine.InventoryBonus(RuneEngine.Presets[0],"Blade",1)-1)<.00001,"missing preset-set stock still boosts");
     Check(RtaPickScore.CounterWeight(0)==0,"rta no counter before enemy pick");
     Check(RtaPickScore.CounterWeight(5)>RtaPickScore.CounterWeight(1),"rta counter grows pick by pick");
     Check(RtaPickScore.SynergyWeight(5)<RtaPickScore.SynergyWeight(0),"rta synergy yields to enemy later");
@@ -40,6 +40,17 @@ static class RuneUpdateRegressionTest {
       coverRune.Subs[3].Stat="Acc%";coverRune.Subs[3].Value=20;coverRune.BestBuild="";
       RuneEngine.Calculate(new List<RuneRow>{coverRune});
       Check(coverRune.BestBuild=="CoverAcc","rune with Acc keeps the Acc P1 preset name");
+      var fast=RuneEngine.MakePreset("Fast DD MAX DPS",new[]{"Non","P1","Non","P1","Non","Non","P1","P1","Non","P1","Non"},"Violent","","Atk%,Spd","CtD%","Atk%");
+      var slow=RuneEngine.MakePreset("Slow DD MAX DPS",new[]{"Non","P1","Non","Non","Non","Non","P1","P1","Non","P1","Non"},"Blade,Rage","Violent","Atk%","CtD%","Atk%");
+      RuneEngine.ReplacePresets(new List<Preset>{fast,slow});
+      var cdRune=new RuneRow{Set="Violent",Slot=4,Main="CtD%",MainValue=59,Grade=5,Stars=6,Level=12};
+      cdRune.Subs.Add(new SubStat{Stat="Atk%",Value=14});
+      cdRune.Subs.Add(new SubStat{Stat="CtR%",Value=10});
+      cdRune.Subs.Add(new SubStat{Stat="Atk+",Value=27});
+      cdRune.Subs.Add(new SubStat{Stat="Def+",Value=14});
+      RuneEngine.Calculate(new List<RuneRow>{cdRune});
+      Check(cdRune.BestBuild=="Fast DD MAX DPS","CD rune with dead Def+ stays Fast DD not Slow DD");
+      Check(cdRune.RecommendSource=="Def+"&&cdRune.RecommendTarget=="Spd","gem replaces dead Def+ with Spd not more Atk");
     }finally{RuneEngine.ReplacePresets(coverSaved);}
     var overlay=new List<RuneRow>();
     string hammer="{\"command\":\"UpgradeRuneList\",\"ret_code\":0,\"upgrade_rune_list\":[{\"rune_id\":65236285954,\"slot_no\":3,\"rank\":14,\"class\":16,\"set_id\":13,\"upgrade_curr\":6,\"pri_eff\":[5,70],\"prefix_eff\":[0,0],\"sec_eff\":[[11,11,0,0],[6,7,0,0],[2,14,0,0]]}]}";

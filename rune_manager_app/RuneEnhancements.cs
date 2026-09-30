@@ -214,7 +214,18 @@ namespace RuneManagerModern {
       foreach(var p in RuneEngine.Presets)AddPresetDataToGrid(g,p,stats);
       ConfigureBlackPresetGrid(g);
       g.CurrentCellDirtyStateChanged+=(s,e)=>{if(g.IsCurrentCellDirty)g.CommitEdit(DataGridViewDataErrorContexts.Commit);};
-      var bar=new FlowLayoutPanel{Dock=DockStyle.Bottom,Height=62,BackColor=Color.Black};var save=new Button{Text=Loc.T("save_recalc"),Width=260,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var add=new Button{Text=Loc.T("preset_add"),Width=200,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var remove=new Button{Text=Loc.T("preset_remove"),Width=200,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var moveUp=new Button{Text=Loc.T("preset_move_up"),Width=130,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var moveDown=new Button{Text=Loc.T("preset_move_down"),Width=150,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var exportBtn=new Button{Text=Loc.T("preset_export"),Width=130,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var importBtn=new Button{Text=Loc.T("preset_import"),Width=130,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var stock=new Button{Text=Loc.T("preset_stock_btn"),Width=230,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};bar.Controls.Add(save);bar.Controls.Add(add);bar.Controls.Add(remove);bar.Controls.Add(moveUp);bar.Controls.Add(moveDown);bar.Controls.Add(exportBtn);bar.Controls.Add(importBtn);bar.Controls.Add(stock);
+      var bar=new FlowLayoutPanel{Dock=DockStyle.Bottom,Height=62,BackColor=Color.Black,WrapContents=true,Padding=new Padding(8,10,8,8)};
+      Action<Button> style=b=>{b.Height=36;b.Margin=new Padding(4,4,4,4);b.AutoSize=true;b.AutoSizeMode=AutoSizeMode.GrowAndShrink;b.MinimumSize=new Size(110,36);b.BackColor=Color.Black;b.ForeColor=Color.White;b.FlatStyle=FlatStyle.Flat;};
+      var save=new Button{Text=Loc.T("save_recalc")};style(save);
+      var add=new Button{Text=Loc.T("preset_add")};style(add);
+      var remove=new Button{Text=Loc.T("preset_remove")};style(remove);
+      var moveUp=new Button{Text=Loc.T("preset_move_up")};style(moveUp);
+      var moveDown=new Button{Text=Loc.T("preset_move_down")};style(moveDown);
+      var exportBtn=new Button{Text=Loc.T("preset_export")};style(exportBtn);
+      var importBtn=new Button{Text=Loc.T("preset_import")};style(importBtn);
+      var stock=new Button{Text=Loc.T("preset_stock_btn")};style(stock);
+      bar.Controls.Add(save);bar.Controls.Add(add);bar.Controls.Add(remove);bar.Controls.Add(moveUp);bar.Controls.Add(moveDown);bar.Controls.Add(exportBtn);bar.Controls.Add(importBtn);bar.Controls.Add(stock);
+      AttachWrapBar(bar);
       add.Click+=(s,e)=>{g.EndEdit();AddPresetGridRow(g,controlRow,stats);};
       remove.Click+=(s,e)=>{g.EndEdit();RemovePresetGridRow(g,controlRow);};
       moveUp.Click+=(s,e)=>{g.EndEdit();MovePresetGridRow(g,controlRow,-1);};
@@ -549,10 +560,10 @@ namespace RuneManagerModern {
         g.Rows.RemoveAt(e.RowIndex);
       };
       g.CurrentCellDirtyStateChanged+=(s,e)=>{if(g.IsCurrentCellDirty)g.CommitEdit(DataGridViewDataErrorContexts.Commit);};
-      var bar=new FlowLayoutPanel{Dock=DockStyle.Bottom,Height=62,BackColor=Color.Black};
-      var add=new Button{Text="AJOUTER UNE RÈGLE",Width=210,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};
-      var save=new Button{Text="ENREGISTRER ET RECALCULER",Width=260,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};
-      bar.Controls.Add(add);bar.Controls.Add(save);
+      var bar=new FlowLayoutPanel{Dock=DockStyle.Bottom,Height=62,BackColor=Color.Black,WrapContents=true,Padding=new Padding(8,10,8,8)};
+      var add=new Button{Text="AJOUTER UNE RÈGLE",AutoSize=true,AutoSizeMode=AutoSizeMode.GrowAndShrink,MinimumSize=new Size(160,36),Height=36,Margin=new Padding(4),BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};
+      var save=new Button{Text="ENREGISTRER ET RECALCULER",AutoSize=true,AutoSizeMode=AutoSizeMode.GrowAndShrink,MinimumSize=new Size(200,36),Height=36,Margin=new Padding(4),BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};
+      bar.Controls.Add(add);bar.Controls.Add(save);AttachWrapBar(bar);
       add.Click+=(s,e)=>addRow(new RuneEngine.ScoreRule{Name="Nouvelle règle",Sets=new List<string>(),Slots=new List<int>(),Stat="Spd",Threshold=20,Bonus=.5,BuiltIn=false,Projected=false});
       save.Click+=(s,e)=>{
         g.EndEdit();

@@ -639,14 +639,43 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
       }
       return strict;
     }
+    static string VariantFamily(string name){
+      if(string.IsNullOrEmpty(name))return "";
+      if(name.StartsWith("PvP def",StringComparison.OrdinalIgnoreCase))return "pvp-def";
+      if(name.StartsWith("Support",StringComparison.OrdinalIgnoreCase))return "support";
+      if(name.StartsWith("Bruiser",StringComparison.OrdinalIgnoreCase))return "bruiser";
+      if(name.IndexOf("DD MAX DPS",StringComparison.OrdinalIgnoreCase)>=0||name.IndexOf("DD HP",StringComparison.OrdinalIgnoreCase)>=0)return "dd";
+      return "solo:"+name;
+    }
+    static double OnRuneFit(Preset p,RuneRow r){
+      if(p==null||r==null)return 0;
+      double fit=0;
+      for(int i=0;i<PresetStatOrder.Length;i++){
+        string stat=PresetStatOrder[i];
+        double pr=StatPriority(p,stat);
+        if(pr<=0)continue;
+        if(!StatOnRune(r,stat)&&!CanGemFromJunk(r,p,stat))continue;
+        fit+=pr==1?3:pr==2?2:1;
+      }
+      return fit;
+    }
     static int PreferCoveredName(RuneRow r,double[] scores,int bp){
       if(r==null||scores==null||Presets==null||bp<0||bp>=Presets.Count||CanStillRollNewStat(r))return bp;
-      int pick=bp,guard=0;
+      int pick=bp;
+      string fam=VariantFamily(Presets[bp].Name);
+      double bestFit=OnRuneFit(Presets[bp],r);
+      for(int p=0;p<Presets.Count;p++){
+        if(p>=scores.Length||scores[p]<=0)continue;
+        if(VariantFamily(Presets[p].Name)!=fam)continue;
+        double fit=OnRuneFit(Presets[p],r);
+        if(fit>bestFit){bestFit=fit;pick=p;}
+      }
+      int guard=0;
       while(guard++<Presets.Count){
         int next=-1;
         for(int p=0;p<Presets.Count;p++){
           if(p==pick||p>=scores.Length||scores[p]<=0)continue;
-          if(!SameOnRunePriorities(Presets[p],Presets[bp],r))continue;
+          if(!SameOnRunePriorities(Presets[p],Presets[pick],r))continue;
           if(!IsSimplerUnusedExtra(Presets[p],Presets[pick],r))continue;
           next=p;
         }

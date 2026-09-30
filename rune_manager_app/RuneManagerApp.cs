@@ -204,11 +204,11 @@ namespace RuneManagerModern {
     Dictionary<string,double> spdSeenBest=new Dictionary<string,double>(StringComparer.OrdinalIgnoreCase);
     public MainForm(){LoadRetentionSetting();LoadEngineSettings();RuneEngine.StatGlobalFactor["Spd"]=1.1;SaveEngineSettings();LoadSpdSeenBest();LoadRuneChoiceSeen();RuneEngine.RuneChoiceDetected+=ShowRuneChoiceDecision;Text=Loc.T("app_title");Icon=LoadAppIcon();WindowState=FormWindowState.Maximized;MinimumSize=ToolbarMinSize();BackColor=Bg;ForeColor=Color.White;Font=new Font("Segoe UI",10);KeyPreview=true;FormClosing+=ClosingWithSave;BuildUi();InstallRuneEnhancements();}
     static Size ToolbarMinSize(){
-      int mw=800,mh=520;
+      int mw=640,mh=420;
       try{
         var wa=Screen.PrimaryScreen.WorkingArea;
-        if(wa.Width<900)mw=Math.Max(640,wa.Width-24);
-        if(wa.Height<600)mh=Math.Max(480,wa.Height-24);
+        if(wa.Width<720)mw=Math.Max(520,wa.Width-16);
+        if(wa.Height<500)mh=Math.Max(360,wa.Height-16);
       }catch{}
       return new Size(mw,mh);
     }
@@ -259,18 +259,19 @@ namespace RuneManagerModern {
     }
     void PlaceLangCombo(){
       if(navFooter==null)return;
-      int pad=12,y=8,w=Math.Max(160,navFooter.ClientSize.Width-pad*2);
-      if(langCombo!=null){langCombo.SetBounds(pad,y,w,28);y=langCombo.Bottom+10;}
+      int pad=Math.Max(8,navGap),gap=Math.Max(6,navGap);
+      int y=Math.Max(4,navGap-2),w=Math.Max(140,navFooter.ClientSize.Width-pad*2);
+      if(langCombo!=null){langCombo.SetBounds(pad,y,w,navLangH);y=langCombo.Bottom+gap;}
       int x=pad;
-      if(paypalButton!=null){paypalButton.Location=new Point(x,y);x+=paypalButton.Width+10;}
-      if(discordButton!=null){discordButton.Location=new Point(x,y);x+=discordButton.Width+10;}
-      if(twitchButton!=null){twitchButton.Location=new Point(x,y);x+=twitchButton.Width+10;}
+      if(paypalButton!=null){paypalButton.Size=new Size(navIconS,navIconS);paypalButton.Location=new Point(x,y);x+=paypalButton.Width+gap;}
+      if(discordButton!=null){discordButton.Size=new Size(navIconS,navIconS);discordButton.Location=new Point(x,y);x+=discordButton.Width+gap;}
+      if(twitchButton!=null){twitchButton.Size=new Size(navIconS,navIconS);twitchButton.Location=new Point(x,y);x+=twitchButton.Width+gap;}
       int iconBottom=y;
       if(paypalButton!=null)iconBottom=Math.Max(iconBottom,paypalButton.Bottom);
       if(discordButton!=null)iconBottom=Math.Max(iconBottom,discordButton.Bottom);
       if(twitchButton!=null)iconBottom=Math.Max(iconBottom,twitchButton.Bottom);
-      y=iconBottom+10;
-      if(updateButton!=null){updateButton.SetBounds(pad,y,w,36);y=updateButton.Bottom+2;}
+      y=iconBottom+gap;
+      if(updateButton!=null){updateButton.SetBounds(pad,y,w,navBtnH);y=updateButton.Bottom+2;}
       if(versionLabel!=null){
         int vx=pad+(w-versionLabel.Width)/2;
         versionLabel.Location=new Point(Math.Max(pad,vx),y);
@@ -483,6 +484,7 @@ namespace RuneManagerModern {
       if(toolbarLayoutBusy||potButton==null||filterBar==null)return;
       toolbarLayoutBusy=true;
       try{
+        CompactNavChrome();
         PlaceLangCombo();
         int pad=12,gap=8,filterH=32;
         int avail=filterBar.ClientSize.Width;
@@ -505,6 +507,7 @@ namespace RuneManagerModern {
         Label[] secs={navSortLbl,navToolsLbl,navAppLbl,navKeepLbl};
         for(int i=0;i<secs.Length;i++)if(secs[i]!=null)secs[i].Width=nw;
         PlaceNavBadges();
+        FitNavButtonText();
         PaintNavSelection();
       }finally{toolbarLayoutBusy=false;}
     }

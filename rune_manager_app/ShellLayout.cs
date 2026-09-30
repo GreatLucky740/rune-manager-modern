@@ -208,7 +208,15 @@ namespace RuneManagerModern {
     }
     int NavTextPx(string s,Font font){
       if(string.IsNullOrEmpty(s)||font==null)return 0;
-      return TextRenderer.MeasureText(s,font,new Size(int.MaxValue,int.MaxValue),TextFormatFlags.NoPadding|TextFormatFlags.NoPrefix).Width;
+      try{return TextRenderer.MeasureText(s,font,new Size(int.MaxValue,int.MaxValue),TextFormatFlags.NoPadding|TextFormatFlags.NoPrefix).Width;}catch{return Math.Max(8,s.Length*6);}
+    }
+    int NavLineH(Font font){
+      if(font==null)return 12;
+      try{
+        int h=TextRenderer.MeasureText("Ag",font,new Size(int.MaxValue,int.MaxValue),TextFormatFlags.NoPadding|TextFormatFlags.NoPrefix).Height;
+        if(h>0)return h;
+      }catch{}
+      return Math.Max(12,navBtnH>0?navBtnH/2:12);
     }
     string WrapNavText(string text,Font font,int maxWidth){
       string raw=(text??"").Replace("\r"," ").Replace("\n"," ").Trim();
@@ -244,7 +252,7 @@ namespace RuneManagerModern {
         string wrapped=WrapNavText(b.Text,b.Font,NavTextWidth(b));
         if(wrapped!=b.Text)b.Text=wrapped;
         int lines=1;for(int k=0;k<wrapped.Length;k++)if(wrapped[k]=='\n')lines++;
-        int lineH=b.Font!=null?b.Font.Height:12;
+        int lineH=NavLineH(b.Font);
         int need=Math.Max(navBtnH,lines*(lineH+2)+6);
         if(b.Height!=need)b.Height=need;
       }
@@ -278,12 +286,12 @@ namespace RuneManagerModern {
         }
       }
       navBtnH=btnH;navIconS=iconS;navGap=gap;navLangH=langH;
-      Font oldBtn=scaleBtnFont,oldSec=scaleSecFont,oldTitle=scaleTitleFont,oldCount=scaleCountFont,oldTiny=scaleTinyFont;
-      scaleBtnFont=new Font("Segoe UI Semibold",btnFs);
-      scaleSecFont=new Font("Segoe UI Semibold",secFs);
-      scaleTitleFont=new Font("Segoe UI Semibold",titleFs);
-      scaleCountFont=new Font("Segoe UI Semibold",countFs);
-      scaleTinyFont=new Font("Segoe UI",Math.Max(6.5f,secFs));
+      if(scaleBtnFont==null||Math.Abs(scaleBtnFont.Size-btnFs)>0.05f)scaleBtnFont=new Font("Segoe UI Semibold",btnFs);
+      if(scaleSecFont==null||Math.Abs(scaleSecFont.Size-secFs)>0.05f)scaleSecFont=new Font("Segoe UI Semibold",secFs);
+      if(scaleTitleFont==null||Math.Abs(scaleTitleFont.Size-titleFs)>0.05f)scaleTitleFont=new Font("Segoe UI Semibold",titleFs);
+      if(scaleCountFont==null||Math.Abs(scaleCountFont.Size-countFs)>0.05f)scaleCountFont=new Font("Segoe UI Semibold",countFs);
+      float tinyFs=Math.Max(6.5f,secFs);
+      if(scaleTinyFont==null||Math.Abs(scaleTinyFont.Size-tinyFs)>0.05f)scaleTinyFont=new Font("Segoe UI",tinyFs);
       int headH=NavHeadNeed(btnH,titleH,cH);
       int footH=NavFootNeed(btnH,iconS,langH);
       if(navHeader.Height!=headH)navHeader.Height=headH;
@@ -321,11 +329,6 @@ namespace RuneManagerModern {
         bool overflow=headH+footH+NavFlowNeed(btnH,btnMV,secH,secMV)>total+8;
         navFlow.AutoScroll=overflow;
       }
-      if(oldBtn!=null&&oldBtn!=scaleBtnFont)oldBtn.Dispose();
-      if(oldSec!=null&&oldSec!=scaleSecFont)oldSec.Dispose();
-      if(oldTitle!=null&&oldTitle!=scaleTitleFont)oldTitle.Dispose();
-      if(oldCount!=null&&oldCount!=scaleCountFont)oldCount.Dispose();
-      if(oldTiny!=null&&oldTiny!=scaleTinyFont)oldTiny.Dispose();
     }
     void BuildShell(){
       leftNav=new Panel{Dock=DockStyle.Fill,BackColor=Color.FromArgb(10,16,26),Padding=new Padding(0)};

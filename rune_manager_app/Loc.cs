@@ -319,6 +319,12 @@ namespace RuneManagerModern {
       Add("preset_global_col","Valeur globale","Global value");
       Add("preset_sets_pref","Sets préférés","Preferred sets");
       Add("preset_sets_ok","Sets acceptables","Accepted sets");
+      Add("preset_slot2","Slot 2","Slot 2");
+      Add("preset_slot2_ok","Slot 2 acceptable","Slot 2 accepted");
+      Add("preset_slot4","Slot 4","Slot 4");
+      Add("preset_slot4_ok","Slot 4 acceptable","Slot 4 accepted");
+      Add("preset_slot6","Slot 6","Slot 6");
+      Add("preset_slot6_ok","Slot 6 acceptable","Slot 6 accepted");
       Add("preset_global_row","Valeur globale par stat","Global value per stat");
       Add("preset_stock_btn","RÉCAP STOCK / BONUS","STOCK / BONUS SUMMARY");
       Add("presets_globals_saved","Presets et valeurs globales enregistrés.","Presets and global values saved.");
@@ -331,6 +337,9 @@ namespace RuneManagerModern {
       Add("preset_remove","ENLEVER LE PRESET","REMOVE PRESET");
       Add("preset_remove_confirm","Enlever le preset « {0} » ?","Remove preset \"{0}\"?");
       Add("preset_remove_pick","Clique une ligne de preset à enlever.","Click a preset row to remove.");
+      Add("preset_move_up","MONTER","MOVE UP");
+      Add("preset_move_down","DESCENDRE","MOVE DOWN");
+      Add("preset_move_pick","Clique une ligne de preset à déplacer.","Click a preset row to move.");
       Add("autokeep_title","Auto-Keep — seuils par set et par stat","Auto-Keep — thresholds by set and stat");
       Add("autokeep_info","Une rune +12 est gardée (Keep) dès qu'une sous-stat atteint le seuil ci-dessous pour son set, même sous le seuil de vente normal. Laisser vide ou 0 = désactivé pour cette case.","A +12 rune is kept as soon as a substat reaches the threshold below for its set, even under the normal sell threshold. Leave empty or 0 to disable that cell.");
       Add("save","ENREGISTRER","SAVE");

@@ -193,30 +193,32 @@ namespace RuneManagerModern {
     }
     void ShowPresets(){using(var f=CreatePresetWindow())f.ShowDialog(this);}
     Form CreatePresetWindow(){
-      var f=new Form{Text=Loc.T("preset_win_title"),Icon=Icon,BackColor=Color.Black,ForeColor=Color.White,Size=new Size(1450,650),StartPosition=FormStartPosition.CenterParent};
+      var f=new Form{Text=Loc.T("preset_win_title"),Icon=Icon,BackColor=Color.Black,ForeColor=Color.White,Size=new Size(1680,650),StartPosition=FormStartPosition.CenterParent};
       var g=new BufferedGrid{Dock=DockStyle.Fill,AllowUserToAddRows=false,RowHeadersVisible=false,BackgroundColor=Color.Black,AutoSizeRowsMode=DataGridViewAutoSizeRowsMode.None};g.RowTemplate.Height=110;g.DefaultCellStyle=new DataGridViewCellStyle{BackColor=Color.Black,ForeColor=Color.White,SelectionBackColor=Color.Black};g.EnableHeadersVisualStyles=false;g.ColumnHeadersDefaultCellStyle=new DataGridViewCellStyle{BackColor=Color.Black,ForeColor=Color.White};
       var factor=new DataGridViewComboBoxColumn{Name="Factor",HeaderText=Loc.T("preset_global_col"),Width=115};for(int n=0;n<=30;n++)factor.Items.Add((n*10).ToString(CultureInfo.InvariantCulture)+"%");foreach(var p in RuneEngine.Presets){string v=Math.Round(p.ScoreFactor*100).ToString(CultureInfo.InvariantCulture)+"%";if(!factor.Items.Contains(v))factor.Items.Add(v);}g.Columns.Add(factor);
       g.Columns.Add("Preset","Preset");g.Columns[1].ReadOnly=false;g.Columns[1].Width=140;
       string[] stats={"HP%","Atk%","Def%","Spd","Res%","Acc%","CtR%","CtD%","HP+","Atk+","Def+"};foreach(string stat in stats){var c=new DataGridViewComboBoxColumn{HeaderText=stat,Width=60};c.Items.AddRange(new object[]{Loc.T("prio_none"),"P1","P2","P3"});g.Columns.Add(c);}
-      g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_sets_pref"),Width=280});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_sets_ok"),Width=280});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText="Slot 2",Width=135});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText="Slot 4",Width=135});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText="Slot 6",Width=135});
+      g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_sets_pref"),Width=280});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_sets_ok"),Width=280});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_slot2"),Width=125});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_slot2_ok"),Width=145});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_slot4"),Width=125});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_slot4_ok"),Width=145});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_slot6"),Width=125});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_slot6_ok"),Width=145});
       // Ligne "globale" tout en haut : ses cellules stat (colonnes 2..12) sont des menus deroulants
       // de POURCENTAGE (50 a 150%), pas Non/P1/P2/P3. Ca regle RuneEngine.StatGlobalFactor[stat],
       // un multiplicateur applique dans Weight() pour TOUTES les stats de ce type, sur TOUS les
       // presets, en plus (pas a la place) de la priorite Non/P1/P2/P3 propre a chaque preset.
       // Ex : mettre Atk% a 90% fait que l'Atk% compte pour 90% de sa valeur normale partout.
-      int controlRow=g.Rows.Add();var controlCells=g.Rows[controlRow].Cells;controlCells[0].ReadOnly=true;controlCells[1].Value="🌐 "+Loc.T("preset_global_row");controlCells[1].ReadOnly=true;for(int n=13;n<=17;n++)controlCells[n].ReadOnly=true;
+      int controlRow=g.Rows.Add();var controlCells=g.Rows[controlRow].Cells;controlCells[0].ReadOnly=true;controlCells[1].Value="🌐 "+Loc.T("preset_global_row");controlCells[1].ReadOnly=true;for(int n=13;n<=20;n++)controlCells[n].ReadOnly=true;
       // Cellules remplacees par de simples DataGridViewTextBoxCell (au lieu du ComboBoxCell de
       // la colonne) : le menu Non/P1/P2/P3 de CreatePresetMenu (PresetMenus.cs) lit les Items de
       // la COLONNE, pas de la cellule — impossible d'y afficher une autre liste (pourcentages)
       // en gardant un ComboBoxCell. CreatePresetMenu detecte cette ligne au contenu ("...%") et
       // propose alors 50%-150% au lieu de Non/P1/P2/P3.
       for(int n=0;n<stats.Length;n++){double gf;if(!RuneEngine.StatGlobalFactor.TryGetValue(stats[n],out gf))gf=1.0;string current=Math.Round(gf*100).ToString(CultureInfo.InvariantCulture)+"%";g.Rows[controlRow].Cells[n+2]=new DataGridViewTextBoxCell{Value=current};}
-      foreach(var p in RuneEngine.Presets){int i=g.Rows.Add();var cells=g.Rows[i].Cells;cells[0].Value=Math.Round(p.ScoreFactor*100).ToString(CultureInfo.InvariantCulture)+"%";cells[1].Value=p.Name;for(int n=0;n<stats.Length;n++)cells[n+2].Value=PriorityDisplay(p.W[stats[n]]);cells[13].Value=string.Join(",",p.Preferred);cells[14].Value=string.Join(",",p.Accepted);cells[15].Value=string.Join(",",p.Main[2]);cells[16].Value=string.Join(",",p.Main[4]);cells[17].Value=string.Join(",",p.Main[6]);}
+      foreach(var p in RuneEngine.Presets){int i=g.Rows.Add();var cells=g.Rows[i].Cells;cells[0].Value=Math.Round(p.ScoreFactor*100).ToString(CultureInfo.InvariantCulture)+"%";cells[1].Value=p.Name;for(int n=0;n<stats.Length;n++)cells[n+2].Value=PriorityDisplay(p.W[stats[n]]);cells[13].Value=string.Join(",",p.Preferred);cells[14].Value=string.Join(",",p.Accepted);cells[15].Value=string.Join(",",p.Main[2]);cells[16].Value=string.Join(",",p.MainAccepted[2]);cells[17].Value=string.Join(",",p.Main[4]);cells[18].Value=string.Join(",",p.MainAccepted[4]);cells[19].Value=string.Join(",",p.Main[6]);cells[20].Value=string.Join(",",p.MainAccepted[6]);}
       ConfigureBlackPresetGrid(g);
       g.CurrentCellDirtyStateChanged+=(s,e)=>{if(g.IsCurrentCellDirty)g.CommitEdit(DataGridViewDataErrorContexts.Commit);};
-      var bar=new FlowLayoutPanel{Dock=DockStyle.Bottom,Height=62,BackColor=Color.Black};var save=new Button{Text=Loc.T("save_recalc"),Width=260,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var add=new Button{Text=Loc.T("preset_add"),Width=200,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var remove=new Button{Text=Loc.T("preset_remove"),Width=200,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var stock=new Button{Text=Loc.T("preset_stock_btn"),Width=230,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};bar.Controls.Add(save);bar.Controls.Add(add);bar.Controls.Add(remove);bar.Controls.Add(stock);
+      var bar=new FlowLayoutPanel{Dock=DockStyle.Bottom,Height=62,BackColor=Color.Black};var save=new Button{Text=Loc.T("save_recalc"),Width=260,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var add=new Button{Text=Loc.T("preset_add"),Width=200,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var remove=new Button{Text=Loc.T("preset_remove"),Width=200,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var moveUp=new Button{Text=Loc.T("preset_move_up"),Width=130,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var moveDown=new Button{Text=Loc.T("preset_move_down"),Width=150,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};var stock=new Button{Text=Loc.T("preset_stock_btn"),Width=230,Height=40,BackColor=Color.Black,ForeColor=Color.White,FlatStyle=FlatStyle.Flat};bar.Controls.Add(save);bar.Controls.Add(add);bar.Controls.Add(remove);bar.Controls.Add(moveUp);bar.Controls.Add(moveDown);bar.Controls.Add(stock);
       add.Click+=(s,e)=>{g.EndEdit();AddPresetGridRow(g,controlRow,stats);};
       remove.Click+=(s,e)=>{g.EndEdit();RemovePresetGridRow(g,controlRow);};
+      moveUp.Click+=(s,e)=>{g.EndEdit();MovePresetGridRow(g,controlRow,-1);};
+      moveDown.Click+=(s,e)=>{g.EndEdit();MovePresetGridRow(g,controlRow,1);};
       stock.Click+=(s,e)=>ShowPresetStock();
       save.Click+=(s,e)=>{g.EndEdit();if(!TryCommitPresetGrid(g,controlRow,stats,controlCells))return;File.WriteAllLines(PresetFactorsPath,RuneEngine.Presets.Select(p=>p.Name+"\t"+p.ScoreFactor.ToString(CultureInfo.InvariantCulture)));ApplySettingsAndClose(f,Loc.T("presets_globals_saved"));};
       f.Controls.Add(g);f.Controls.Add(bar);return f;
@@ -248,6 +250,27 @@ namespace RuneManagerModern {
       if(confirm&&MessageBox.Show(Loc.T("preset_remove_confirm",name),Loc.T("preset_win_title"),MessageBoxButtons.YesNo,MessageBoxIcon.Question)!=DialogResult.Yes)return;
       g.Rows.RemoveAt(row);
     }
+    void MovePresetGridRow(DataGridView g,int controlRow,int delta){MovePresetGridRow(g,controlRow,delta,true);}
+    void MovePresetGridRow(DataGridView g,int controlRow,int delta,bool warn){
+      if(g==null||delta==0)return;
+      int row=g.CurrentCell==null?-1:g.CurrentCell.RowIndex;
+      if(row<=controlRow||row>=g.Rows.Count||g.Rows[row].IsNewRow){
+        if(warn)MessageBox.Show(Loc.T("preset_move_pick"),Loc.T("preset_win_title"),MessageBoxButtons.OK,MessageBoxIcon.Information);
+        return;
+      }
+      int dest=row+delta;
+      if(dest<=controlRow||dest>=g.Rows.Count||g.Rows[dest].IsNewRow)return;
+      int col=g.CurrentCell==null?1:g.CurrentCell.ColumnIndex;
+      SwapPresetGridRows(g,row,dest);
+      try{g.CurrentCell=g.Rows[dest].Cells[col];}catch{}
+    }
+    static void SwapPresetGridRows(DataGridView g,int a,int b){
+      int cols=g.Columns.Count;
+      var tmp=new object[cols];
+      for(int c=0;c<cols;c++)tmp[c]=g.Rows[a].Cells[c].Value;
+      for(int c=0;c<cols;c++)g.Rows[a].Cells[c].Value=g.Rows[b].Cells[c].Value;
+      for(int c=0;c<cols;c++)g.Rows[b].Cells[c].Value=tmp[c];
+    }
     bool TryCommitPresetGrid(DataGridView g,int controlRow,string[] stats,DataGridViewCellCollection controlCells){
       for(int n=0;n<stats.Length;n++){string txt=Convert.ToString(controlCells[n+2].Value);double pct;if(txt!=null&&txt.EndsWith("%")&&double.TryParse(txt.TrimEnd('%'),NumberStyles.Any,CultureInfo.InvariantCulture,out pct))RuneEngine.StatGlobalFactor[stats[n]]=pct/100.0;}
       var next=new List<Preset>();var seen=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -258,7 +281,7 @@ namespace RuneManagerModern {
         if(name.Length==0){MessageBox.Show(Loc.T("preset_name_empty"),Loc.T("preset_win_title"),MessageBoxButtons.OK,MessageBoxIcon.Warning);return false;}
         if(!seen.Add(name)){MessageBox.Show(Loc.T("preset_name_dup",name),Loc.T("preset_win_title"),MessageBoxButtons.OK,MessageBoxIcon.Warning);return false;}
         var w=new string[stats.Length];for(int n=0;n<stats.Length;n++)w[n]=PriorityLabel(PriorityValue(Convert.ToString(c[n+2].Value)));
-        var p=RuneEngine.MakePreset(name,w,Convert.ToString(c[13].Value),Convert.ToString(c[14].Value),Convert.ToString(c[15].Value),Convert.ToString(c[16].Value),Convert.ToString(c[17].Value));
+        var p=RuneEngine.MakePreset(name,w,Convert.ToString(c[13].Value),Convert.ToString(c[14].Value),Convert.ToString(c[15].Value),Convert.ToString(c[17].Value),Convert.ToString(c[19].Value),Convert.ToString(c[16].Value),Convert.ToString(c[18].Value),Convert.ToString(c[20].Value));
         p.ScoreFactor=ParsePresetFactor(Convert.ToString(c[0].Value));
         next.Add(p);
       }
@@ -270,16 +293,25 @@ namespace RuneManagerModern {
     }
     void RemapRunePresetNames(List<string> oldNames){
       if(oldNames==null||all==null)return;
-      if(RuneEngine.Presets.Count<oldNames.Count)return;
-      int n=oldNames.Count;
+      var newNames=new List<string>();
+      for(int i=0;i<RuneEngine.Presets.Count;i++)newNames.Add(RuneEngine.Presets[i].Name);
+      var newSet=new HashSet<string>(newNames,StringComparer.OrdinalIgnoreCase);
+      var oldSet=new HashSet<string>(oldNames,StringComparer.OrdinalIgnoreCase);
+      var map=new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);
+      int n=Math.Min(oldNames.Count,newNames.Count);
       for(int i=0;i<n;i++){
-        string from=oldNames[i],to=RuneEngine.Presets[i].Name;
+        string from=oldNames[i],to=newNames[i];
+        if(string.IsNullOrEmpty(from)||string.IsNullOrEmpty(to))continue;
         if(string.Equals(from,to,StringComparison.Ordinal))continue;
-        foreach(var r in all){
-          if(r.BestBuild==from)r.BestBuild=to;
-          if(r.RefinementPreset==from)r.RefinementPreset=to;
-          if(r.ReevalBestBuild==from)r.ReevalBestBuild=to;
-        }
+        if(newSet.Contains(from)||oldSet.Contains(to))continue;
+        map[from]=to;
+      }
+      if(map.Count==0)return;
+      foreach(var r in all){
+        string next;
+        if(!string.IsNullOrEmpty(r.BestBuild)&&map.TryGetValue(r.BestBuild,out next))r.BestBuild=next;
+        if(!string.IsNullOrEmpty(r.RefinementPreset)&&map.TryGetValue(r.RefinementPreset,out next))r.RefinementPreset=next;
+        if(!string.IsNullOrEmpty(r.ReevalBestBuild)&&map.TryGetValue(r.ReevalBestBuild,out next))r.ReevalBestBuild=next;
       }
     }
     void ShowPresetStock(){

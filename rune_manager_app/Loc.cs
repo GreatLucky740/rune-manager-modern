@@ -340,6 +340,16 @@ namespace RuneManagerModern {
       Add("preset_move_up","MONTER","MOVE UP");
       Add("preset_move_down","DESCENDRE","MOVE DOWN");
       Add("preset_move_pick","Clique une ligne de preset à déplacer.","Click a preset row to move.");
+      Add("preset_export","EXPORTER","EXPORT");
+      Add("preset_import","IMPORTER","IMPORT");
+      Add("preset_share_filter","Fichier presets (*.tsv)|*.tsv|Tous les fichiers (*.*)|*.*","Preset file (*.tsv)|*.tsv|All files (*.*)|*.*");
+      Add("preset_export_title","Exporter les presets","Export presets");
+      Add("preset_import_title","Importer des presets","Import presets");
+      Add("preset_export_ok","Presets exportés.","Presets exported.");
+      Add("preset_import_bad","Fichier de presets invalide.","Invalid preset file.");
+      Add("preset_import_none","Aucun preset dans ce fichier.","No presets in this file.");
+      Add("preset_import_confirm","Remplacer tes presets affichés par ce fichier ?","Replace the presets on screen with this file?");
+      Add("preset_import_ok","{0} presets chargés. Enregistre pour les garder.","{0} presets loaded. Save to keep them.");
       Add("autokeep_title","Auto-Keep — seuils par set et par stat","Auto-Keep — thresholds by set and stat");
       Add("autokeep_info","Une rune +12 est gardée (Keep) dès qu'une sous-stat atteint le seuil ci-dessous pour son set, même sous le seuil de vente normal. Laisser vide ou 0 = désactivé pour cette case.","A +12 rune is kept as soon as a substat reaches the threshold below for its set, even under the normal sell threshold. Leave empty or 0 to disable that cell.");
       Add("save","ENREGISTRER","SAVE");

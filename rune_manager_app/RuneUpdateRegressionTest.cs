@@ -42,6 +42,12 @@ static class RuneUpdateRegressionTest {
     string five="{\"command\":\"OpenReward\",\"ret_code\":0,\"choices\":["+string.Join(",",Enumerable.Repeat(entry,5))+"]}";Check(RuneEngine.CompareRuneChoice(rows,five).Choices.Count==5,"five rune chest retained");
     int presetCount=RuneEngine.Presets.Count;
     Check(presetCount>=7,"default presets loaded");
+    string starterSets=System.IO.Path.Combine("rune_manager_app","defaults","parametres-runes.tsv");
+    if(System.IO.File.Exists(starterSets)){
+      var starterLines=System.IO.File.ReadAllLines(starterSets);
+      Check(starterLines.Count(x=>x.StartsWith("PRESET\t"))==13,"first-run zip ships 13 starter presets");
+      Check(!starterLines.Any(x=>x.StartsWith("SKILLHIDDEN")),"starter settings omit personal skill-hidden");
+    }
     string oldName=RuneEngine.Presets[0].Name;
     var sample=rows.Where(r=>r.BestBuild==oldName).Take(8).ToList();
     var beforeScores=sample.Select(r=>r.Potential).ToArray();
@@ -95,6 +101,18 @@ static class RuneUpdateRegressionTest {
         g.CurrentCell=g.Rows[1].Cells[1];
         move.Invoke(form,new object[]{g,0,1,false});
         Check(Convert.ToString(g.Rows[1].Cells[1].Value)==name1&&Convert.ToString(g.Rows[2].Cells[1].Value)==name2,"move down restores original preset order");
+        var setOrder=(string[])typeof(MainForm).GetField("PresetSetOrder",BindingFlags.NonPublic|BindingFlags.Static).GetValue(null);
+        var joinSets=typeof(MainForm).GetMethod("JoinOrderedNames",BindingFlags.NonPublic|BindingFlags.Static);
+        Check((string)joinSets.Invoke(null,new object[]{new[]{"Intangible","Fight","Will","Violent","Rage","Blade","Swift"},setOrder})=="Swift,Blade,Rage,Violent,Will,Fight,Intangible","set chips follow dropdown order");
+        for(int presetRow=1;presetRow<g.Rows.Count;presetRow++){
+          if(g.Rows[presetRow].IsNewRow)continue;
+          string prefSets=Convert.ToString(g.Rows[presetRow].Cells[13].Value)??"";
+          string accSets=Convert.ToString(g.Rows[presetRow].Cells[14].Value)??"";
+          var prefParts=prefSets.Split(',').Select(x=>x.Trim()).Where(x=>x.Length>0).ToArray();
+          var accParts=accSets.Split(',').Select(x=>x.Trim()).Where(x=>x.Length>0).ToArray();
+          Check(prefSets==(string)joinSets.Invoke(null,new object[]{prefParts,setOrder}),"preferred sets stay in dropdown order");
+          Check(accSets==(string)joinSets.Invoke(null,new object[]{accParts,setOrder}),"accepted sets stay in dropdown order");
+        }
         using(var slot2=(ContextMenuStrip)typeof(MainForm).GetMethod("CreatePresetMenu",flags).Invoke(form,new object[]{g,1,15})){
           Check(slot2.Items.OfType<ToolStripMenuItem>().Any(x=>x.Text=="Spd")&&!slot2.Items.OfType<ToolStripMenuItem>().Any(x=>x.Text=="CtD%"),"slot 2 menu lists Spd not CtD");
           var current=Convert.ToString(g.Rows[1].Cells[15].Value)??"";
@@ -123,6 +141,27 @@ static class RuneUpdateRegressionTest {
           Check(!(Convert.ToString(g.Rows[1].Cells[15].Value)??"").Split(',').Select(x=>x.Trim()).Contains(pick),"preferred column loses the moved main");
         }
         Check(g.Columns.Count==21,"preset grid has accepted main columns");
+      }
+    }
+    using(var form=new MainForm()){
+      var flags=BindingFlags.Instance|BindingFlags.NonPublic;
+      string[] stats={"HP%","Atk%","Def%","Spd","Res%","Acc%","CtR%","CtD%","HP+","Atk+","Def+"};
+      using(var window=(Form)typeof(MainForm).GetMethod("CreatePresetWindow",flags).Invoke(form,null)){
+        var g=window.Controls.OfType<DataGridView>().First();
+        var created=g.Handle;
+        int shareRows=g.Rows.Count;
+        string shareFirst=Convert.ToString(g.Rows[1].Cells[1].Value);
+        string shareSlot2=Convert.ToString(g.Rows[1].Cells[15].Value);
+        var lines=(string[])typeof(MainForm).GetMethod("BuildPresetShareLines",flags).Invoke(form,new object[]{g,0,stats});
+        Check(lines.Length>=3&&lines[0].StartsWith("RMM-PRESETS"),"export writes share header");
+        Check(lines.Any(x=>x.StartsWith("PRESET\t"+shareFirst)),"export includes first preset");
+        Check(!(bool)typeof(MainForm).GetMethod("ApplyPresetShare",flags).Invoke(form,new object[]{g,0,stats,new[]{"nope"},false}),"garbage share file is rejected");
+        var one=new[]{"PRESET\tShareOnly\tP1,Non,Non,P1,Non,Non,Non,Non,Non,Non,Non\tViolent\tWill\tSpd\tCtD%\tAtk%\tHP%\t\t\t0.8"};
+        Check((bool)typeof(MainForm).GetMethod("ApplyPresetShare",flags).Invoke(form,new object[]{g,0,stats,one,false}),"single preset file imports");
+        Check(g.Rows.Count==2&&Convert.ToString(g.Rows[1].Cells[1].Value)=="ShareOnly","import replaces grid with shared presets");
+        Check(Convert.ToString(g.Rows[1].Cells[15].Value)=="Spd","import keeps preferred slot 2 mains");
+        Check((bool)typeof(MainForm).GetMethod("ApplyPresetShare",flags).Invoke(form,new object[]{g,0,stats,lines,false}),"roundtrip export imports back");
+        Check(g.Rows.Count==shareRows&&Convert.ToString(g.Rows[1].Cells[1].Value)==shareFirst&&Convert.ToString(g.Rows[1].Cells[15].Value)==shareSlot2,"roundtrip restores original presets");
       }
     }
     using(var form=new MainForm()){

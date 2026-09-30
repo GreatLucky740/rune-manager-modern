@@ -1,0 +1,38 @@
+COEFF	1	0.5	0.2	1.75	0.95	0.85	9.5
+PRESET	Fast DD MAX DPS	Non,P1,Non,P1,Non,Non,P1,P1,Non,P1,Non	Swift,Blade,Rage,Violent,Will,Fight,Intangible	Fatal,Despair,Vampire,Nemesis,Shield,Revenge	Atk%,Spd	CtD%	Atk%			
+PRESET	Fast DD HP	P2,P1,Non,P1,Non,P2,P1,P1,Non,P1,Non	Swift,Blade,Rage,Violent,Will,Fight,Intangible	Focus,Fatal,Despair,Vampire,Nemesis,Shield,Revenge	Atk%,Spd	CtD%	Atk%	HP%	HP%	HP%
+PRESET	Slow DD MAX DPS	Non,P1,Non,Non,Non,Non,P1,P1,Non,P1,Non	Blade,Rage,Violent,Will,Fight,Intangible	Fatal,Despair,Nemesis	Atk%	CtD%	Atk%			
+PRESET	Slow DD HP	P2,P1,Non,Non,Non,P2,P1,P1,Non,P1,Non	Blade,Rage,Violent,Will,Shield,Fight,Intangible	Focus,Fatal,Despair,Vampire,Nemesis,Revenge	Atk%	CtD%	Atk%	HP%	HP%	HP%
+PRESET	Def DD	P2,Non,P1,P2,Non,P2,P1,P1,P2,Non,P1	Guard,Blade,Rage,Will,Determination,Intangible	Despair,Violent,Fight	Def%	Def%,CtD%	Def%			
+PRESET	Bomber	P2,P1,Non,P1,Non,P1,Non,Non,P3,P1,Non	Fatal,Will,Intangible	Focus,Violent,Fight	Atk%,Spd	Atk%	Atk%	HP%	HP%	HP%,Acc%
+PRESET	Support	P1,Non,P2,P1,Non,P1,Non,Non,P2,Non,Non	Swift,Despair,Violent,Will,Seal,Intangible	Energy,Guard,Nemesis,Revenge,Determination,Enhance,Accuracy,Tolerance	HP%,Spd	HP%,CtR%	HP%,Acc%	Def%	Def%	Def%
+PRESET	Support ATK	P1,P1,P2,P1,Non,P1,Non,Non,P2,Non,Non	Swift,Despair,Violent,Will,Seal,Intangible	Energy,Guard,Nemesis,Shield,Revenge,Determination,Enhance,Tolerance	HP%,Atk%,Spd	HP%,Atk%	HP%,Atk%,Acc%	Def%	Def%	Def%
+PRESET	Suppor DEF	P2,Non,P1,P1,Non,P1,Non,Non,Non,Non,P2	Swift,Despair,Violent,Will,Seal,Intangible	Energy,Guard,Nemesis,Revenge,Determination,Enhance,Accuracy,Tolerance	Def%,Spd	Def%	Def%,Acc%	HP%	HP%	HP%
+PRESET	PvP def ACC	P1,Non,P2,P1,Non,P1,Non,Non,P2,Non,Non	Swift,Despair,Violent,Nemesis,Will,Seal,Intangible	Energy,Guard,Endure,Shield,Revenge,Destroy,Fight,Determination,Tolerance	HP%,Spd	HP%	HP%,Acc%	Def%	Def%	Def%
+PRESET	PvP def RES	P1,Non,P2,P1,P1,Non,Non,Non,P2,Non,Non	Swift,Despair,Violent,Nemesis,Will,Seal,Intangible	Energy,Guard,Endure,Shield,Revenge,Destroy,Fight,Determination,Tolerance	HP%,Spd	HP%	HP%	Def%	Def%	Def%,Res%
+PRESET	Bruiser	P1,P2,Non,P1,Non,Non,P1,P2,P2,Non,Non	Swift,Despair,Vampire,Violent,Will,Revenge,Destroy,Intangible	Nemesis,Seal	HP%,Spd	HP%,CtR%	HP%	Atk%	CtD%	Atk%
+PRESET	Bruiser ACC	P1,P2,Non,P1,Non,P1,P1,P2,P2,Non,Non	Swift,Despair,Vampire,Violent,Will,Revenge,Destroy,Intangible	Nemesis,Seal	HP%,Spd	HP%,CtR%	HP%	Atk%	CtD%	Atk%
+AUTOKEEP	Energy	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Guard	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Swift	HP%=0,Atk%=0,Def%=0,Spd=22,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Blade	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Rage	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Focus	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Endure	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Fatal	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Despair	HP%=0,Atk%=0,Def%=0,Spd=22,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Vampire	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Violent	HP%=0,Atk%=0,Def%=0,Spd=22,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Nemesis	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Will	HP%=0,Atk%=0,Def%=0,Spd=22,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Shield	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Revenge	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Destroy	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Fight	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Determination	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Enhance	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Accuracy	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Tolerance	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Seal	HP%=0,Atk%=0,Def%=0,Spd=22,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+AUTOKEEP	Intangible	HP%=0,Atk%=0,Def%=0,Spd=22,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
+STATFACTOR	HP%=1,Atk%=1,Def%=1,Spd=1.1,Res%=1,Acc%=1,CtR%=1,CtD%=1,HP+=0.9,Atk+=0.9,Def+=0.9

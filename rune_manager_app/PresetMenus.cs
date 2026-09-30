@@ -45,9 +45,20 @@ namespace RuneManagerModern {
     static readonly Color AcceptableColor=Color.FromArgb(25,65,125);
     static bool PresetDropColumn(int col){return col==0||(col>=2&&col<=20);}
     static bool PresetMainColumn(int col){return col>=15&&col<=20;}
+    static readonly string[] PresetSetOrder={"Energy","Guard","Swift","Blade","Rage","Focus","Endure","Fatal","Despair","Vampire","Violent","Nemesis","Will","Shield","Revenge","Destroy","Fight","Determination","Enhance","Accuracy","Tolerance","Seal","Intangible"};
     static readonly string[] Slot2Mains={"HP%","Atk%","Def%","Spd","HP+","Atk+","Def+"};
     static readonly string[] Slot4Mains={"HP%","Atk%","Def%","CtR%","CtD%","HP+","Atk+","Def+"};
     static readonly string[] Slot6Mains={"HP%","Atk%","Def%","Res%","Acc%","HP+","Atk+","Def+"};
+    static List<string> OrderedNames(IEnumerable<string> selected,string[] order){
+      var list=new List<string>();
+      if(selected==null)return list;
+      var set=new HashSet<string>(selected,StringComparer.OrdinalIgnoreCase);
+      var seen=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+      if(order!=null)for(int i=0;i<order.Length;i++)if(set.Contains(order[i])&&seen.Add(order[i]))list.Add(order[i]);
+      foreach(string name in selected)if(name!=null&&name.Length>0&&seen.Add(name))list.Add(name);
+      return list;
+    }
+    static string JoinOrderedNames(IEnumerable<string> selected,string[] order){return string.Join(",",OrderedNames(selected,order).ToArray());}
     static int PresetMainSlot(int col){return col==15||col==16?2:col==17||col==18?4:6;}
     static int PresetMainPrefCol(int col){return col<=16?15:col<=18?17:19;}
     static int PresetMainAccCol(int col){return PresetMainPrefCol(col)+1;}
@@ -58,7 +69,7 @@ namespace RuneManagerModern {
       var cell=g.Rows[row].Cells[col];
       if(col==13||col==14){
         var selected=CellSets(cell);var other=g.Rows[row].Cells[col==13?14:13];
-        string[] names={"Energy","Guard","Swift","Blade","Rage","Focus","Endure","Fatal","Despair","Vampire","Violent","Nemesis","Will","Shield","Revenge","Destroy","Fight","Determination","Enhance","Accuracy","Tolerance","Seal","Intangible"};
+        string[] names=PresetSetOrder;
         // Couleur FIXE par catégorie (rouge = Préféré, bleu = Acceptable), jamais relative à
         // la colonne ouverte. Avant : rouge voulait dire "déjà dans cette colonne-ci", donc en
         // ouvrant la colonne Acceptables, les sets Acceptables s'affichaient en ROUGE (la
@@ -104,8 +115,8 @@ namespace RuneManagerModern {
         // Sans ce reglage, GDI+ redimensionne les icones de set en basse qualite quand
         // elles sont reduites a 20x20 dans les puces — rendu crenele/flou.
         e.Graphics.SmoothingMode=SmoothingMode.AntiAlias;e.Graphics.InterpolationMode=InterpolationMode.HighQualityBicubic;e.Graphics.PixelOffsetMode=PixelOffsetMode.HighQuality;
-        if(e.ColumnIndex==13||e.ColumnIndex==14){Color chipColor=e.ColumnIndex==13?PreferredColor:AcceptableColor;int x=e.CellBounds.X+3,y=e.CellBounds.Y+3;foreach(string name in CellSets(g.Rows[e.RowIndex].Cells[e.ColumnIndex])){int w=TextRenderer.MeasureText(name,g.Font).Width+28;if(x+w>e.CellBounds.Right-18){x=e.CellBounds.X+3;y+=22;}if(y+22>e.CellBounds.Bottom)break;using(var chipBrush=new SolidBrush(chipColor))e.Graphics.FillRectangle(chipBrush,new Rectangle(x,y,w-4,20));var icon=GetSetIcon(name);if(icon!=null)e.Graphics.DrawImage(icon,new Rectangle(x,y,20,20));TextRenderer.DrawText(e.Graphics,name,g.Font,new Point(x+22,y+2),Color.White);x+=w;}}
-        else if(PresetMainColumn(e.ColumnIndex)){Color chipColor=e.ColumnIndex==PresetMainPrefCol(e.ColumnIndex)?PreferredColor:AcceptableColor;int x=e.CellBounds.X+3,y=e.CellBounds.Y+3;foreach(string name in CellSets(g.Rows[e.RowIndex].Cells[e.ColumnIndex])){int w=TextRenderer.MeasureText(name,g.Font).Width+16;if(x+w>e.CellBounds.Right-18){x=e.CellBounds.X+3;y+=22;}if(y+22>e.CellBounds.Bottom)break;using(var chipBrush=new SolidBrush(chipColor))e.Graphics.FillRectangle(chipBrush,new Rectangle(x,y,w-4,20));TextRenderer.DrawText(e.Graphics,name,g.Font,new Point(x+6,y+2),Color.White);x+=w;}}
+        if(e.ColumnIndex==13||e.ColumnIndex==14){Color chipColor=e.ColumnIndex==13?PreferredColor:AcceptableColor;int x=e.CellBounds.X+3,y=e.CellBounds.Y+3;foreach(string name in OrderedNames(CellSets(g.Rows[e.RowIndex].Cells[e.ColumnIndex]),PresetSetOrder)){int w=TextRenderer.MeasureText(name,g.Font).Width+28;if(x+w>e.CellBounds.Right-18){x=e.CellBounds.X+3;y+=22;}if(y+22>e.CellBounds.Bottom)break;using(var chipBrush=new SolidBrush(chipColor))e.Graphics.FillRectangle(chipBrush,new Rectangle(x,y,w-4,20));var icon=GetSetIcon(name);if(icon!=null)e.Graphics.DrawImage(icon,new Rectangle(x,y,20,20));TextRenderer.DrawText(e.Graphics,name,g.Font,new Point(x+22,y+2),Color.White);x+=w;}}
+        else if(PresetMainColumn(e.ColumnIndex)){Color chipColor=e.ColumnIndex==PresetMainPrefCol(e.ColumnIndex)?PreferredColor:AcceptableColor;int x=e.CellBounds.X+3,y=e.CellBounds.Y+3;foreach(string name in OrderedNames(CellSets(g.Rows[e.RowIndex].Cells[e.ColumnIndex]),PresetMainChoices(e.ColumnIndex))){int w=TextRenderer.MeasureText(name,g.Font).Width+16;if(x+w>e.CellBounds.Right-18){x=e.CellBounds.X+3;y+=22;}if(y+22>e.CellBounds.Bottom)break;using(var chipBrush=new SolidBrush(chipColor))e.Graphics.FillRectangle(chipBrush,new Rectangle(x,y,w-4,20));TextRenderer.DrawText(e.Graphics,name,g.Font,new Point(x+6,y+2),Color.White);x+=w;}}
         else TextRenderer.DrawText(e.Graphics,Convert.ToString(e.FormattedValue),g.Font,new Rectangle(e.CellBounds.X+4,e.CellBounds.Y+2,Math.Max(1,e.CellBounds.Width-22),e.CellBounds.Height-4),Color.White,TextFormatFlags.VerticalCenter|TextFormatFlags.EndEllipsis);
         if(PresetDropColumn(e.ColumnIndex)&&!(e.RowIndex==0&&PresetMainColumn(e.ColumnIndex))){int x=e.CellBounds.Right-12,y=e.CellBounds.Y+13;e.Graphics.FillPolygon(Brushes.White,new[]{new Point(x-4,y-2),new Point(x+4,y-2),new Point(x,y+3)});}
         e.Paint(e.ClipBounds,DataGridViewPaintParts.Border);e.Handled=true;

@@ -629,13 +629,27 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
       Presets.Clear();
       for(int i=0;i<next.Count;i++)if(next[i]!=null)Presets.Add(next[i]);
     }
-    static List<Preset>CreatePresets(){return new List<Preset>{
-      P("Fast DD",new[]{"P2","P1","Non","P1","Non","P2","P1","P1","P3","P1","Non"},"Blade,Fight,Rage,Intangible,Swift,Will,Violent","Despair,Nemesis,Fatal,Focus,Vampire,Shield,Revenge","Atk%,Spd","CtD%","Atk%"),
-      P("Slow DD",new[]{"P2","P1","Non","P2","Non","P2","P1","P1","P3","P1","Non"},"Fight,Rage,Violent,Will,Intangible,Blade,Shield","Fatal,Revenge,Vampire,Despair,Nemesis,Focus","Atk%","CtD%","Atk%"),
-      P("Def DD",new[]{"P2","Non","P1","P2","Non","P2","P1","P1","P2","Non","P1"},"Determination,Guard,Rage,Will,Intangible,Blade","Despair,Violent,Fight","Def%","CtD%,Def%","Def%"),
-      P("Bomber",new[]{"P2","P1","Non","P1","Non","P1","Non","Non","P3","P1","Non"},"Fatal,Will,Intangible","Fight,Focus,Violent","Atk%,Spd","Atk%","Atk%"),
-      P("Support",new[]{"P1","P2","P2","P1","P2","P1","Non","Non","P2","Non","P3"},"Despair,Swift,Violent,Will,Intangible,Seal","Determination,Enhance,Energy,Tolerance,Guard,Nemesis,Revenge,Shield","Spd,HP%","HP%,Atk%,Def%","HP%,Acc%,Atk%,Def%"),
-      P("PvP def",new[]{"P1","Non","P2","P1","P1","P2","Non","Non","P2","Non","P3"},"Intangible,Despair,Nemesis,Violent,Will,Seal","Shield,Destroy,Determination,Energy,Revenge,Fight,Endure","Spd,HP%","HP%,Def%","HP%,Def%"),
-      P("Bruiser",new[]{"P1","P2","P3","P1","Non","P2","P1","P2","P2","P3","Non"},"Swift,Despair,Destroy,Revenge,Vampire,Violent,Will,Intangible","Seal,Nemesis","Spd,Atk%,HP%","CtD%,CtR%,HP%,Atk%","Atk%,HP%")};}
+    static List<Preset>CreatePresets(){
+      var list=new List<Preset>{
+        MakePreset("Fast DD MAX DPS",new[]{"Non","P1","Non","P1","Non","Non","P1","P1","Non","P1","Non"},"Swift,Blade,Rage,Violent,Will,Fight,Intangible","Fatal,Despair,Vampire,Nemesis,Shield,Revenge","Atk%,Spd","CtD%","Atk%","","",""),
+        MakePreset("Fast DD HP",new[]{"P2","P1","Non","P1","Non","P2","P1","P1","Non","P1","Non"},"Swift,Blade,Rage,Violent,Will,Fight,Intangible","Focus,Fatal,Despair,Vampire,Nemesis,Shield,Revenge","Atk%,Spd","CtD%","Atk%","HP%","HP%","HP%"),
+        MakePreset("Slow DD MAX DPS",new[]{"Non","P1","Non","Non","Non","Non","P1","P1","Non","P1","Non"},"Blade,Rage,Violent,Will,Fight,Intangible","Fatal,Despair,Nemesis","Atk%","CtD%","Atk%","","",""),
+        MakePreset("Slow DD HP",new[]{"P2","P1","Non","Non","Non","P2","P1","P1","Non","P1","Non"},"Blade,Rage,Violent,Will,Shield,Fight,Intangible","Focus,Fatal,Despair,Vampire,Nemesis,Revenge","Atk%","CtD%","Atk%","HP%","HP%","HP%"),
+        MakePreset("Def DD",new[]{"P2","Non","P1","P2","Non","P2","P1","P1","P2","Non","P1"},"Guard,Blade,Rage,Will,Determination,Intangible","Despair,Violent,Fight","Def%","Def%,CtD%","Def%","","",""),
+        MakePreset("Bomber",new[]{"P2","P1","Non","P1","Non","P1","Non","Non","P3","P1","Non"},"Fatal,Will,Intangible","Focus,Violent,Fight","Atk%,Spd","Atk%","Atk%","HP%","HP%","HP%,Acc%"),
+        MakePreset("Support",new[]{"P1","Non","P2","P1","Non","P1","Non","Non","P2","Non","Non"},"Swift,Despair,Violent,Will,Seal,Intangible","Energy,Guard,Nemesis,Revenge,Determination,Enhance,Accuracy,Tolerance","HP%,Spd","HP%,CtR%","HP%,Acc%","Def%","Def%","Def%"),
+        MakePreset("Support ATK",new[]{"P1","P1","P2","P1","Non","P1","Non","Non","P2","Non","Non"},"Swift,Despair,Violent,Will,Seal,Intangible","Energy,Guard,Nemesis,Shield,Revenge,Determination,Enhance,Tolerance","HP%,Atk%,Spd","HP%,Atk%","HP%,Atk%,Acc%","Def%","Def%","Def%"),
+        MakePreset("Suppor DEF",new[]{"P2","Non","P1","P1","Non","P1","Non","Non","Non","Non","P2"},"Swift,Despair,Violent,Will,Seal,Intangible","Energy,Guard,Nemesis,Revenge,Determination,Enhance,Accuracy,Tolerance","Def%,Spd","Def%","Def%,Acc%","HP%","HP%","HP%"),
+        MakePreset("PvP def ACC",new[]{"P1","Non","P2","P1","Non","P1","Non","Non","P2","Non","Non"},"Swift,Despair,Violent,Nemesis,Will,Seal,Intangible","Energy,Guard,Endure,Shield,Revenge,Destroy,Fight,Determination,Tolerance","HP%,Spd","HP%","HP%,Acc%","Def%","Def%","Def%"),
+        MakePreset("PvP def RES",new[]{"P1","Non","P2","P1","P1","Non","Non","Non","P2","Non","Non"},"Swift,Despair,Violent,Nemesis,Will,Seal,Intangible","Energy,Guard,Endure,Shield,Revenge,Destroy,Fight,Determination,Tolerance","HP%,Spd","HP%","HP%","Def%","Def%","Def%,Res%"),
+        MakePreset("Bruiser",new[]{"P1","P2","Non","P1","Non","Non","P1","P2","P2","Non","Non"},"Swift,Despair,Vampire,Violent,Will,Revenge,Destroy,Intangible","Nemesis,Seal","HP%,Spd","HP%,CtR%","HP%","Atk%","CtD%","Atk%"),
+        MakePreset("Bruiser ACC",new[]{"P1","P2","Non","P1","Non","P1","P1","P2","P2","Non","Non"},"Swift,Despair,Vampire,Violent,Will,Revenge,Destroy,Intangible","Nemesis,Seal","HP%,Spd","HP%,CtR%","HP%","Atk%","CtD%","Atk%")
+      };
+      for(int i=0;i<list.Count;i++){
+        string n=list[i].Name;
+        list[i].ScoreFactor=(n=="Def DD"||n=="Bomber")?.9:1;
+      }
+      return list;
+    }
   }
 }

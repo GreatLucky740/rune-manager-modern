@@ -160,16 +160,13 @@ namespace RuneManagerModern {
     void SetCountAlert(Button b,CountBadge badge,int count){
       if(badge!=null)badge.Text=count.ToString(CultureInfo.InvariantCulture);
       bool on=count>0;
-      if(b!=null){
-        Padding pad;
-        if(b==reevalButton)pad=new Padding(12,0,132,0);
-        else if(b==refinementButton)pad=new Padding(12,0,72,0);
-        else pad=on?new Padding(12,0,48,0):new Padding(12,0,12,0);
+      if(b!=null&&b!=reevalButton&&b!=refinementButton){
+        Padding pad=on?new Padding(12,0,48,0):new Padding(12,0,12,0);
         if(b.Padding!=pad)b.Padding=pad;
       }
       SetActionBorder(b,badge,on);
       if(on&&badge!=null)badge.BringToFront();
-      LayoutToolbar();
+      if(!toolbarLayoutBusy){PlaceNavBadges();PaintNavSelection();}
     }
     readonly DataGridView grid=new BufferedGrid(); readonly Label status=new Label(), counters=new Label(); readonly IconBadge reappNormalBadge=new IconBadge(),reappAncientBadge=new IconBadge(),refinementBadge=new IconBadge(); readonly CountBadge improveBadge=new CountBadge(),skillBadge=new CountBadge(),worldBossBadge=new CountBadge(),spdRankBadge=new CountBadge(),updateBadge=new CountBadge(),codesBadge=new CountBadge(); readonly TextBox search=new TextBox(); readonly Label searchHint=new Label(); readonly ComboBox set=new ComboBox(),slot=new ComboBox(),action=new ComboBox(),build=new ComboBox(),runeType=new ComboBox();
     readonly Dictionary<string,Image> setIcons=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,Image> runeIcons=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly Image[] slotLayers=new Image[7]; readonly Dictionary<int,Image> worldBossMonsterIcons=new Dictionary<int,Image>(),monsterPortraits=new Dictionary<int,Image>(); readonly Dictionary<int,string> portraitPathById=new Dictionary<int,string>(); readonly Dictionary<string,string[]> portraitFilesByPrefix=new Dictionary<string,string[]>(); readonly Dictionary<long,double> upgradeCaps=new Dictionary<long,double>(),craftPotentials=new Dictionary<long,double>();

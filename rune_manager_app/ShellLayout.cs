@@ -219,10 +219,12 @@ namespace RuneManagerModern {
       return Math.Max(12,navBtnH>0?navBtnH/2:12);
     }
     string WrapNavText(string text,Font font,int maxWidth){
+      bool hadWrap=text!=null&&text.IndexOf('\n')>=0;
       string raw=(text??"").Replace("\r"," ").Replace("\n"," ").Trim();
       while(raw.IndexOf("  ",StringComparison.Ordinal)>=0)raw=raw.Replace("  "," ");
       if(raw.Length==0||font==null||maxWidth<24)return raw;
-      if(NavTextPx(raw,font)<=maxWidth)return raw;
+      int one=NavTextPx(raw,font);
+      if(one<=maxWidth-(hadWrap?12:0))return raw;
       string[] words=raw.Split(new[]{' '},StringSplitOptions.RemoveEmptyEntries);
       if(words.Length==1){
         int cut=Math.Max(1,words[0].Length/2);
@@ -244,6 +246,12 @@ namespace RuneManagerModern {
       if(cur.Length>0)lines.Add(cur);
       return string.Join("\n",lines.ToArray());
     }
+    int NavWrappedHeight(Button b,int minH){
+      if(b==null||string.IsNullOrEmpty(b.Text))return minH;
+      int lines=1;string t=b.Text;for(int k=0;k<t.Length;k++)if(t[k]=='\n')lines++;
+      if(lines<=1)return minH;
+      return Math.Max(minH,lines*(NavLineH(b.Font)+2)+6);
+    }
     void FitNavButtonText(){
       Button[] all={importButton,potButton,obtButton,improveButton,reevalButton,refinementButton,presetButton,coefficientButton,autoKeepButton,spdRankButton,skillButton,rtaButton,codesButton,retentionButton,updateButton};
       for(int i=0;i<all.Length;i++){
@@ -251,10 +259,8 @@ namespace RuneManagerModern {
         b.AutoEllipsis=false;b.UseCompatibleTextRendering=true;
         string wrapped=WrapNavText(b.Text,b.Font,NavTextWidth(b));
         if(wrapped!=b.Text)b.Text=wrapped;
-        int lines=1;for(int k=0;k<wrapped.Length;k++)if(wrapped[k]=='\n')lines++;
-        int lineH=NavLineH(b.Font);
-        int need=Math.Max(navBtnH,lines*(lineH+2)+6);
-        if(b.Height!=need)b.Height=need;
+        int need=NavWrappedHeight(b,navBtnH);
+        if(Math.Abs(b.Height-need)>1)b.Height=need;
       }
     }
     int NavHeadNeed(int btnH,int titleH,int cH){return 8+titleH+4+cH+6+btnH+8;}
@@ -304,7 +310,9 @@ namespace RuneManagerModern {
       Padding btnPad=new Padding(8,Math.Max(0,btnMV/2),8,Math.Max(0,btnMV/2));
       for(int i=0;i<flowBtns.Length;i++){
         Button b=flowBtns[i];if(b==null)continue;
-        b.Width=nw;b.Height=btnH;b.Margin=btnPad;AssignFont(b,scaleBtnFont);
+        b.Width=nw;b.Margin=btnPad;AssignFont(b,scaleBtnFont);
+        int wantH=NavWrappedHeight(b,btnH);
+        if(Math.Abs(b.Height-wantH)>1)b.Height=wantH;
       }
       if(importButton!=null){importButton.SetBounds(8,impY,nw,btnH);AssignFont(importButton,scaleBtnFont);}
       if(updateButton!=null)AssignFont(updateButton,scaleBtnFont);

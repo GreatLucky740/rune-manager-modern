@@ -73,6 +73,11 @@ public sealed class SkillUpGroup { public SkillUpMonster Target; public List<Ski
       return Math.Max(0,Math.Min(1,(max-n)/(double)(max-min)));
     }
     public static double InventoryBonus(Preset p,string set,int slot){int[] c;if(p==null||!PresetSlotCounts.TryGetValue(p.Name+"|"+set,out c)||c==null)c=new int[6];return ScarcityBonus(c,slot);}
+    public static string StockFingerprint(){
+      int n=Stocks.Count;long qty=0,mix=0;
+      for(int i=0;i<n;i++){var x=Stocks[i];qty+=x.Amount;mix+=x.Id+(x.Amount*17L)+(x.Grade*31L);}
+      return n+"|"+qty+"|"+mix;
+    }
     public static readonly HashSet<long> ProtectedArtifactIds=new HashSet<long>(); public static int ReappNormal,ReappAncient,RefinementStones;
     // Seuls 3 donjons a runes existent (confirme par Jeremy) : chacun donne un pool
     // fixe de sets. Sets hors de ces 3 pools = pas farmables en donjon (craft/boutique/rift).
@@ -690,9 +695,27 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
       return total;
     }
     static double GemBonus(RuneRow r,Preset p){double best=0;bool hasGem=r.Subs.Any(x=>x.Gemmed);foreach(var src in r.Subs){if(hasGem&&!src.Gemmed)continue;if(PercentMustBeKept(r,src,hasGem))continue;foreach(string target in p.W.Keys){bool same=src.Stat==target;if(p.W[target]<=0||(!same&&r.Subs.Any(x=>x.Stat==target))||target==r.Main||target==r.Innate||!SlotPossible(r.Slot,target)||!AccResCompatible(r,target))continue;if(Rank(p,target)>Rank(p,src.Stat))continue;if(IsFlat(target)&&!IsFlat(src.Stat)&&Rank(p,target)>=Rank(p,src.Stat))continue;double gain=Contribution(target,GemMax(target,r.Ancient),Weight(p,target,r.Set),r.Ancient)-Contribution(src.Stat,src.Value,Weight(p,src.Stat,r.Set),r.Ancient);best=Math.Max(best,gain);}}return Math.Max(0,best);}
-    static string Recommend(RuneRow r,Preset p){double best=double.MinValue;SubStat source=null;string target="";bool hasGem=r.Subs.Any(x=>x.Gemmed);r.RecommendationInStock=false;foreach(var src in r.Subs){if(hasGem&&!src.Gemmed)continue;if(PercentMustBeKept(r,src,hasGem))continue;foreach(string t in p.W.Keys){if(p.W[t]<=0||t==r.Main||t==r.Innate||!SlotPossible(r.Slot,t)||!AccResCompatible(r,t))continue;bool same=src.Stat==t;if(!same&&r.Subs.Any(x=>x.Stat==t))continue;if(Rank(p,t)>Rank(p,src.Stat))continue;if(IsFlat(t)&&!IsFlat(src.Stat)&&Rank(p,t)>=Rank(p,src.Stat))continue;double available=DisplayedGemMax(r,t);if(same&&available<=src.Value&&GemMax(t,r.Ancient)>src.Value)available=GemMax(t,r.Ancient);double gain=Contribution(t,available,Weight(p,t,r.Set),r.Ancient)-Contribution(src.Stat,src.Value,Weight(p,src.Stat,r.Set),r.Ancient);if(gain>best){best=gain;source=src;target=t;}}}if(source==null){r.RecommendSource="";r.RecommendTarget="";return Loc.T("gem_max");}double displayed=DisplayedGemMax(r,target);bool inStock=HasGemGrade(r,target,5)||HasGemGrade(r,target,4);if(target==source.Stat&&displayed<=source.Value&&GemMax(target,r.Ancient)>source.Value){displayed=GemMax(target,r.Ancient);inStock=HasGemGrade(r,target,5);}double actualGain=Contribution(target,displayed,Weight(p,target,r.Set),r.Ancient)-Contribution(source.Stat,source.Value,Weight(p,source.Stat,r.Set),r.Ancient);if((target==source.Stat&&displayed<=source.Value)||actualGain<=0){r.RecommendSource="";r.RecommendTarget="";return Loc.T("gem_max");}r.RecommendSource=source.Stat;r.RecommendTarget=target;r.RecommendationInStock=inStock;return source.BaseDisplay+" → "+new SubStat{Stat=target,Value=displayed}.BaseDisplay;}
+    static string Recommend(RuneRow r,Preset p){double best=double.MinValue;SubStat source=null;string target="";bool hasGem=r.Subs.Any(x=>x.Gemmed);r.RecommendationInStock=false;foreach(var src in r.Subs){if(hasGem&&!src.Gemmed)continue;if(PercentMustBeKept(r,src,hasGem))continue;foreach(string t in p.W.Keys){if(p.W[t]<=0||t==r.Main||t==r.Innate||!SlotPossible(r.Slot,t)||!AccResCompatible(r,t))continue;bool same=src.Stat==t;if(!same&&r.Subs.Any(x=>x.Stat==t))continue;if(Rank(p,t)>Rank(p,src.Stat))continue;if(IsFlat(t)&&!IsFlat(src.Stat)&&Rank(p,t)>=Rank(p,src.Stat))continue;double available=DisplayedGemMax(r,t);if(same&&available<=src.Value&&GemMax(t,r.Ancient)>src.Value)available=GemMax(t,r.Ancient);double gain=Contribution(t,available,Weight(p,t,r.Set),r.Ancient)-SourceCost(p,r,src);if(gain>best){best=gain;source=src;target=t;}}}if(source==null){r.RecommendSource="";r.RecommendTarget="";return Loc.T("gem_max");}double displayed=DisplayedGemMax(r,target);bool inStock=HasGemGrade(r,target,5)||HasGemGrade(r,target,4);if(target==source.Stat&&displayed<=source.Value&&GemMax(target,r.Ancient)>source.Value){displayed=GemMax(target,r.Ancient);inStock=HasGemGrade(r,target,5);}double actualGain=Contribution(target,displayed,Weight(p,target,r.Set),r.Ancient)-SourceCost(p,r,source);if((target==source.Stat&&displayed<=source.Value)||actualGain<=0){r.RecommendSource="";r.RecommendTarget="";return Loc.T("gem_max");}r.RecommendSource=source.Stat;r.RecommendTarget=target;r.RecommendationInStock=inStock;return source.BaseDisplay+" → "+new SubStat{Stat=target,Value=displayed}.BaseDisplay;}
     static bool PercentMustBeKept(RuneRow r,SubStat src,bool hasGem){string flat=src.Stat=="HP%"?"HP+":src.Stat=="Atk%"?"Atk+":src.Stat=="Def%"?"Def+":"";if(flat.Length==0)return false;return r.Subs.Any(x=>x.Stat==flat&&(!hasGem||x.Gemmed));}
-    static double Contribution(string s,double v,double w,bool a){return w*(v/RollMax(s)+(Grindable(s)?.5:0));} static bool IsFlat(string s){return s=="HP+"||s=="Atk+"||s=="Def+";} static bool Grindable(string s){return s=="HP+"||s=="HP%"||s=="Atk+"||s=="Atk%"||s=="Def+"||s=="Def%"||s=="Spd";}
+    static double Contribution(string s,double v,double w,bool a){return w*(v/RollMax(s)+(Grindable(s)?.5:0));}
+    // Stats Non (poids 0) avaient un cout de gem identique a 0 : la premiere sub
+    // de la liste gagnait, donc CtR% +8 (1 roll) etait gemmee et Atk+ 15 gardé
+    // alors que les deux sont Non en Support. On garde un reliquat hors preset :
+    // rolls extra + crit/spd/cd valent plus qu'un flat mort.
+    static double SourceCost(Preset p,RuneRow r,SubStat src){
+      if(src==null)return 0;
+      double w=Weight(p,src.Stat,r.Set);
+      if(w>0)return Contribution(src.Stat,src.Value,w,r.Ancient);
+      return UnusedSubKeep(src);
+    }
+    static double UnusedSubKeep(SubStat src){
+      double max=RollMax(src.Stat);if(max<=0)return 0;
+      double extra=Math.Max(0,src.Value/max-1);
+      double quality=IsFlat(src.Stat)?.08:(src.Stat=="Spd"||src.Stat=="CtR%"||src.Stat=="CtD%"?.30:.18);
+      return quality*(1+extra*1.5);
+    }
+    static bool IsFlat(string s){return s=="HP+"||s=="Atk+"||s=="Def+";}
+    static bool Grindable(string s){return s=="HP+"||s=="HP%"||s=="Atk+"||s=="Atk%"||s=="Def+"||s=="Def%"||s=="Spd";}
     static bool SlotPossible(int slot,string s){return !(slot==1&&(s=="Def+"||s=="Def%"))&&!(slot==3&&(s=="Atk+"||s=="Atk%"));} static bool AccResCompatible(RuneRow r,string t){if(t=="Acc%")return r.Main!="Res%"&&!r.Subs.Any(x=>x.Stat=="Res%");if(t=="Res%")return r.Main!="Acc%"&&!r.Subs.Any(x=>x.Stat=="Acc%");return true;}
     static double Weight(Preset p,string s,string set){double priority;if(!p.W.TryGetValue(s,out priority)||priority<=0)return 0;double w=priority==1?PoidsP1:priority==2?PoidsP2:PoidsP3;if(IsFlat(s))w*=priority==1?.55:.45;if(s=="CtR%"||s=="CtD%"||s=="Acc%"||s=="Res%")w*=1.3;string q=set.ToLowerInvariant();if(s=="Res%"&&(q=="endure"||q=="energy"))w*=1.15;if(s=="Acc%"&&(q=="seal"||q=="fight"||q=="despair"||q=="focus"))w*=1.15;if(s=="Spd"&&priority==1)w*=1.05;double gf;if(StatGlobalFactor.TryGetValue(s,out gf))w*=gf;return w;}
     static int Rank(Preset p,string s){double priority;return p.W.TryGetValue(s,out priority)&&priority>0?(int)Math.Round(priority):4;}

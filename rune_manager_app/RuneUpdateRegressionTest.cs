@@ -51,6 +51,22 @@ static class RuneUpdateRegressionTest {
       RuneEngine.Calculate(new List<RuneRow>{cdRune});
       Check(cdRune.BestBuild=="Fast DD MAX DPS","CD rune with dead Def+ stays Fast DD not Slow DD");
       Check(cdRune.RecommendSource=="Def+"&&cdRune.RecommendTarget=="Spd","gem replaces dead Def+ with Spd not more Atk");
+      Check(!cdRune.RecommendationInStock,"CD rune without Spd gem is not marked in-stock");
+      string riftSpd="{\"command\":\"BattleRiftDungeonResult\",\"ret_code\":0,\"item_list\":[{\"type\":27,\"id\":null,\"quantity\":1,\"is_boxing\":1,\"info\":{\"craft_item_id\":1990000001,\"wizard_id\":1,\"craft_type\":1,\"craft_type_id\":130805,\"sell_value\":30000,\"amount\":1}}]}";
+      string gemMsg=RuneEngine.ApplyLiveEvent(new List<RuneRow>(),riftSpd);
+      RuneEngine.Calculate(new List<RuneRow>{cdRune});
+      Check(gemMsg.Length>0,"live gem drop reports a stock sync");
+      Check(cdRune.RecommendationInStock&&cdRune.RecommendTarget=="Spd","live gem drop marks the upgrade as in stock");
+      var support=RuneEngine.MakePreset("Support",new[]{"P1","Non","P2","P1","Non","P1","Non","Non","P2","Non","Non"},"Despair","","HP%,Spd","HP%,CtR%","HP%,Acc%","Def%","Def%","Def%");
+      RuneEngine.ReplacePresets(new List<Preset>{support});
+      var despair=new RuneRow{Set="Despair",Slot=6,Main="Acc%",MainValue=48,Innate="HP+",InnateValue=288,Grade=5,Stars=6,Level=12};
+      despair.Subs.Add(new SubStat{Stat="CtR%",Value=8});
+      despair.Subs.Add(new SubStat{Stat="Spd",Value=16});
+      despair.Subs.Add(new SubStat{Stat="Atk+",Value=15,Grind=19});
+      despair.Subs.Add(new SubStat{Stat="HP%",Value=15});
+      RuneEngine.Calculate(new List<RuneRow>{despair});
+      Check(despair.BestBuild=="Support","Despair Acc slot 6 stays Support");
+      Check(despair.RecommendSource=="Atk+"&&despair.RecommendTarget=="Def%","gem the dead Atk+ flat not the rolled Crit");
     }finally{RuneEngine.ReplacePresets(coverSaved);}
     var overlay=new List<RuneRow>();
     string hammer="{\"command\":\"UpgradeRuneList\",\"ret_code\":0,\"upgrade_rune_list\":[{\"rune_id\":65236285954,\"slot_no\":3,\"rank\":14,\"class\":16,\"set_id\":13,\"upgrade_curr\":6,\"pri_eff\":[5,70],\"prefix_eff\":[0,0],\"sec_eff\":[[11,11,0,0],[6,7,0,0],[2,14,0,0]]}]}";

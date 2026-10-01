@@ -355,7 +355,7 @@ namespace RuneManagerModern {
       Add("preset_import_confirm","Remplacer tes presets affichés par ce fichier ?","Replace the presets on screen with this file?");
       Add("preset_import_ok","{0} presets chargés. Enregistre pour les garder.","{0} presets loaded. Save to keep them.");
       Add("autokeep_title","Auto-Keep — seuils par set et par stat","Auto-Keep — thresholds by set and stat");
-      Add("autokeep_info","Une rune +12 est gardée (Keep) dès qu'une sous-stat atteint le seuil ci-dessous pour son set, même sous le seuil de vente normal. Laisser vide ou 0 = désactivé pour cette case.","A +12 rune is kept as soon as a substat reaches the threshold below for its set, even under the normal sell threshold. Leave empty or 0 to disable that cell.");
+      Add("autokeep_info","Une rune +12 est gardée (Keep) dès qu'une sous-stat atteint le seuil ci-dessous pour son set, même sous le seuil de vente normal. Le seuil Spd ignore le slot 2. Laisser vide ou 0 = désactivé pour cette case.","A +12 rune is kept as soon as a substat reaches the threshold below for its set, even under the normal sell threshold. The Spd threshold ignores slot 2. Leave empty or 0 to disable that cell.");
       Add("save","ENREGISTRER","SAVE");
       Add("tip_set_pref","Set préféré — cliquer pour retirer","Preferred set — click to remove");
       Add("tip_set_ok","Set acceptable — cliquer pour retirer","Accepted set — click to remove");

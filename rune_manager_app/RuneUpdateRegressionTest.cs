@@ -25,6 +25,16 @@ static class RuneUpdateRegressionTest {
     Check(Math.Abs(accScore/prefScore-RuneEngine.FacteurMainAcceptable)<.0000001,"acceptable main is 85 percent of preferred");
     mainPreset.MainAccepted[2].Clear();
     Check((double)scoreM.Invoke(null,new object[]{mainRune,mainPreset})==0,"main outside both lists scores 0");
+    var keepM=typeof(RuneEngine).GetMethod("PremiumKeep",BindingFlags.NonPublic|BindingFlags.Static);
+    var pwrM=typeof(RuneEngine).GetMethod("PowerSpeed",BindingFlags.NonPublic|BindingFlags.Static);
+    var slot2Spd=new RuneRow{Set="Violent",Slot=2,Main="Atk%",Grade=5,Stars=6,Level=12};slot2Spd.Subs.Add(new SubStat{Stat="Spd",Value=24});
+    var slot1Spd=new RuneRow{Set="Violent",Slot=1,Main="Atk+",Grade=5,Stars=6,Level=12};slot1Spd.Subs.Add(new SubStat{Stat="Spd",Value=24});
+    Check(!(bool)keepM.Invoke(null,new object[]{slot2Spd}),"slot 2 spd does not auto-keep");
+    Check((bool)keepM.Invoke(null,new object[]{slot1Spd}),"slot 1 spd still auto-keeps");
+    var pwr2=new RuneRow{Set="Violent",Slot=2,Main="Atk%",Grade=5,Stars=6,Level=6};pwr2.Subs.Add(new SubStat{Stat="Spd",Value=12});
+    var pwr1=new RuneRow{Set="Violent",Slot=1,Main="Atk+",Grade=5,Stars=6,Level=6};pwr1.Subs.Add(new SubStat{Stat="Spd",Value=12});
+    Check(!(bool)pwrM.Invoke(null,new object[]{pwr2}),"slot 2 spd does not power-up from simulated spd");
+    Check((bool)pwrM.Invoke(null,new object[]{pwr1}),"slot 1 spd still power-up from simulated spd");
     var coverSaved=RuneEngine.Presets.ToList();
     try{
       var coverBase=RuneEngine.MakePreset("CoverBase",new[]{"P1","P2","Non","P1","Non","Non","P1","P2","P2","Non","Non"},"Violent","Will","HP%,Spd","CtD%","HP%");

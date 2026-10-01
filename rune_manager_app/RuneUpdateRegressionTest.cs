@@ -103,6 +103,20 @@ static class RuneUpdateRegressionTest {
       Check(gemFocus.Scores!=null&&gemFocus.Scores.Length>=2&&gemFocus.Scores[1]>gemFocus.Scores[0],"empty stock still boosts display score");
       Check(gemFocus.BestBuild=="GemKeep","stock bonus does not steal best build from max raw");
       Check(gemFocus.RecommendSource=="Def+"&&gemFocus.RecommendTarget=="Spd","stock bonus does not change gem rec");
+      var despairAtk=new RuneRow{Id=9201,Set="Despair",Slot=2,Main="Atk%",MainValue=47,Innate="HP+",InnateValue=348,Grade=5,Stars=6,Level=12};
+      despairAtk.Subs.Add(new SubStat{Stat="CtD%",Value=11});
+      despairAtk.Subs.Add(new SubStat{Stat="Acc%",Value=16});
+      despairAtk.Subs.Add(new SubStat{Stat="Spd",Value=18});
+      despairAtk.Subs.Add(new SubStat{Stat="CtR%",Value=5});
+      var fastDps=RuneEngine.MakePreset("Fast DD MAX DPS",new[]{"Non","P1","Non","P1","Non","Non","P1","P1","Non","P1","Non"},"Swift,Blade,Rage,Violent,Will,Intangible","Fatal,Despair,Vampire,Nemesis,Shield,Revenge,Fight","Atk%,Spd","CtD%","Atk%");
+      var fastHp=RuneEngine.MakePreset("Fast DD HP",new[]{"P2","P1","Non","P1","Non","P2","P1","P1","Non","P1","Non"},"Swift,Blade,Rage,Violent,Will,Intangible","Focus,Fatal,Despair,Vampire,Nemesis,Shield,Revenge,Fight","Atk%,Spd","CtD%","Atk%","HP%","HP%","HP%");
+      var slowDps=RuneEngine.MakePreset("Slow DD MAX DPS",new[]{"Non","P1","Non","Non","Non","Non","P1","P1","Non","P1","Non"},"Blade,Rage,Violent,Will,Intangible","Fatal,Despair,Nemesis","Atk%","CtD%","Atk%");
+      var slowHp=RuneEngine.MakePreset("Slow DD HP",new[]{"P2","P1","Non","Non","Non","P2","P1","P1","Non","P1","Non"},"Blade,Rage,Violent,Will,Shield,Intangible","Focus,Fatal,Despair,Vampire,Nemesis,Revenge,Fight","Atk%","CtD%","Atk%","HP%","HP%","HP%");
+      RuneEngine.ReplacePresets(new List<Preset>{fastDps,fastHp,slowDps,slowHp});
+      RuneEngine.Calculate(new List<RuneRow>{despairAtk});
+      Check(despairAtk.BestBuild=="Fast DD HP","Despair Atk slot 2 with Spd stays Fast DD HP not Slow DD HP");
+      Check(despairAtk.Scores!=null&&despairAtk.Scores.Length>=4&&despairAtk.Scores[1]>despairAtk.Scores[3],"Fast DD HP score stays above Slow DD HP");
+      Check(Math.Abs(despairAtk.Potential-Math.Round(despairAtk.Scores[1],3))<.001,"displayed potential is Fast DD HP max");
     }finally{RuneEngine.ReplacePresets(coverSaved);}
     var overlay=new List<RuneRow>();
     string hammer="{\"command\":\"UpgradeRuneList\",\"ret_code\":0,\"upgrade_rune_list\":[{\"rune_id\":65236285954,\"slot_no\":3,\"rank\":14,\"class\":16,\"set_id\":13,\"upgrade_curr\":6,\"pri_eff\":[5,70],\"prefix_eff\":[0,0],\"sec_eff\":[[11,11,0,0],[6,7,0,0],[2,14,0,0]]}]}";

@@ -543,7 +543,7 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
       }
       double[] avg=new double[n];for(int p=0;p<n;p++){for(int s=0;s<6;s++)avg[p]+=counts[p,s];avg[p]/=6.0;}
       Parallel.For(0,rows.Count,opts,i=>{
-        var r=rows[i];if(r.Scores==null||r.Scores.Length!=n)r.Scores=new double[n];string previousBuild=r.BestBuild;double refinementBest=0;int bp=bestIdx[i],refinementPreset=-1;
+        var r=rows[i];if(r.Scores==null||r.Scores.Length!=n)r.Scores=new double[n];double refinementBest=0;int bp=bestIdx[i],refinementPreset=-1;
         var rawScores=new double[n];
         for(int p=0;p<n;p++){
           rawScores[p]=raw[i,p];
@@ -552,10 +552,9 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
           if(CanRefine(r)){double rs=ExpectedRefinementScore(r,Presets[p])+bonus;if(rs>refinementBest){refinementBest=rs;refinementPreset=p;}}
         }
         CalculateReevalPriority(r,counts,avg,setSlot,setTotal);if(bestVal[i]<=0){SetNoPreset(r);return;}
-        int prevIdx=string.IsNullOrEmpty(previousBuild)?-1:Presets.FindIndex(x=>x.Name==previousBuild);if(prevIdx>=0&&prevIdx!=bp&&raw[i,prevIdx]>0&&bestVal[i]-raw[i,prevIdx]<BuildStabilityMargin)bp=prevIdx;
-        int named=PreferCoveredName(r,rawScores,bp);var chosen=projected[i,named];
-        double namedBonus=raw[i,named]>0?InventoryBonus(Presets[named],r.Set,r.Slot):0;
-        r.Potential=Math.Round(raw[i,named]+namedBonus+RuleBonus(r),3);r.BestBuild=Presets[named].Name;r.Recommendation=Recommend(chosen,Presets[named]);r.RecommendSource=chosen.RecommendSource;r.RecommendTarget=chosen.RecommendTarget;r.RecommendationInStock=chosen.RecommendationInStock;r.RefinementPotential=Math.Round(refinementBest,3);r.RefinementGain=Math.Round(Math.Max(0,refinementBest-raw[i,named]-namedBonus),3);r.RefinementPreset=refinementPreset>=0?Presets[PreferCoveredName(r,rawScores,refinementPreset)].Name:"";
+        int named=PreferCoveredName(r,rawScores,bp);var chosen=projected[i,bp];
+        double winBonus=raw[i,bp]>0?InventoryBonus(Presets[bp],r.Set,r.Slot):0;
+        r.Potential=Math.Round(raw[i,bp]+winBonus+RuleBonus(r),3);r.BestBuild=Presets[named].Name;r.Recommendation=Recommend(chosen,Presets[bp]);r.RecommendSource=chosen.RecommendSource;r.RecommendTarget=chosen.RecommendTarget;r.RecommendationInStock=chosen.RecommendationInStock;r.RefinementPotential=Math.Round(refinementBest,3);r.RefinementGain=Math.Round(Math.Max(0,refinementBest-raw[i,bp]-winBonus),3);r.RefinementPreset=refinementPreset>=0?Presets[PreferCoveredName(r,rawScores,refinementPreset)].Name:"";
       });
       ApplyRetentionRules(rows);
     }
@@ -592,12 +591,10 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
     static bool ForceInstantSell(RuneRow r){return InvalidFlatSlot2(r)||FlatMainSlot46LowSpeed(r);}
     static bool IsUsable(RuneRow r,double score){if(ForceInstantSell(r))return false;if(IsBlue(r)&&!IsDeckProtected(r))return false;return score>0||IsDeckProtected(r);}
     static double MainFit(Preset p,int slot,string main){if(p==null||(slot!=2&&slot!=4&&slot!=6))return 1;HashSet<string> set;if(p.Main.TryGetValue(slot,out set)&&set.Contains(main))return 1;if(p.MainAccepted.TryGetValue(slot,out set)&&set.Contains(main))return FacteurMainAcceptable;return 0;}
-    // Nom affiche seulement : si deux presets ont les memes priorites sur les stats DEJA
-    // presentes sur la rune, on montre le nom sans la priorite "en trop" (Bruiser, pas
-    // Bruiser ACC sans Acc). Le score / Keep-Sell / bonus stock ne bougent pas.
-    // Exception : si la stat "en trop" peut encore arriver en gemmant une sub a poids 0
-    // (Def+ mort → Spd Fast DD), on garde le preset qui gagne. Sinon le gem suit le nom
-    // simplifie et propose d'encore plus d'Atk au lieu de la Spd.
+    // Nom affiche seulement : si un autre preset a les memes priorites sur les stats
+    // DEJA presentes (ou gemmables depuis une sub morte), on peut montrer le nom plus
+    // simple (Bruiser, pas Bruiser ACC sans Acc). Fast DD et Slow DD restent des
+    // presets separes : le gagnant est toujours le meilleur Score brut.
     static bool StatOnRune(RuneRow r,string stat){
       if(r==null||string.IsNullOrEmpty(stat))return false;
       if(string.Equals(r.Main,stat,StringComparison.OrdinalIgnoreCase))return true;
@@ -647,37 +644,9 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
       }
       return strict;
     }
-    static string VariantFamily(string name){
-      if(string.IsNullOrEmpty(name))return "";
-      if(name.StartsWith("PvP def",StringComparison.OrdinalIgnoreCase))return "pvp-def";
-      if(name.StartsWith("Support",StringComparison.OrdinalIgnoreCase))return "support";
-      if(name.StartsWith("Bruiser",StringComparison.OrdinalIgnoreCase))return "bruiser";
-      if(name.IndexOf("DD MAX DPS",StringComparison.OrdinalIgnoreCase)>=0||name.IndexOf("DD HP",StringComparison.OrdinalIgnoreCase)>=0)return "dd";
-      return "solo:"+name;
-    }
-    static double OnRuneFit(Preset p,RuneRow r){
-      if(p==null||r==null)return 0;
-      double fit=0;
-      for(int i=0;i<PresetStatOrder.Length;i++){
-        string stat=PresetStatOrder[i];
-        double pr=StatPriority(p,stat);
-        if(pr<=0)continue;
-        if(!StatOnRune(r,stat)&&!CanGemFromJunk(r,p,stat))continue;
-        fit+=pr==1?3:pr==2?2:1;
-      }
-      return fit;
-    }
     static int PreferCoveredName(RuneRow r,double[] scores,int bp){
       if(r==null||scores==null||Presets==null||bp<0||bp>=Presets.Count||CanStillRollNewStat(r))return bp;
       int pick=bp;
-      string fam=VariantFamily(Presets[bp].Name);
-      double bestFit=OnRuneFit(Presets[bp],r);
-      for(int p=0;p<Presets.Count;p++){
-        if(p>=scores.Length||scores[p]<=0)continue;
-        if(VariantFamily(Presets[p].Name)!=fam)continue;
-        double fit=OnRuneFit(Presets[p],r);
-        if(fit>bestFit){bestFit=fit;pick=p;}
-      }
       int guard=0;
       while(guard++<Presets.Count){
         int next=-1;

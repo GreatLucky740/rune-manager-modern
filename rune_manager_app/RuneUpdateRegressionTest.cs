@@ -67,6 +67,16 @@ static class RuneUpdateRegressionTest {
       RuneEngine.Calculate(new List<RuneRow>{cdRune});
       Check(gemMsg.Length>0,"live gem drop reports a stock sync");
       Check(cdRune.RecommendationInStock&&cdRune.RecommendTarget=="Spd","live gem drop marks the upgrade as in stock");
+      using(var form=new MainForm()){
+        var created=form.Handle;
+        var type=typeof(MainForm);var flags=BindingFlags.Instance|BindingFlags.NonPublic;
+        type.GetField("all",flags).SetValue(form,new List<RuneRow>{cdRune});
+        type.GetField("viewMode",flags).SetValue(form,"upgrade");
+        var actionBox=(ComboBox)type.GetField("action",flags).GetValue(form);
+        if(actionBox.Items.Count>0)actionBox.SelectedIndex=0;
+        var filtered=((IEnumerable<RuneRow>)type.GetMethod("Filter",flags).Invoke(form,null)).ToList();
+        Check(filtered.Contains(cdRune),"upgrade list includes the rune after live gem drop");
+      }
       var support=RuneEngine.MakePreset("Support",new[]{"P1","Non","P2","P1","Non","P1","Non","Non","P2","Non","Non"},"Despair","","HP%,Spd","HP%,CtR%","HP%,Acc%","Def%","Def%","Def%");
       RuneEngine.ReplacePresets(new List<Preset>{support});
       var despair=new RuneRow{Set="Despair",Slot=6,Main="Acc%",MainValue=48,Innate="HP+",InnateValue=288,Grade=5,Stars=6,Level=12};
@@ -117,6 +127,61 @@ static class RuneUpdateRegressionTest {
       Check(despairAtk.BestBuild=="Fast DD HP","Despair Atk slot 2 with Spd stays Fast DD HP not Slow DD HP");
       Check(despairAtk.Scores!=null&&despairAtk.Scores.Length>=4&&despairAtk.Scores[1]>despairAtk.Scores[3],"Fast DD HP score stays above Slow DD HP");
       Check(Math.Abs(despairAtk.Potential-Math.Round(despairAtk.Scores[1],3))<.001,"displayed potential is Fast DD HP max");
+      var liveFast=RuneEngine.MakePreset("Fast DD",new[]{"P2","P1","Non","P1","Non","P2","P1","P1","Non","P1","Non"},"Swift,Blade,Rage,Violent,Will,Intangible","Fatal,Despair,Vampire,Nemesis,Shield,Revenge,Fight","Atk%,Spd","CtD%","Atk%");
+      var liveSlow=RuneEngine.MakePreset("Slow DD",new[]{"P2","P1","Non","Non","Non","P2","P1","P1","Non","P1","Non"},"Blade,Rage,Violent,Will,Shield,Intangible","Focus,Fatal,Despair,Vampire,Nemesis,Revenge,Fight","Atk%","CtD%","Atk%");
+      RuneEngine.ReplacePresets(new List<Preset>{liveFast,liveSlow});
+      var noJunk=new RuneRow{Id=9301,Set="Violent",Slot=5,Main="HP+",MainValue=2448,Innate="Atk%",InnateValue=21,Grade=5,Stars=6,Level=12};
+      noJunk.Subs.Add(new SubStat{Stat="CtD%",Value=7});
+      noJunk.Subs.Add(new SubStat{Stat="Atk+",Value=17,Grind=28});
+      noJunk.Subs.Add(new SubStat{Stat="CtR%",Value=17});
+      noJunk.Subs.Add(new SubStat{Stat="HP%",Value=11});
+      RuneEngine.Calculate(new List<RuneRow>{noJunk});
+      Check(noJunk.BestBuild!="Slow DD"||noJunk.RecommendTarget!="Spd","Slow DD does not recommend a Spd gem");
+      var liveFastHp=RuneEngine.MakePreset("Fast DD",new[]{"P2","P1","Non","P1","Non","P2","P1","P1","Non","Non","Non"},"Swift,Blade,Rage,Violent,Will,Intangible","Fatal,Despair,Vampire,Nemesis,Shield,Revenge,Fight","Atk%,Spd","CtD%","Atk%");
+      var liveFastDps=RuneEngine.MakePreset("Fast DD MAX DPS",new[]{"Non","P1","Non","P1","Non","Non","P1","P1","Non","P1","Non"},"Swift,Blade,Rage,Violent,Will,Intangible","Fatal,Despair,Vampire,Nemesis,Shield,Revenge,Fight","Atk%,Spd","CtD%","Atk%");
+      var liveSlowHp=RuneEngine.MakePreset("Slow DD",new[]{"P2","P1","Non","Non","Non","P2","P1","P1","Non","Non","Non"},"Blade,Rage,Violent,Will,Shield,Intangible","Focus,Fatal,Despair,Vampire,Nemesis,Revenge,Fight","Atk%","CtD%","Atk%");
+      var liveSlowDps=RuneEngine.MakePreset("Slow DD MAX DPS",new[]{"Non","P1","Non","Non","Non","Non","P1","P1","Non","P1","Non"},"Blade,Rage,Violent,Will,Shield,Intangible","Focus,Fatal,Despair,Vampire,Nemesis,Revenge,Fight","Atk%","CtD%","Atk%");
+      RuneEngine.ReplacePresets(new List<Preset>{liveFastHp,liveFastDps,liveSlowHp,liveSlowDps});
+      var gemHp=new RuneRow{Id=9501,Set="Violent",Slot=5,Main="HP+",MainValue=2448,Innate="Atk%",InnateValue=22,Grade=5,Stars=6,Level=12};
+      gemHp.Subs.Add(new SubStat{Stat="Atk%",Value=10,Grind=7});
+      gemHp.Subs.Add(new SubStat{Stat="CtR%",Value=10});
+      gemHp.Subs.Add(new SubStat{Stat="HP%",Value=12,Gemmed=true});
+      gemHp.Subs.Add(new SubStat{Stat="CtD%",Value=14});
+      RuneEngine.Calculate(new List<RuneRow>{gemHp});
+      Check(gemHp.BestBuild!="Slow DD","gemmed HP% does not rename the rune Slow DD");
+      Check(gemHp.RecommendTarget=="Spd","gemmed HP% hole still gems into Spd on Fast DD");
+      RuneEngine.ReplacePresets(new List<Preset>{liveFastHp});
+      var hpVsDef=new RuneRow{Id=9601,Set="Violent",Slot=4,Main="CtD%",MainValue=59,Grade=5,Stars=6,Level=12};
+      hpVsDef.Subs.Add(new SubStat{Stat="Atk%",Value=21});
+      hpVsDef.Subs.Add(new SubStat{Stat="Def+",Value=25});
+      hpVsDef.Subs.Add(new SubStat{Stat="HP+",Value=263,Grind=447});
+      hpVsDef.Subs.Add(new SubStat{Stat="CtR%",Value=12});
+      RuneEngine.Calculate(new List<RuneRow>{hpVsDef});
+      Check(hpVsDef.RecommendSource=="Def+"&&hpVsDef.RecommendTarget=="Spd","P0 HP flat is kept over P0 Def flat");
+      var bruiserBomb=RuneEngine.MakePreset("Bruiser Bomber",new[]{"P1","P1","Non","P1","Non","P1","P1","Non","P3","Non","Non"},"Swift,Violent,Will,Intangible","Despair,Revenge","HP%,Atk%,Spd","HP%,Atk%,CtR%","HP%,Atk%,Acc%");
+      RuneEngine.ReplacePresets(new List<Preset>{bruiserBomb});
+      var hpVsCd=new RuneRow{Id=9701,Set="Swift",Slot=2,Main="Atk%",MainValue=47,Innate="Res%",InnateValue=6,Grade=5,Stars=6,Level=12};
+      hpVsCd.Subs.Add(new SubStat{Stat="HP+",Value=348});
+      hpVsCd.Subs.Add(new SubStat{Stat="CtR%",Value=15});
+      hpVsCd.Subs.Add(new SubStat{Stat="HP%",Value=16});
+      hpVsCd.Subs.Add(new SubStat{Stat="CtD%",Value=5});
+      RuneEngine.Calculate(new List<RuneRow>{hpVsCd});
+      Check(hpVsCd.RecommendSource=="CtD%"&&hpVsCd.RecommendTarget=="Spd","P0 HP flat is kept over P0 CtD");
+      RuneEngine.ReplacePresets(new List<Preset>{liveSlow});
+      var hpToAtk=new RuneRow{Id=9401,Set="Violent",Slot=5,Main="HP+",MainValue=2448,Innate="Atk%",InnateValue=22,Grade=5,Stars=6,Level=12};
+      hpToAtk.Subs.Add(new SubStat{Stat="HP%",Value=10,Grind=7});
+      hpToAtk.Subs.Add(new SubStat{Stat="CtR%",Value=10});
+      hpToAtk.Subs.Add(new SubStat{Stat="CtD%",Value=12,Grind=3});
+      hpToAtk.Subs.Add(new SubStat{Stat="Acc%",Value=14});
+      var savedAtk=RuneEngine.StatGlobalFactor["Atk+"];
+      var savedHp=RuneEngine.StatGlobalFactor["HP%"];
+      RuneEngine.StatGlobalFactor["Atk+"]=0.9;RuneEngine.StatGlobalFactor["HP%"]=1;
+      RuneEngine.Stocks.Add(new CraftStock{Type="Gemme",Set="Violent",Stat="HP%",Grade=4,Amount=1,Ancient=false});
+      RuneEngine.Stocks.Add(new CraftStock{Type="Gemme",Set="Violent",Stat="Atk+",Grade=4,Amount=1,Ancient=false});
+      RuneEngine.Calculate(new List<RuneRow>{hpToAtk});
+      RuneEngine.StatGlobalFactor["Atk+"]=savedAtk;RuneEngine.StatGlobalFactor["HP%"]=savedHp;
+      RuneEngine.Stocks.RemoveAll(x=>x.Id==0&&(x.Stat=="HP%"||x.Stat=="Atk+")&&x.Grade==4);
+      Check(hpToAtk.RecommendTarget=="Atk+","Slow DD gems P2 HP% into P1 Atk+");
     }finally{RuneEngine.ReplacePresets(coverSaved);}
     var overlay=new List<RuneRow>();
     string hammer="{\"command\":\"UpgradeRuneList\",\"ret_code\":0,\"upgrade_rune_list\":[{\"rune_id\":65236285954,\"slot_no\":3,\"rank\":14,\"class\":16,\"set_id\":13,\"upgrade_curr\":6,\"pri_eff\":[5,70],\"prefix_eff\":[0,0],\"sec_eff\":[[11,11,0,0],[6,7,0,0],[2,14,0,0]]}]}";
@@ -138,7 +203,7 @@ static class RuneUpdateRegressionTest {
     string starterSets=System.IO.Path.Combine("rune_manager_app","defaults","parametres-runes.tsv");
     if(System.IO.File.Exists(starterSets)){
       var starterLines=System.IO.File.ReadAllLines(starterSets);
-      Check(starterLines.Count(x=>x.StartsWith("PRESET\t"))==13,"first-run zip ships 13 starter presets");
+      Check(starterLines.Count(x=>x.StartsWith("PRESET\t"))==12,"first-run zip ships 12 starter presets");
       Check(!starterLines.Any(x=>x.StartsWith("SKILLHIDDEN")),"starter settings omit personal skill-hidden");
     }
     string oldName=RuneEngine.Presets[0].Name;

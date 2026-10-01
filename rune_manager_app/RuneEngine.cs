@@ -552,9 +552,11 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
           if(CanRefine(r)){double rs=ExpectedRefinementScore(r,Presets[p])+bonus;if(rs>refinementBest){refinementBest=rs;refinementPreset=p;}}
         }
         CalculateReevalPriority(r,counts,avg,setSlot,setTotal);if(bestVal[i]<=0){SetNoPreset(r);return;}
-        int named=PreferCoveredName(r,rawScores,bp);var chosen=projected[i,bp];
+        int named=PreferCoveredName(r,rawScores,bp);
+        var chosen=projected[i,named];
+        r.Recommendation=Recommend(chosen,Presets[named]);
         double winBonus=raw[i,bp]>0?InventoryBonus(Presets[bp],r.Set,r.Slot):0;
-        r.Potential=Math.Round(raw[i,bp]+winBonus+RuleBonus(r),3);r.BestBuild=Presets[named].Name;r.Recommendation=Recommend(chosen,Presets[bp]);r.RecommendSource=chosen.RecommendSource;r.RecommendTarget=chosen.RecommendTarget;r.RecommendationInStock=chosen.RecommendationInStock;r.RefinementPotential=Math.Round(refinementBest,3);r.RefinementGain=Math.Round(Math.Max(0,refinementBest-raw[i,bp]-winBonus),3);r.RefinementPreset=refinementPreset>=0?Presets[PreferCoveredName(r,rawScores,refinementPreset)].Name:"";
+        r.Potential=Math.Round(raw[i,bp]+winBonus+RuleBonus(r),3);r.BestBuild=Presets[named].Name;r.RecommendSource=chosen.RecommendSource;r.RecommendTarget=chosen.RecommendTarget;r.RecommendationInStock=chosen.RecommendationInStock;r.RefinementPotential=Math.Round(refinementBest,3);r.RefinementGain=Math.Round(Math.Max(0,refinementBest-raw[i,bp]-winBonus),3);r.RefinementPreset=refinementPreset>=0?Presets[PreferCoveredName(r,rawScores,refinementPreset)].Name:"";
       });
       ApplyRetentionRules(rows);
     }
@@ -599,7 +601,10 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
       if(r==null||string.IsNullOrEmpty(stat))return false;
       if(string.Equals(r.Main,stat,StringComparison.OrdinalIgnoreCase))return true;
       if(string.Equals(r.Innate,stat,StringComparison.OrdinalIgnoreCase))return true;
-      for(int i=0;i<r.Subs.Count;i++)if(string.Equals(r.Subs[i].Stat,stat,StringComparison.OrdinalIgnoreCase))return true;
+      for(int i=0;i<r.Subs.Count;i++){
+        if(r.Subs[i].Gemmed)continue;
+        if(string.Equals(r.Subs[i].Stat,stat,StringComparison.OrdinalIgnoreCase))return true;
+      }
       return false;
     }
     static bool CanStillRollNewStat(RuneRow r){return r!=null&&r.Level<12&&r.Subs.Count<4;}
@@ -614,7 +619,7 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
         var src=r.Subs[i];
         if(hasGem&&!src.Gemmed)continue;
         if(PercentMustBeKept(r,src,hasGem))continue;
-        if(StatPriority(p,src.Stat)>0)continue;
+        if(!src.Gemmed&&StatPriority(p,src.Stat)>0)continue;
         if(Rank(p,target)>Rank(p,src.Stat))continue;
         if(IsFlat(target)&&!IsFlat(src.Stat)&&Rank(p,target)>=Rank(p,src.Stat))continue;
         return true;
@@ -701,7 +706,7 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
       return total;
     }
     static double GemBonus(RuneRow r,Preset p){double best=0;bool hasGem=r.Subs.Any(x=>x.Gemmed);foreach(var src in r.Subs){if(hasGem&&!src.Gemmed)continue;if(PercentMustBeKept(r,src,hasGem))continue;foreach(string target in p.W.Keys){bool same=src.Stat==target;if(p.W[target]<=0||(!same&&r.Subs.Any(x=>x.Stat==target))||target==r.Main||target==r.Innate||!SlotPossible(r.Slot,target)||!AccResCompatible(r,target))continue;if(Rank(p,target)>Rank(p,src.Stat))continue;if(IsFlat(target)&&!IsFlat(src.Stat)&&Rank(p,target)>=Rank(p,src.Stat))continue;double gain=Contribution(target,GemMax(target,r.Ancient),Weight(p,target,r.Set),r.Ancient)-Contribution(src.Stat,src.Value,Weight(p,src.Stat,r.Set),r.Ancient);best=Math.Max(best,gain);}}return Math.Max(0,best);}
-    static string Recommend(RuneRow r,Preset p){double best=double.MinValue;SubStat source=null;string target="";bool hasGem=r.Subs.Any(x=>x.Gemmed);r.RecommendationInStock=false;foreach(var src in r.Subs){if(hasGem&&!src.Gemmed)continue;if(PercentMustBeKept(r,src,hasGem))continue;foreach(string t in p.W.Keys){if(p.W[t]<=0||t==r.Main||t==r.Innate||!SlotPossible(r.Slot,t)||!AccResCompatible(r,t))continue;bool same=src.Stat==t;if(!same&&r.Subs.Any(x=>x.Stat==t))continue;if(Rank(p,t)>Rank(p,src.Stat))continue;if(IsFlat(t)&&!IsFlat(src.Stat)&&Rank(p,t)>=Rank(p,src.Stat))continue;double available=DisplayedGemMax(r,t);if(same&&available<=src.Value&&GemMax(t,r.Ancient)>src.Value)available=GemMax(t,r.Ancient);double gain=Contribution(t,available,Weight(p,t,r.Set),r.Ancient)-SourceCost(p,r,src);if(gain>best){best=gain;source=src;target=t;}}}if(source==null){r.RecommendSource="";r.RecommendTarget="";return Loc.T("gem_max");}double displayed=DisplayedGemMax(r,target);bool inStock=HasGemGrade(r,target,5)||HasGemGrade(r,target,4);if(target==source.Stat&&displayed<=source.Value&&GemMax(target,r.Ancient)>source.Value){displayed=GemMax(target,r.Ancient);inStock=HasGemGrade(r,target,5);}double actualGain=Contribution(target,displayed,Weight(p,target,r.Set),r.Ancient)-SourceCost(p,r,source);if((target==source.Stat&&displayed<=source.Value)||actualGain<=0){r.RecommendSource="";r.RecommendTarget="";return Loc.T("gem_max");}r.RecommendSource=source.Stat;r.RecommendTarget=target;r.RecommendationInStock=inStock;return source.BaseDisplay+" → "+new SubStat{Stat=target,Value=displayed}.BaseDisplay;}
+    static string Recommend(RuneRow r,Preset p){double best=double.MinValue;int bestRank=99;int bestSrcRank=-1;SubStat source=null;string target="";bool hasGem=r.Subs.Any(x=>x.Gemmed);r.RecommendationInStock=false;foreach(var src in r.Subs){if(hasGem&&!src.Gemmed)continue;if(PercentMustBeKept(r,src,hasGem))continue;foreach(string t in p.W.Keys){if(p.W[t]<=0||t==r.Main||t==r.Innate||!SlotPossible(r.Slot,t)||!AccResCompatible(r,t))continue;bool same=src.Stat==t;if(!same&&r.Subs.Any(x=>x.Stat==t))continue;if(Rank(p,t)>Rank(p,src.Stat))continue;if(IsFlat(t)&&!IsFlat(src.Stat)&&Rank(p,t)>=Rank(p,src.Stat))continue;double available=DisplayedGemMax(r,t);if(same&&available<=src.Value&&GemMax(t,r.Ancient)>src.Value)available=GemMax(t,r.Ancient);double gain=Contribution(t,available,Weight(p,t,r.Set),r.Ancient)-SourceCost(p,r,src);int tr=Rank(p,t);int sr=Rank(p,src.Stat);if(gain<=0)continue;if(tr>bestRank)continue;if(tr==bestRank){if(sr<bestSrcRank)continue;if(sr==bestSrcRank&&gain<=best)continue;}best=gain;bestRank=tr;bestSrcRank=sr;source=src;target=t;}}if(source==null){r.RecommendSource="";r.RecommendTarget="";return Loc.T("gem_max");}double displayed=DisplayedGemMax(r,target);bool inStock=HasGemGrade(r,target,5)||HasGemGrade(r,target,4);if(target==source.Stat&&displayed<=source.Value&&GemMax(target,r.Ancient)>source.Value){displayed=GemMax(target,r.Ancient);inStock=HasGemGrade(r,target,5);}double actualGain=Contribution(target,displayed,Weight(p,target,r.Set),r.Ancient)-SourceCost(p,r,source);if((target==source.Stat&&displayed<=source.Value)||actualGain<=0){r.RecommendSource="";r.RecommendTarget="";return Loc.T("gem_max");}r.RecommendSource=source.Stat;r.RecommendTarget=target;r.RecommendationInStock=inStock;return source.BaseDisplay+" → "+new SubStat{Stat=target,Value=displayed}.BaseDisplay;}
     static bool PercentMustBeKept(RuneRow r,SubStat src,bool hasGem){string flat=src.Stat=="HP%"?"HP+":src.Stat=="Atk%"?"Atk+":src.Stat=="Def%"?"Def+":"";if(flat.Length==0)return false;return r.Subs.Any(x=>x.Stat==flat&&(!hasGem||x.Gemmed));}
     static double Contribution(string s,double v,double w,bool a){return w*(v/RollMax(s)+(Grindable(s)?.5:0));}
     // Stats Non (poids 0) avaient un cout de gem identique a 0 : la premiere sub
@@ -715,9 +720,15 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
       return UnusedSubKeep(src);
     }
     static double UnusedSubKeep(SubStat src){
+      if(src==null)return 0;
       double max=RollMax(src.Stat);if(max<=0)return 0;
-      double extra=Math.Max(0,src.Value/max-1);
-      double quality=IsFlat(src.Stat)?.08:(src.Stat=="Spd"||src.Stat=="CtR%"||src.Stat=="CtD%"?.30:.18);
+      double kept=src.Value+src.Grind;
+      double extra=Math.Max(0,kept/max-1);
+      double quality=0.18;
+      if(src.Stat=="HP+")quality=.36;
+      else if(src.Stat=="Atk+")quality=.08;
+      else if(src.Stat=="Def+")quality=.05;
+      else if(src.Stat=="Spd"||src.Stat=="CtR%"||src.Stat=="CtD%")quality=.30;
       return quality*(1+extra*1.5);
     }
     static bool IsFlat(string s){return s=="HP+"||s=="Atk+"||s=="Def+";}

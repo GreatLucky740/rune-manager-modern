@@ -1,14 +1,20 @@
 using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 namespace RuneManagerModern {
   sealed partial class MainForm {
-    Panel leftNav, navHeader, navFooter, filterBar, currentToolHost, contentHost, centerPanel, rightPanel;
+    Panel leftNav, navHeader, navFooter, filterBar, currentToolHost, contentHost, centerPanel, rightPanel, navRail;
+    TableLayoutPanel shellRoot;
     FlowLayoutPanel navFlow;
     Form currentTool;
-    Button currentToolButton;
+    Button currentToolButton, navPinButton;
     Label navSortLbl, navToolsLbl, navAppLbl, navKeepLbl;
+    Timer navShowTimer, navHideTimer, navWatchTimer, navArrowTimer;
+    bool navPinned, navOpen;
+    float navArrowT;
+    const int NavFullW=252, NavRailW=32;
     readonly Color NavIdle=Color.FromArgb(14,22,34), NavHover=Color.FromArgb(28,44,64), NavActive=Color.FromArgb(18,56,74);
 
     Button NavItem(string text,Color accent){
@@ -86,7 +92,7 @@ namespace RuneManagerModern {
         centerPanel.Visible=true;
         rightPanel.Dock=DockStyle.Right;
         int avail=contentHost!=null?contentHost.ClientSize.Width:ClientSize.Width;
-        if(avail<80)avail=Math.Max(900,ClientSize.Width-(leftNav==null?252:leftNav.Width));
+        if(avail<80)avail=Math.Max(900,ClientSize.Width-(navPinned?NavFullW:NavRailW));
         int keep=Math.Min(420,Math.Max(180,avail/3));
         int toolW=preferredWidth;
         if(toolW>avail-keep)toolW=avail-keep;
@@ -298,31 +304,29 @@ namespace RuneManagerModern {
         if(Math.Abs(b.Height-need)>1)b.Height=need;
       }
     }
-    int NavHeadNeed(int btnH,int titleH,int cH){return 8+titleH+4+cH+6+btnH+8;}
+    int NavHeadNeed(int btnH,int titleH){return 8+titleH+8+btnH+8;}
     int NavFootNeed(int btnH,int iconS,int langH){return 6+langH+6+iconS+6+btnH+4+14+6;}
     void ScaleNavToFit(){
       if(navHeader==null||navFooter==null)return;
-      int total=leftNav!=null&&leftNav.ClientSize.Height>80?leftNav.ClientSize.Height:Math.Max(400,ClientSize.Height);
-      int btnH=40,btnMV=4,secH=22,secMV=14,titleH=26,cH=102,iconS=32,langH=28,gap=8;
-      float btnFs=9.5f,secFs=8f,titleFs=15f,countFs=10f;
+      int total=Math.Max(400,ClientSize.Height);
+      if(leftNav!=null&&leftNav.Visible&&leftNav.Height>80)total=leftNav.Height;
+      int btnH=40,btnMV=4,secH=22,secMV=14,titleH=26,iconS=32,langH=28,gap=8;
+      float btnFs=9.5f,secFs=8f,titleFs=15f;
       for(int h=40;h>=22;h--){
         int mv=h>=34?4:(h>=28?2:0);
         int sh=Math.Max(12,h*11/20);
         int sm=h>=34?14:(h>=28?8:4);
         int th=h>=36?26:(h>=30?20:16);
-        float cfs=h>=36?10f:(h>=30?8.5f:7.5f);
-        int ch=Math.Max(100,(int)(cfs*9.6f)+10);
         int ic=h>=34?32:(h>=28?24:20);
         int lh=h>=34?28:(h>=28?22:18);
-        int head=NavHeadNeed(h,th,ch);
+        int head=NavHeadNeed(h,th);
         int foot=NavFootNeed(h,ic,lh);
         int flow=NavFlowNeed(h,mv,sh,sm);
         if(head+foot+flow<=total||h==22){
-          btnH=h;btnMV=mv;secH=sh;secMV=sm;titleH=th;cH=ch;iconS=ic;langH=lh;gap=h>=34?8:(h>=28?6:4);
+          btnH=h;btnMV=mv;secH=sh;secMV=sm;titleH=th;iconS=ic;langH=lh;gap=h>=34?8:(h>=28?6:4);
           btnFs=h>=36?9.5f:(h>=30?8.2f:(h>=26?7.4f:6.6f));
           secFs=h>=34?8f:(h>=28?7f:6.2f);
           titleFs=h>=36?15f:(h>=30?12f:10f);
-          countFs=cfs;
           break;
         }
       }
@@ -330,17 +334,17 @@ namespace RuneManagerModern {
       if(scaleBtnFont==null||Math.Abs(scaleBtnFont.Size-btnFs)>0.05f)scaleBtnFont=new Font("Segoe UI Semibold",btnFs);
       if(scaleSecFont==null||Math.Abs(scaleSecFont.Size-secFs)>0.05f)scaleSecFont=new Font("Segoe UI Semibold",secFs);
       if(scaleTitleFont==null||Math.Abs(scaleTitleFont.Size-titleFs)>0.05f)scaleTitleFont=new Font("Segoe UI Semibold",titleFs);
-      if(scaleCountFont==null||Math.Abs(scaleCountFont.Size-countFs)>0.05f)scaleCountFont=new Font("Segoe UI Semibold",countFs);
+      if(scaleCountFont==null||Math.Abs(scaleCountFont.Size-9.5f)>0.05f)scaleCountFont=new Font("Segoe UI Semibold",9.5f);
       float tinyFs=Math.Max(6.5f,secFs);
       if(scaleTinyFont==null||Math.Abs(scaleTinyFont.Size-tinyFs)>0.05f)scaleTinyFont=new Font("Segoe UI",tinyFs);
-      int headH=NavHeadNeed(btnH,titleH,cH);
+      int headH=NavHeadNeed(btnH,titleH);
       int footH=NavFootNeed(btnH,iconS,langH);
       if(navHeader.Height!=headH)navHeader.Height=headH;
       if(navFooter.Height!=footH)navFooter.Height=footH;
-      int titleY=6;int cY=titleY+titleH+4;int impY=cY+cH+6;
+      int titleY=6;int impY=titleY+titleH+8;
       if(titleLabel!=null){titleLabel.Location=new Point(12,titleY);titleLabel.Size=new Size(228,titleH);AssignFont(titleLabel,scaleTitleFont);}
-      if(counters!=null){counters.Location=new Point(12,cY);counters.Size=new Size(228,cH);AssignFont(counters,scaleCountFont);}
-      int nw=Math.Max(180,(leftNav==null?252:leftNav.ClientSize.Width)-20);
+      if(counters!=null)AssignFont(counters,scaleCountFont);
+      int nw=Math.Max(180,NavFullW-20);
       Button[] flowBtns={potButton,obtButton,improveButton,reevalButton,refinementButton,presetButton,coefficientButton,autoKeepButton,spdRankButton,skillButton,rtaButton,codesButton,retentionButton};
       Padding btnPad=new Padding(8,Math.Max(0,btnMV/2),8,Math.Max(0,btnMV/2));
       for(int i=0;i<flowBtns.Length;i++){
@@ -358,6 +362,7 @@ namespace RuneManagerModern {
         s.Width=nw;s.Height=secH;s.Margin=secPad;AssignFont(s,scaleSecFont);
       }
       if(langCombo!=null)AssignFont(langCombo,scaleTinyFont);
+      if(navPinButton!=null)AssignFont(navPinButton,scaleTinyFont);
       if(versionLabel!=null)AssignFont(versionLabel,scaleTinyFont);
       CountBadge[] badges={improveBadge,skillBadge,spdRankBadge,codesBadge,updateBadge};
       for(int i=0;i<badges.Length;i++)if(badges[i]!=null)AssignFont(badges[i],scaleTinyFont);
@@ -373,12 +378,165 @@ namespace RuneManagerModern {
         navFlow.AutoScroll=overflow;
       }
     }
+    void PaintNavArrow(Graphics g,int cy,int ox){
+      int x0=9+ox;
+      int x1=navRail.ClientSize.Width-9+ox;
+      int h=8;
+      using(var p=new Pen(Cyan,2.2f)){
+        p.StartCap=LineCap.Round;p.EndCap=LineCap.Round;p.LineJoin=LineJoin.Round;
+        g.DrawLines(p,new[]{new Point(x0,cy-h),new Point(x1,cy),new Point(x0,cy+h)});
+      }
+    }
+    void TickNavArrow(object sender,EventArgs e){
+      if(navRail==null||!navRail.Visible||navOpen||navPinned){
+        if(navArrowTimer!=null)navArrowTimer.Stop();
+        return;
+      }
+      navArrowT+=0.16f;
+      if(navArrowT>(float)(Math.PI*2))navArrowT-=(float)(Math.PI*2);
+      navRail.Invalidate();
+    }
+    void PaintNavRail(object sender,PaintEventArgs e){
+      if(navRail==null)return;
+      Graphics g=e.Graphics;
+      g.SmoothingMode=SmoothingMode.AntiAlias;
+      using(var bg=new SolidBrush(Color.FromArgb(10,16,26)))g.FillRectangle(bg,navRail.ClientRectangle);
+      using(var edge=new SolidBrush(Cyan))g.FillRectangle(edge,0,0,3,navRail.Height);
+      Font f=scaleSecFont??scaleTinyFont??navRail.Font;
+      string label=Loc.T("nav_rail");
+      if(string.IsNullOrEmpty(label))label="MENU";
+      TextFormatFlags flags=TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter|TextFormatFlags.NoPadding|TextFormatFlags.NoPrefix;
+      int ox=(int)Math.Round(3.0+3.0*Math.Sin(navArrowT));
+      PaintNavArrow(g,22,ox);
+      PaintNavArrow(g,navRail.Height-22,ox);
+      int line=Math.Max(12,NavLineH(f)+2);
+      int block=label.Length*line;
+      int y=Math.Max(44,(navRail.Height-block)/2);
+      for(int i=0;i<label.Length;i++)
+        TextRenderer.DrawText(g,label.Substring(i,1),f,new Rectangle(0,y+i*line,navRail.Width,line),Cyan,flags);
+    }
+    bool NavPointerInside(){
+      Point screen=Cursor.Position;
+      if(leftNav!=null&&leftNav.Visible){
+        Rectangle r=leftNav.RectangleToScreen(leftNav.ClientRectangle);
+        if(r.Contains(screen))return true;
+      }
+      if(navRail!=null&&navRail.Visible){
+        Rectangle r=navRail.RectangleToScreen(navRail.ClientRectangle);
+        if(r.Contains(screen))return true;
+      }
+      return false;
+    }
+    void NavChildAdded(object sender,ControlEventArgs e){if(e!=null&&e.Control!=null)HookNavPointer(e.Control);}
+    void HookNavPointer(Control c){
+      if(c==null)return;
+      c.MouseEnter-=NavPointerEnter;c.MouseEnter+=NavPointerEnter;
+      c.MouseLeave-=NavPointerLeave;c.MouseLeave+=NavPointerLeave;
+      c.ControlAdded-=NavChildAdded;c.ControlAdded+=NavChildAdded;
+      foreach(Control k in c.Controls)HookNavPointer(k);
+    }
+    void NavPointerEnter(object sender,EventArgs e){ShowNavSoon();}
+    void NavPointerLeave(object sender,EventArgs e){if(IsHandleCreated&&!IsDisposed)BeginInvoke((MethodInvoker)HideNavSoon);}
+    void WatchNavPointer(object sender,EventArgs e){
+      if(navPinned||!navOpen){if(navWatchTimer!=null)navWatchTimer.Stop();return;}
+      if(NavPointerInside()||(langCombo!=null&&langCombo.DroppedDown)){
+        if(navHideTimer!=null)navHideTimer.Stop();
+        return;
+      }
+      HideNavSoon();
+    }
+    void ShowNavSoon(){
+      if(navHideTimer!=null)navHideTimer.Stop();
+      if(navPinned||navOpen)return;
+      if(navShowTimer!=null){navShowTimer.Stop();navShowTimer.Start();}
+    }
+    void HideNavSoon(){
+      if(navPinned)return;
+      if(NavPointerInside())return;
+      if(langCombo!=null&&langCombo.DroppedDown)return;
+      if(navShowTimer!=null)navShowTimer.Stop();
+      if(navHideTimer!=null&&!navHideTimer.Enabled)navHideTimer.Start();
+    }
+    void HideNavNow(){
+      if(navPinned)return;
+      if(NavPointerInside())return;
+      if(langCombo!=null&&langCombo.DroppedDown)return;
+      navOpen=false;
+      ApplyNavChrome();
+    }
+    void ToggleNavPin(){
+      navPinned=!navPinned;
+      navOpen=true;
+      if(navShowTimer!=null)navShowTimer.Stop();
+      if(navHideTimer!=null)navHideTimer.Stop();
+      ApplyNavChrome();
+      SaveEngineSettings();
+      LayoutToolbar();
+    }
+    void PaintNavPin(){
+      if(navPinButton==null)return;
+      navPinButton.FlatAppearance.BorderColor=navPinned?Cyan:Color.FromArgb(40,70,90);
+      navPinButton.ForeColor=navPinned?Cyan:Color.FromArgb(205,216,228);
+      if(navPinTip!=null)navPinTip.SetToolTip(navPinButton,Loc.T(navPinned?"nav_unpin":"nav_pin"));
+    }
+    void ApplyNavChrome(){
+      if(shellRoot==null||leftNav==null)return;
+      int colW=navPinned?NavFullW:NavRailW;
+      if(shellRoot.ColumnStyles.Count>0){
+        ColumnStyle st=shellRoot.ColumnStyles[0];
+        if(st.SizeType!=SizeType.Absolute||Math.Abs(st.Width-colW)>0.5f)shellRoot.ColumnStyles[0]=new ColumnStyle(SizeType.Absolute,colW);
+      }
+      if(navRail!=null)navRail.Visible=!navPinned;
+      bool show=navPinned||navOpen;
+      leftNav.Visible=show;
+      if(show){
+        leftNav.Bounds=new Rectangle(0,0,NavFullW,Math.Max(1,ClientSize.Height));
+        leftNav.BringToFront();
+      }
+      if(navWatchTimer!=null){
+        if(!navPinned&&navOpen)navWatchTimer.Start();
+        else navWatchTimer.Stop();
+      }
+      if(navArrowTimer!=null){
+        if(!navPinned&&!navOpen)navArrowTimer.Start();
+        else navArrowTimer.Stop();
+      }
+      PaintNavPin();
+    }
+    void InitNavAutoHide(){
+      if(navShowTimer==null){navShowTimer=new Timer();navShowTimer.Interval=220;navShowTimer.Tick+=(s,e)=>{navShowTimer.Stop();navOpen=true;ApplyNavChrome();LayoutToolbar();};}
+      if(navHideTimer==null){navHideTimer=new Timer();navHideTimer.Interval=180;navHideTimer.Tick+=(s,e)=>{navHideTimer.Stop();HideNavNow();};}
+      if(navWatchTimer==null){navWatchTimer=new Timer();navWatchTimer.Interval=80;navWatchTimer.Tick+=WatchNavPointer;}
+      if(navArrowTimer==null){navArrowTimer=new Timer();navArrowTimer.Interval=40;navArrowTimer.Tick+=TickNavArrow;}
+      HookNavPointer(leftNav);
+      HookNavPointer(navRail);
+      if(navRail!=null){
+        navRail.Click+=(s,e)=>{navOpen=true;ApplyNavChrome();LayoutToolbar();};
+        if(navRailTip!=null)navRailTip.SetToolTip(navRail,Loc.T("nav_hover"));
+      }
+      if(langCombo!=null){
+        langCombo.DropDown+=(s,e)=>{if(navHideTimer!=null)navHideTimer.Stop();};
+        langCombo.DropDownClosed+=(s,e)=>HideNavSoon();
+      }
+      Shown+=(s,e)=>{if(!navPinned&&!NavPointerInside()){navOpen=false;ApplyNavChrome();}};
+      navOpen=navPinned;
+      ApplyNavChrome();
+    }
+    void StopNavAutoHide(){
+      if(navShowTimer!=null){navShowTimer.Stop();navShowTimer.Dispose();navShowTimer=null;}
+      if(navHideTimer!=null){navHideTimer.Stop();navHideTimer.Dispose();navHideTimer=null;}
+      if(navWatchTimer!=null){navWatchTimer.Stop();navWatchTimer.Dispose();navWatchTimer=null;}
+      if(navArrowTimer!=null){navArrowTimer.Stop();navArrowTimer.Dispose();navArrowTimer=null;}
+    }
     void BuildShell(){
-      leftNav=new Panel{Dock=DockStyle.Fill,BackColor=Color.FromArgb(10,16,26),Padding=new Padding(0)};
+      leftNav=new Panel{Location=new Point(0,0),Size=new Size(NavFullW,400),Anchor=AnchorStyles.Left|AnchorStyles.Top|AnchorStyles.Bottom,BackColor=Color.FromArgb(10,16,26),Padding=new Padding(0),Visible=false};
       navHeader=new Panel{Dock=DockStyle.Top,Height=196,BackColor=Color.FromArgb(10,16,26)};
       navFooter=new Panel{Dock=DockStyle.Bottom,Height=156,BackColor=Color.FromArgb(10,16,26)};
       navFlow=new FlowLayoutPanel{Dock=DockStyle.Fill,FlowDirection=FlowDirection.TopDown,WrapContents=false,AutoScroll=true,BackColor=Color.FromArgb(10,16,26),Padding=new Padding(0,4,0,8)};
       leftNav.Controls.Add(navFlow);leftNav.Controls.Add(navHeader);leftNav.Controls.Add(navFooter);
+      navRail=new Panel{Dock=DockStyle.Fill,BackColor=Color.FromArgb(10,16,26),Cursor=Cursors.Hand};
+      typeof(Control).GetProperty("DoubleBuffered",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).SetValue(navRail,true,null);
+      navRail.Paint+=PaintNavRail;
       filterBar=new Panel{Dock=DockStyle.Top,Height=52,BackColor=Panel,Padding=new Padding(12,8,12,8)};
       topBar=filterBar;
       centerPanel=new Panel{Dock=DockStyle.Fill,BackColor=Bg};
@@ -388,16 +546,17 @@ namespace RuneManagerModern {
       contentHost=new Panel{Dock=DockStyle.Fill,BackColor=Bg};
       contentHost.Controls.Add(centerPanel);
       contentHost.Controls.Add(rightPanel);
-      var root=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=2,RowCount=2,BackColor=Bg,Padding=new Padding(0)};
-      root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,252));
-      root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));
-      root.RowStyles.Add(new RowStyle(SizeType.Percent,100));
-      root.RowStyles.Add(new RowStyle(SizeType.Absolute,24));
-      root.Controls.Add(leftNav,0,0);root.SetRowSpan(leftNav,2);
-      root.Controls.Add(contentHost,1,0);
+      shellRoot=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=2,RowCount=2,BackColor=Bg,Padding=new Padding(0)};
+      shellRoot.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,NavRailW));
+      shellRoot.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));
+      shellRoot.RowStyles.Add(new RowStyle(SizeType.Percent,100));
+      shellRoot.RowStyles.Add(new RowStyle(SizeType.Absolute,24));
+      shellRoot.Controls.Add(navRail,0,0);shellRoot.SetRowSpan(navRail,2);
+      shellRoot.Controls.Add(contentHost,1,0);
       status.Dock=DockStyle.Fill;status.TextAlign=ContentAlignment.MiddleLeft;status.Padding=new Padding(10,0,8,0);
-      root.Controls.Add(status,1,1);
-      Controls.Add(root);
+      shellRoot.Controls.Add(status,1,1);
+      Controls.Add(shellRoot);
+      Controls.Add(leftNav);
     }
   }
 }

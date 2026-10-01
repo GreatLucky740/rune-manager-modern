@@ -39,6 +39,10 @@ namespace RuneManagerModern {
       Add("nav_tools","OUTILS","TOOLS");
       Add("nav_app","FONCTIONS","FEATURES");
       Add("nav_keep","SEUIL","THRESHOLD");
+      Add("nav_pin","Épingler le menu","Pin menu");
+      Add("nav_unpin","Libérer le menu","Unpin menu");
+      Add("nav_rail","MENU","MENU");
+      Add("nav_hover","Survolez ici pour afficher le menu","Hover here to show the menu");
       Add("lang_switch","EN","FR");
       Add("filter_all_sets","Tous les sets","All sets");
       Add("filter_all_slots","Tous les slots","All slots");
@@ -84,8 +88,8 @@ namespace RuneManagerModern {
       Add("status_stock_live","Stock gemmes/meules synchronisé en temps réel","Gem/grindstone stock synced live");
       Add("status_reapp_live","Pierres de réévaluation synchronisées en temps réel","Reappraisal stones synced live");
       Add("status_refine_live","Pierres de raffinage synchronisées en temps réel","Refinement stones synced live");
-      Add("counters","TOTAL  {0}\r\nKEEP  {1}\r\nPWR UP  {2}\r\nSELL  {3}\r\nAFFICHÉES  {4}","TOTAL  {0}\r\nKEEP  {1}\r\nPWR UP  {2}\r\nSELL  {3}\r\nSHOWN  {4}");
-      Add("counters_reeval","TOTAL  {0}\r\nREEVAL  {1}\r\nNORMALES  {2}\r\nANTIQUES  {3}\r\nAFFICHÉES  {4}","TOTAL  {0}\r\nREEVAL  {1}\r\nNORMAL  {2}\r\nANCIENT  {3}\r\nSHOWN  {4}");
+      Add("counters","TOTAL  {0}    KEEP  {1}    PWR UP  {2}    SELL  {3}    AFFICHÉES  {4}","TOTAL  {0}    KEEP  {1}    PWR UP  {2}    SELL  {3}    SHOWN  {4}");
+      Add("counters_reeval","TOTAL  {0}    REEVAL  {1}    NORMALES  {2}    ANTIQUES  {3}    AFFICHÉES  {4}","TOTAL  {0}    REEVAL  {1}    NORMAL  {2}    ANCIENT  {3}    SHOWN  {4}");
       Add("seuil_fixe","SEUIL FIXE  •  {0}","FIXED THRESHOLD  •  {0}");
       Add("seuil_dyn","SEUIL DYNAMIQUE  {0}  •  {1}","DYNAMIC THRESHOLD  {0}  •  {1}");
       Add("eco_mana","  •  ECO MANA","  •  MANA SAVE");

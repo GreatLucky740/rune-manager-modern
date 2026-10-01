@@ -1,15 +1,15 @@
 {
-  "build": 23,
-  "version": "1.15",
+  "build": 24,
+  "version": "1.16",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Le bonus stock ne change plus la recommandation de gemme.",
-    "La gemme suit toujours le meilleur potentiel brut de la rune.",
-    "Le bonus stock monte seulement la Potential Value, pour en garder plus."
+    "Menu de gauche : se cache tout seul, rail MENU, epingle, petites fleches animees.",
+    "Liste des runes ameliorables : se met a jour apres une gemme ou une meule.",
+    "Gemme : suit le preset affiche, P1 avant P2, Non avant P3."
   ],
   "notes_en": [
-    "Stock bonus no longer changes the gem recommendation.",
-    "The gem always follows the rune's best raw potential.",
-    "Stock bonus only raises Potential Value, so more runes can be kept."
+    "Left menu: auto-hides, MENU rail, pin, small animated arrows.",
+    "Upgrade list: refreshes after a gem or grind.",
+    "Gem: follows the shown preset, P1 before P2, Non before P3."
   ]
 }

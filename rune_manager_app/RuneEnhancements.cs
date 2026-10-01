@@ -194,7 +194,7 @@ namespace RuneManagerModern {
     void ShowPresets(){if(ToggleOffTool(presetButton))return;OpenToolFrom(presetButton,CreatePresetWindow(),1680,true);}
     Form CreatePresetWindow(){
       var f=new Form{Text=Loc.T("preset_win_title"),Icon=Icon,BackColor=Color.Black,ForeColor=Color.White,Size=new Size(1680,650),StartPosition=FormStartPosition.CenterParent};
-      var g=new BufferedGrid{Dock=DockStyle.Fill,AllowUserToAddRows=false,RowHeadersVisible=false,BackgroundColor=Color.Black,AutoSizeRowsMode=DataGridViewAutoSizeRowsMode.None};g.RowTemplate.Height=110;g.DefaultCellStyle=new DataGridViewCellStyle{BackColor=Color.Black,ForeColor=Color.White,SelectionBackColor=Color.Black};g.EnableHeadersVisualStyles=false;g.ColumnHeadersDefaultCellStyle=new DataGridViewCellStyle{BackColor=Color.Black,ForeColor=Color.White};
+      var g=new BufferedGrid{Dock=DockStyle.Fill,AllowUserToAddRows=false,RowHeadersVisible=false,BackgroundColor=Color.Black,AutoSizeRowsMode=DataGridViewAutoSizeRowsMode.None,ScrollBars=ScrollBars.None};g.RowTemplate.Height=56;g.DefaultCellStyle=new DataGridViewCellStyle{BackColor=Color.Black,ForeColor=Color.White,SelectionBackColor=Color.Black};g.EnableHeadersVisualStyles=false;g.ColumnHeadersHeightSizeMode=DataGridViewColumnHeadersHeightSizeMode.DisableResizing;g.ColumnHeadersHeight=28;g.ColumnHeadersDefaultCellStyle=new DataGridViewCellStyle{BackColor=Color.Black,ForeColor=Color.White};
       var factor=new DataGridViewComboBoxColumn{Name="Factor",HeaderText=Loc.T("preset_global_col"),Width=115};for(int n=0;n<=30;n++)factor.Items.Add((n*10).ToString(CultureInfo.InvariantCulture)+"%");foreach(var p in RuneEngine.Presets){string v=Math.Round(p.ScoreFactor*100).ToString(CultureInfo.InvariantCulture)+"%";if(!factor.Items.Contains(v))factor.Items.Add(v);}g.Columns.Add(factor);
       g.Columns.Add("Preset","Preset");g.Columns[1].ReadOnly=false;g.Columns[1].Width=140;
       string[] stats={"HP%","Atk%","Def%","Spd","Res%","Acc%","CtR%","CtD%","HP+","Atk+","Def+"};foreach(string stat in stats){var c=new DataGridViewComboBoxColumn{HeaderText=stat,Width=60};c.Items.AddRange(new object[]{Loc.T("prio_none"),"P1","P2","P3"});g.Columns.Add(c);}
@@ -214,8 +214,9 @@ namespace RuneManagerModern {
       foreach(var p in RuneEngine.Presets)AddPresetDataToGrid(g,p,stats);
       ConfigureBlackPresetGrid(g);
       g.CurrentCellDirtyStateChanged+=(s,e)=>{if(g.IsCurrentCellDirty)g.CommitEdit(DataGridViewDataErrorContexts.Commit);};
-      var bar=new FlowLayoutPanel{Dock=DockStyle.Bottom,Height=62,BackColor=Color.Black,WrapContents=true,Padding=new Padding(8,10,8,8)};
-      Action<Button> style=b=>{b.Height=36;b.Margin=new Padding(4,4,4,4);b.AutoSize=true;b.AutoSizeMode=AutoSizeMode.GrowAndShrink;b.MinimumSize=new Size(110,36);b.BackColor=Color.Black;b.ForeColor=Color.White;b.FlatStyle=FlatStyle.Flat;};
+      var host=new Panel{Dock=DockStyle.Bottom,Height=50,MinimumSize=new Size(0,48),BackColor=Color.Black};
+      var bar=new FlowLayoutPanel{Dock=DockStyle.Fill,WrapContents=true,AutoScroll=false,BackColor=Color.Black,Padding=new Padding(6,6,6,6)};
+      Action<Button> style=b=>{b.Height=32;b.Margin=new Padding(3,3,3,3);b.AutoSize=true;b.AutoSizeMode=AutoSizeMode.GrowAndShrink;b.MinimumSize=new Size(88,32);b.BackColor=Color.Black;b.ForeColor=Color.White;b.FlatStyle=FlatStyle.Flat;};
       var save=new Button{Text=Loc.T("save_recalc")};style(save);
       var add=new Button{Text=Loc.T("preset_add")};style(add);
       var remove=new Button{Text=Loc.T("preset_remove")};style(remove);
@@ -225,7 +226,7 @@ namespace RuneManagerModern {
       var importBtn=new Button{Text=Loc.T("preset_import")};style(importBtn);
       var stock=new Button{Text=Loc.T("preset_stock_btn")};style(stock);
       bar.Controls.Add(save);bar.Controls.Add(add);bar.Controls.Add(remove);bar.Controls.Add(moveUp);bar.Controls.Add(moveDown);bar.Controls.Add(exportBtn);bar.Controls.Add(importBtn);bar.Controls.Add(stock);
-      AttachWrapBar(bar);
+      host.Controls.Add(bar);
       add.Click+=(s,e)=>{g.EndEdit();AddPresetGridRow(g,controlRow,stats);};
       remove.Click+=(s,e)=>{g.EndEdit();RemovePresetGridRow(g,controlRow);};
       moveUp.Click+=(s,e)=>{g.EndEdit();MovePresetGridRow(g,controlRow,-1);};
@@ -234,7 +235,57 @@ namespace RuneManagerModern {
       importBtn.Click+=(s,e)=>{g.EndEdit();ImportPresetShare(g,controlRow,stats);};
       stock.Click+=(s,e)=>ShowPresetStock();
       save.Click+=(s,e)=>{g.EndEdit();if(!TryCommitPresetGrid(g,controlRow,stats,controlCells))return;File.WriteAllLines(PresetFactorsPath,RuneEngine.Presets.Select(p=>p.Name+"\t"+p.ScoreFactor.ToString(CultureInfo.InvariantCulture)));ApplySettingsAndClose(f,Loc.T("presets_globals_saved"));};
-      f.Controls.Add(g);f.Controls.Add(bar);return f;
+      bool fitBusy=false;
+      EventHandler fit=(s,e)=>{if(fitBusy||f.IsDisposed||g.IsDisposed||host.IsDisposed)return;if(f.ClientSize.Width<80||f.ClientSize.Height<80)return;fitBusy=true;try{FitPresetLayout(f,g,host,bar);}finally{fitBusy=false;}};
+      f.SizeChanged+=fit;g.SizeChanged+=fit;f.Shown+=fit;
+      g.RowsAdded+=(s,e)=>fit(s,EventArgs.Empty);
+      g.RowsRemoved+=(s,e)=>fit(s,EventArgs.Empty);
+      f.Controls.Add(g);f.Controls.Add(host);return f;
+    }
+    void FitPresetLayout(Form f,DataGridView g,Panel host,FlowLayoutPanel bar){
+      if(f==null||g==null||host==null||bar==null)return;
+      int bottom=bar.Padding.Top;
+      foreach(Control c in bar.Controls){
+        if(c==null||!c.Visible)continue;
+        int b=c.Bottom+c.Margin.Bottom;
+        if(b>bottom)bottom=b;
+      }
+      int barH=50;
+      if(bottom>bar.Padding.Top+8)barH=Math.Min(92,Math.Max(48,bottom+bar.Padding.Bottom+2));
+      if(host.MinimumSize.Height>48)host.MinimumSize=new Size(0,48);
+      if(Math.Abs(host.Height-barH)>1)host.Height=barH;
+      int rows=g.Rows.Count;if(rows<=0)return;
+      int[] baseW={88,108,40,40,40,40,40,40,40,40,40,40,40,190,190,86,96,86,96,86,96};
+      int n=Math.Min(baseW.Length,g.Columns.Count);
+      int sum=0;for(int i=0;i<n;i++)sum+=baseW[i];
+      int cw=g.ClientSize.Width;if(cw<200)cw=Math.Max(200,f.ClientSize.Width);
+      int used=0;
+      for(int i=0;i<n;i++){
+        int w=baseW[i]*cw/sum;if(w<24)w=24;
+        if(i==n-1)w=Math.Max(24,cw-used);
+        if(g.Columns[i].Width!=w)g.Columns[i].Width=w;
+        used+=w;
+      }
+      int headerNow=Math.Max(22,g.ColumnHeadersHeight);
+      int bodyGuess=Math.Max(36,g.ClientSize.Height-headerNow-2);
+      int rhGuess=Math.Max(28,bodyGuess/rows);
+      float fs=rhGuess>=70?9f:rhGuess>=46?8.5f:7.5f;
+      if(g.Font==null||Math.Abs(g.Font.Size-fs)>0.2f){
+        g.Font=new Font("Segoe UI",fs);
+        g.ColumnHeadersDefaultCellStyle.Font=new Font("Segoe UI Semibold",fs);
+        g.DefaultCellStyle.Font=g.Font;
+      }
+      int hh=Math.Max(22,(int)(fs*2.4f));
+      if(g.ColumnHeadersHeight!=hh)g.ColumnHeadersHeight=hh;
+      int body=g.ClientSize.Height-g.ColumnHeadersHeight-2;
+      if(body<36)body=36;
+      int rh=body/rows;if(rh<28)rh=28;
+      int extra=body-rh*rows;if(extra<0)extra=0;
+      g.RowTemplate.Height=rh;
+      for(int i=0;i<g.Rows.Count;i++){
+        int h=rh+(i<extra?1:0);
+        if(g.Rows[i].Height!=h)g.Rows[i].Height=h;
+      }
     }
     void AddPresetGridRow(DataGridView g,int controlRow,string[] stats){
       if(g==null)return;
@@ -580,7 +631,7 @@ namespace RuneManagerModern {
         File.WriteAllLines(ScoreRulesPath,rules.Select(r=>r.Name+"\t"+string.Join(",",r.Sets)+"\t"+r.Stat+"\t"+r.Threshold.ToString(CultureInfo.InvariantCulture)+"\t"+r.Bonus.ToString(CultureInfo.InvariantCulture)+"\t"+(r.BuiltIn?"1":"0")+"\t"+string.Join(",",r.Slots)));
         ApplySettingsAndClose(f,"Règles enregistrées et scores recalculés.");
       };
-      f.Controls.Add(g);f.Controls.Add(bar);return f;
+      f.Controls.Add(g);f.Controls.Add(bar);bar.BringToFront();return f;
     }
   }
 }

@@ -270,7 +270,7 @@ namespace RuneManagerModern {
       Add("coeff_p3","Poids P3","P3 weight");
       Add("coeff_main","Bonus stat principale","Main stat bonus");
       Add("coeff_ok_set","Facteur set acceptable","Accepted set factor");
-      Add("coeff_bad_set","Facteur set exclu","Excluded set factor");
+      Add("coeff_bad_set","Facteur main acceptable","Accepted main factor");
       Add("coeff_sim","Seuil Potential simulé +12","Simulated +12 potential threshold");
       Add("coeff_bad","Valeur incorrecte : {0}","Invalid value: {0}");
       Add("presets_saved","Presets enregistrés et scores recalculés.","Presets saved and scores recalculated.");

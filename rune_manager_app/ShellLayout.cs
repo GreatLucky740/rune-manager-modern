@@ -175,30 +175,65 @@ namespace RuneManagerModern {
       badge.Location=new Point(Math.Max(4,host.Width-badge.Width-pad),Math.Max(2,(host.Height-badge.Height)/2));
     }
     bool wrapBarBusy;
+    void FitWrapBarApply(FlowLayoutPanel bar,int h){
+      if(bar==null||bar.IsDisposed)return;
+      if(bar.ClientSize.Width<80)return;
+      wrapBarBusy=true;
+      try{
+        if(bar.MinimumSize.Height<62)bar.MinimumSize=new Size(0,62);
+        if(bar.Height<62||Math.Abs(bar.Height-h)>2)bar.Height=h;
+      }finally{wrapBarBusy=false;}
+    }
     void FitWrapBar(FlowLayoutPanel bar){
       if(bar==null||bar.IsDisposed||wrapBarBusy)return;
+      if(!bar.IsHandleCreated)return;
+      int cw=bar.ClientSize.Width;
+      if(cw<80)return;
       wrapBarBusy=true;
       try{
         bar.WrapContents=true;
+        Size pref=bar.GetPreferredSize(new Size(cw,0));
         int bottom=bar.Padding.Top;
         foreach(Control c in bar.Controls){
           if(c==null||c.IsDisposed||!c.Visible)continue;
           int b=c.Bottom+c.Margin.Bottom;
           if(b>bottom)bottom=b;
         }
-        int h=Math.Max(56,bottom+bar.Padding.Bottom+4);
-        if(h>220)h=220;
-        if(Math.Abs(bar.Height-h)>2)bar.Height=h;
+        int h=pref.Height;
+        int fromKids=bottom+bar.Padding.Bottom+4;
+        if(fromKids>h)h=fromKids;
+        if(h<62)h=62;
+        if(h>140)h=140;
+        if(bar.Height>=62&&Math.Abs(bar.Height-h)<=2)return;
+        int want=h;
+        bar.BeginInvoke((MethodInvoker)delegate{FitWrapBarApply(bar,want);});
       }finally{wrapBarBusy=false;}
     }
     void AttachWrapBar(FlowLayoutPanel bar){
       if(bar==null)return;
       bar.WrapContents=true;
       bar.AutoScroll=false;
+      bar.MinimumSize=new Size(0,62);
+      if(bar.Height<62)bar.Height=62;
       if(bar.Padding.All==0)bar.Padding=new Padding(8,10,8,8);
-      bar.Layout+=(s,e)=>FitWrapBar(bar);
-      bar.Resize+=(s,e)=>FitWrapBar(bar);
-      bar.HandleCreated+=(s,e)=>FitWrapBar(bar);
+      LayoutEventHandler onLayout=(s,e)=>FitWrapBar(bar);
+      EventHandler onFit=(s,e)=>FitWrapBar(bar);
+      bar.Layout+=onLayout;
+      bar.HandleCreated+=onFit;
+      bar.ParentChanged+=(s,e)=>{
+        Control p=bar.Parent;
+        if(p==null)return;
+        p.SizeChanged-=onFit;
+        p.SizeChanged+=onFit;
+        Form hostForm=p as Form;
+        if(hostForm==null)hostForm=p.FindForm();
+        if(hostForm!=null){
+          hostForm.Shown-=onFit;
+          hostForm.Shown+=onFit;
+          hostForm.SizeChanged-=onFit;
+          hostForm.SizeChanged+=onFit;
+        }
+      };
     }
     void CompactNavChrome(){ScaleNavToFit();}
     int NavFlowNeed(int btnH,int btnMV,int secH,int secMV){return 13*(btnH+btnMV)+4*(secH+secMV)+48;}

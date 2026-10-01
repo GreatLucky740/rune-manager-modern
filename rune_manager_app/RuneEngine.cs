@@ -153,8 +153,8 @@ public sealed class SkillUpGroup { public SkillUpMonster Target; public List<Ski
     public static double PwrUpThreshold(){return SeuilApres12+(ManaSaverMode?Math.Max(0,MargePwrUpStrict):0);}
     // Ecart minimum pour changer de BestBuild d'un calcul a l'autre (ex. Fast DD <-> Slow
     // DD, qui ne different que par le poids SPD). En dessous, on garde le preset precedent
-    // au lieu de basculer pour un gain marginal du a InventoryBonus (qui bouge avec le
-    // reste de l'inventaire, meme si CETTE rune n'a pas change).
+    // au lieu de basculer pour un gain marginal. InventoryBonus ne choisit plus le preset
+    // ni la gemme : il s'ajoute seulement au Potential du preset au max raw.
     public static double BuildStabilityMargin=0.5;
     static Dictionary<string,object> D(object o){return o as Dictionary<string,object>;}
     static object[] A(object o){
@@ -323,7 +323,7 @@ public sealed class SkillUpGroup { public SkillUpMonster Target; public List<Ski
       Func<Dictionary<string,object>,string> fp=d=>{object rid;if(d.TryGetValue("rid",out rid)&&rid!=null)return Convert.ToString(rid);return I(G(d,"slot_no"))+"-"+I(G(d,"set_id"))+"-"+L(G(d,"base_value"))+"-"+L(G(d,"sell_value"));};
       string signature=string.Join(",",selected.Select(fp).OrderBy(x=>x));
       if(signature.Length==0||SeenRuneChoices.Contains(signature))return null;
-      var candidates=new List<RuneRow>();long fake=-1;foreach(var d in selected){var copy=new Dictionary<string,object>(d);copy["rune_id"]=fake--;var parsed=new List<RuneRow>();AddRune(copy,false,parsed,new HashSet<long>(),new Dictionary<long,string>(),new HashSet<long>());if(parsed.Count>0)candidates.Add(parsed[0]);}if(candidates.Count!=3&&candidates.Count!=5)return null;SeenRuneChoices.Add(signature);var test=candidates.Select(CopyRune).ToList();foreach(var candidate in test){double best=-1;foreach(var preset in Presets){var projection=BestProjection(candidate,preset);double rawScore=Score(projection,preset);double value=rawScore>0?rawScore+InventoryBonus(preset,candidate.Set,candidate.Slot):0;if(value>best){best=value;candidate.Potential=Math.Round(value,3);candidate.BestBuild=preset.Name;candidate.Recommendation=Recommend(projection,preset);}}}return new RuneChoiceComparison{Choices=test.Where(x=>x.Id<0).OrderByDescending(x=>x.Potential).ToList()};}catch{return null;}}
+      var candidates=new List<RuneRow>();long fake=-1;foreach(var d in selected){var copy=new Dictionary<string,object>(d);copy["rune_id"]=fake--;var parsed=new List<RuneRow>();AddRune(copy,false,parsed,new HashSet<long>(),new Dictionary<long,string>(),new HashSet<long>());if(parsed.Count>0)candidates.Add(parsed[0]);}if(candidates.Count!=3&&candidates.Count!=5)return null;SeenRuneChoices.Add(signature);var test=candidates.Select(CopyRune).ToList();foreach(var candidate in test){double bestRaw=-1;Preset bestP=null;RuneRow bestProj=null;foreach(var preset in Presets){var projection=BestProjection(candidate,preset);double rawScore=Score(projection,preset);if(rawScore>bestRaw){bestRaw=rawScore;bestP=preset;bestProj=projection;}}if(bestP!=null&&bestRaw>0){double bonus=InventoryBonus(bestP,candidate.Set,candidate.Slot);candidate.Potential=Math.Round(bestRaw+bonus,3);candidate.BestBuild=bestP.Name;candidate.Recommendation=Recommend(bestProj,bestP);}}return new RuneChoiceComparison{Choices=test.Where(x=>x.Id<0).OrderByDescending(x=>x.Potential).ToList()};}catch{return null;}}
     // Cas coffre a choix (ex. Blessed Rune Box) : dictionnaire "extra":{"<rid>":{...rune...},...} —
     // le "rid" (cle) est la seule identite stable du candidat tant que rune_id vaut 0 (rien choisi),
     // donc on le copie dans chaque candidat (cle "rid") pour la signature anti-doublon plus haut.
@@ -543,11 +543,19 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
       }
       double[] avg=new double[n];for(int p=0;p<n;p++){for(int s=0;s<6;s++)avg[p]+=counts[p,s];avg[p]/=6.0;}
       Parallel.For(0,rows.Count,opts,i=>{
-        var r=rows[i];if(r.Scores==null||r.Scores.Length!=n)r.Scores=new double[n];string previousBuild=r.BestBuild;double best=-1,refinementBest=0;int bp=0,refinementPreset=-1;
-        for(int p=0;p<n;p++){double bonus=raw[i,p]>0?InventoryBonus(Presets[p],r.Set,r.Slot):0;r.Scores[p]=raw[i,p]+bonus;if(r.Scores[p]>best){best=r.Scores[p];bp=p;}if(CanRefine(r)){double rs=ExpectedRefinementScore(r,Presets[p])+bonus;if(rs>refinementBest){refinementBest=rs;refinementPreset=p;}}}
-        CalculateReevalPriority(r,counts,avg,setSlot,setTotal);if(best<=0){SetNoPreset(r);return;}
-        int prevIdx=string.IsNullOrEmpty(previousBuild)?-1:Presets.FindIndex(x=>x.Name==previousBuild);if(prevIdx>=0&&prevIdx!=bp&&raw[i,prevIdx]>0&&best-r.Scores[prevIdx]<BuildStabilityMargin){bp=prevIdx;best=r.Scores[prevIdx];}
-        int named=PreferCoveredName(r,r.Scores,bp);var chosen=projected[i,named];r.Potential=Math.Round(best+RuleBonus(r),3);r.BestBuild=Presets[named].Name;r.Recommendation=Recommend(chosen,Presets[named]);r.RecommendSource=chosen.RecommendSource;r.RecommendTarget=chosen.RecommendTarget;r.RecommendationInStock=chosen.RecommendationInStock;r.RefinementPotential=Math.Round(refinementBest,3);r.RefinementGain=Math.Round(Math.Max(0,refinementBest-best),3);r.RefinementPreset=refinementPreset>=0?Presets[PreferCoveredName(r,r.Scores,refinementPreset)].Name:"";
+        var r=rows[i];if(r.Scores==null||r.Scores.Length!=n)r.Scores=new double[n];string previousBuild=r.BestBuild;double refinementBest=0;int bp=bestIdx[i],refinementPreset=-1;
+        var rawScores=new double[n];
+        for(int p=0;p<n;p++){
+          rawScores[p]=raw[i,p];
+          double bonus=raw[i,p]>0?InventoryBonus(Presets[p],r.Set,r.Slot):0;
+          r.Scores[p]=raw[i,p]+bonus;
+          if(CanRefine(r)){double rs=ExpectedRefinementScore(r,Presets[p])+bonus;if(rs>refinementBest){refinementBest=rs;refinementPreset=p;}}
+        }
+        CalculateReevalPriority(r,counts,avg,setSlot,setTotal);if(bestVal[i]<=0){SetNoPreset(r);return;}
+        int prevIdx=string.IsNullOrEmpty(previousBuild)?-1:Presets.FindIndex(x=>x.Name==previousBuild);if(prevIdx>=0&&prevIdx!=bp&&raw[i,prevIdx]>0&&bestVal[i]-raw[i,prevIdx]<BuildStabilityMargin)bp=prevIdx;
+        int named=PreferCoveredName(r,rawScores,bp);var chosen=projected[i,named];
+        double namedBonus=raw[i,named]>0?InventoryBonus(Presets[named],r.Set,r.Slot):0;
+        r.Potential=Math.Round(raw[i,named]+namedBonus+RuleBonus(r),3);r.BestBuild=Presets[named].Name;r.Recommendation=Recommend(chosen,Presets[named]);r.RecommendSource=chosen.RecommendSource;r.RecommendTarget=chosen.RecommendTarget;r.RecommendationInStock=chosen.RecommendationInStock;r.RefinementPotential=Math.Round(refinementBest,3);r.RefinementGain=Math.Round(Math.Max(0,refinementBest-raw[i,named]-namedBonus),3);r.RefinementPreset=refinementPreset>=0?Presets[PreferCoveredName(r,rawScores,refinementPreset)].Name:"";
       });
       ApplyRetentionRules(rows);
     }

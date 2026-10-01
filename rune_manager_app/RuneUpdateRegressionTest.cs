@@ -77,6 +77,32 @@ static class RuneUpdateRegressionTest {
       RuneEngine.Calculate(new List<RuneRow>{despair});
       Check(despair.BestBuild=="Support","Despair Acc slot 6 stays Support");
       Check(despair.RecommendSource=="Atk+"&&despair.RecommendTarget=="Def%","gem the dead Atk+ flat not the rolled Crit");
+      var gemKeep=RuneEngine.MakePreset("GemKeep",new[]{"Non","P1","Non","P1","Non","Non","P1","P1","Non","P1","Non"},"Violent","","Atk%,Spd","CtD%","Atk%");
+      var gemStock=RuneEngine.MakePreset("GemStock",new[]{"Non","P1","Non","Non","Non","Non","P1","P1","Non","P1","Non"},"Blade,Rage","Violent","Atk%","CtD%","Atk%");
+      double gemKeepRaw=(double)scoreM.Invoke(null,new object[]{cdRune,gemKeep});
+      double gemStockRaw=(double)scoreM.Invoke(null,new object[]{cdRune,gemStock});
+      Check(gemKeepRaw>gemStockRaw,"gem-keep raw beats empty-stock preset");
+      if(gemStockRaw>0)gemStock.ScoreFactor=Math.Max(0.05,(gemKeepRaw-0.3)/gemStockRaw);
+      var gemPack=new List<RuneRow>();
+      var gemFocus=new RuneRow{Id=9001,Set="Violent",Slot=4,Main="CtD%",MainValue=59,Grade=5,Stars=6,Level=12};
+      gemFocus.Subs.Add(new SubStat{Stat="Atk%",Value=14});
+      gemFocus.Subs.Add(new SubStat{Stat="CtR%",Value=10});
+      gemFocus.Subs.Add(new SubStat{Stat="Atk+",Value=27});
+      gemFocus.Subs.Add(new SubStat{Stat="Def+",Value=14});
+      gemPack.Add(gemFocus);
+      for(int gi=0;gi<8;gi++){
+        var filler=new RuneRow{Id=9100+gi,Set="Violent",Slot=4,Main="CtD%",MainValue=80,Grade=5,Stars=6,Level=12};
+        filler.Subs.Add(new SubStat{Stat="Atk%",Value=20});
+        filler.Subs.Add(new SubStat{Stat="Spd",Value=20});
+        filler.Subs.Add(new SubStat{Stat="CtR%",Value=15});
+        filler.Subs.Add(new SubStat{Stat="Atk+",Value=20});
+        gemPack.Add(filler);
+      }
+      RuneEngine.ReplacePresets(new List<Preset>{gemKeep,gemStock});
+      RuneEngine.Calculate(gemPack);
+      Check(gemFocus.Scores!=null&&gemFocus.Scores.Length>=2&&gemFocus.Scores[1]>gemFocus.Scores[0],"empty stock still boosts display score");
+      Check(gemFocus.BestBuild=="GemKeep","stock bonus does not steal best build from max raw");
+      Check(gemFocus.RecommendSource=="Def+"&&gemFocus.RecommendTarget=="Spd","stock bonus does not change gem rec");
     }finally{RuneEngine.ReplacePresets(coverSaved);}
     var overlay=new List<RuneRow>();
     string hammer="{\"command\":\"UpgradeRuneList\",\"ret_code\":0,\"upgrade_rune_list\":[{\"rune_id\":65236285954,\"slot_no\":3,\"rank\":14,\"class\":16,\"set_id\":13,\"upgrade_curr\":6,\"pri_eff\":[5,70],\"prefix_eff\":[0,0],\"sec_eff\":[[11,11,0,0],[6,7,0,0],[2,14,0,0]]}]}";

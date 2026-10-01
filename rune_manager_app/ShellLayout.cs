@@ -276,7 +276,7 @@ namespace RuneManagerModern {
         int sm=h>=34?14:(h>=28?8:4);
         int th=h>=36?26:(h>=30?20:16);
         float cfs=h>=36?10f:(h>=30?8.5f:7.5f);
-        int ch=Math.Max(36,(int)(cfs*5.4f)+6);
+        int ch=Math.Max(100,(int)(cfs*9.6f)+10);
         int ic=h>=34?32:(h>=28?24:20);
         int lh=h>=34?28:(h>=28?22:18);
         int head=NavHeadNeed(h,th,ch);

@@ -213,7 +213,7 @@ namespace RuneManagerModern {
     void BuildUi(){
       BuildShell();
       titleLabel=new Label{Text="RUNE MANAGER",ForeColor=Cyan,Font=new Font("Segoe UI Semibold",15),AutoSize=false,Size=new Size(228,26),Location=new Point(14,10),TextAlign=ContentAlignment.MiddleLeft};navHeader.Controls.Add(titleLabel);
-      counters.AutoSize=false;counters.Size=new Size(228,102);counters.Location=new Point(14,38);counters.ForeColor=Color.Gainsboro;counters.Font=new Font("Segoe UI Semibold",10f);counters.TextAlign=ContentAlignment.TopLeft;navHeader.Controls.Add(counters);
+      counters.AutoSize=false;counters.Size=new Size(228,102);counters.Location=new Point(14,38);counters.ForeColor=Color.Gainsboro;counters.Font=new Font("Segoe UI Semibold",10f);counters.TextAlign=ContentAlignment.TopLeft;counters.AutoEllipsis=false;counters.UseCompatibleTextRendering=true;navHeader.Controls.Add(counters);
       Color LegendaryOrange=Color.FromArgb(255,170,40),EpicPurple=Color.FromArgb(150,90,230);
       Color OutilsColor=EpicPurple,FonctionColor=LegendaryOrange,SeuilColor=LegendaryOrange;
       importButton=NavItem(Loc.T("import_json"),Cyan);importButton.Location=new Point(8,146);importButton.Size=new Size(236,36);importButton.Click+=(s,e)=>ChooseFile();navHeader.Controls.Add(importButton);

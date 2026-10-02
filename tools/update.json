@@ -1,15 +1,11 @@
 {
-  "build": 24,
+  "build": 25,
   "version": "1.16",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Menu de gauche : se cache tout seul, rail MENU, epingle, petites fleches animees.",
-    "Liste des runes ameliorables : se met a jour apres une gemme ou une meule.",
-    "Gemme : suit le preset affiche, P1 avant P2, Non avant P3."
+    "Correctifs de bugs."
   ],
   "notes_en": [
-    "Left menu: auto-hides, MENU rail, pin, small animated arrows.",
-    "Upgrade list: refreshes after a gem or grind.",
-    "Gem: follows the shown preset, P1 before P2, Non before P3."
+    "Bug fixes."
   ]
 }

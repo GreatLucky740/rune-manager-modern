@@ -182,6 +182,22 @@ static class RuneUpdateRegressionTest {
       RuneEngine.StatGlobalFactor["Atk+"]=savedAtk;RuneEngine.StatGlobalFactor["HP%"]=savedHp;
       RuneEngine.Stocks.RemoveAll(x=>x.Id==0&&(x.Stat=="HP%"||x.Stat=="Atk+")&&x.Grade==4);
       Check(hpToAtk.RecommendTarget=="Atk+","Slow DD gems P2 HP% into P1 Atk+");
+      var bruiserCritAcc=RuneEngine.MakePreset("Bruiser Crit/Acc",new[]{"P1","P1","P3","P1","Non","P2","P1","Non","P3","Non","Non"},"Swift,Violent,Will,Intangible","Despair,Revenge","HP%,Atk%,Spd","HP%,Atk%,CtR%","HP%,Atk%,Acc%");
+      RuneEngine.ReplacePresets(new List<Preset>{bruiserCritAcc});
+      var junkDef=new RuneRow{Id=9901,Set="Intangible",Slot=2,Main="HP%",MainValue=47,Grade=5,Stars=6,Level=12};
+      junkDef.Subs.Add(new SubStat{Stat="Atk%",Value=6});
+      junkDef.Subs.Add(new SubStat{Stat="Spd",Value=17});
+      junkDef.Subs.Add(new SubStat{Stat="CtR%",Value=11});
+      junkDef.Subs.Add(new SubStat{Stat="Def+",Value=13});
+      RuneEngine.Calculate(new List<RuneRow>{junkDef});
+      Check(junkDef.RecommendSource=="Def+"&&junkDef.RecommendTarget=="Acc%","junk Def flat is gemmed instead of a valued Atk%");
+      var resToAcc=new RuneRow{Id=9902,Set="Intangible",Slot=4,Main="CtR%",MainValue=58,Grade=5,Stars=6,Level=12};
+      resToAcc.Subs.Add(new SubStat{Stat="Spd",Value=11,Grind=4});
+      resToAcc.Subs.Add(new SubStat{Stat="Atk%",Value=23,Grind=7});
+      resToAcc.Subs.Add(new SubStat{Stat="HP%",Value=5});
+      resToAcc.Subs.Add(new SubStat{Stat="Res%",Value=8});
+      RuneEngine.Calculate(new List<RuneRow>{resToAcc});
+      Check(resToAcc.RecommendSource=="Res%"&&resToAcc.RecommendTarget=="Acc%","gemming Res unlocks Acc on Bruiser Crit/Acc");
     }finally{RuneEngine.ReplacePresets(coverSaved);}
     var overlay=new List<RuneRow>();
     string hammer="{\"command\":\"UpgradeRuneList\",\"ret_code\":0,\"upgrade_rune_list\":[{\"rune_id\":65236285954,\"slot_no\":3,\"rank\":14,\"class\":16,\"set_id\":13,\"upgrade_curr\":6,\"pri_eff\":[5,70],\"prefix_eff\":[0,0],\"sec_eff\":[[11,11,0,0],[6,7,0,0],[2,14,0,0]]}]}";

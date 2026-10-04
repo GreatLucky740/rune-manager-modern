@@ -1,11 +1,11 @@
 {
-  "build": 27,
+  "build": 28,
   "version": "1.17",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Correctif : les legendaires prennent bien la couleur orange en jeu."
+    "Couleur legendaire comme en jeu."
   ],
   "notes_en": [
-    "Fix: legendary runes now use the in-game orange color."
+    "Legendary color matches in-game."
   ]
 }

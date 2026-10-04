@@ -151,7 +151,7 @@ namespace RuneManagerModern {
     // affiche un compte > 0, revient a l'orange normal sinon. NormalActionBorder =
     // meme orange que les autres boutons "outils/fonction".
     readonly Color RedAlertBorder=Color.FromArgb(218,70,62), NormalActionBorder=Color.FromArgb(255,170,40);
-    const int AppBuild=27;
+    const int AppBuild=28;
     const string AppVersion="1.17";
     void SetActionBorder(Button b,bool active){SetActionBorder(b,null,active);}
     // Le cadre du badge suit la meme couleur que le contour du bouton ou il se trouve
@@ -1658,7 +1658,7 @@ namespace RuneManagerModern {
     // est reduite pour un badge ou une puce.
     static Bitmap HighQualityScale(Image source,int width,int height){var result=new Bitmap(width,height);using(var g=Graphics.FromImage(result)){g.SmoothingMode=SmoothingMode.AntiAlias;g.InterpolationMode=InterpolationMode.HighQualityBicubic;g.PixelOffsetMode=PixelOffsetMode.HighQuality;g.CompositingQuality=CompositingQuality.HighQuality;g.DrawImage(source,new Rectangle(0,0,width,height));}return result;}
     Image GetSetIcon(string setName){Image img;if(setIcons.TryGetValue(setName,out img))return img;string p=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"assets","sets",setName.ToLowerInvariant()+".png");if(!File.Exists(p))return null;try{using(var fs=new FileStream(p,FileMode.Open,FileAccess.Read))using(var source=Image.FromStream(fs)){setIcons[setName]=new Bitmap(source);return setIcons[setName];}}catch{return null;}}
-    static Color RuneLogoColor(int grade){return grade>=5?Color.FromArgb(255,126,20):grade==4?Color.FromArgb(239,135,251):grade==3?Color.FromArgb(72,196,236):grade==2?Color.FromArgb(64,210,110):Color.FromArgb(232,228,220);}
+    static Color RuneLogoColor(int grade){return grade>=5?Color.FromArgb(232,168,56):grade==4?Color.FromArgb(239,135,251):grade==3?Color.FromArgb(72,196,236):grade==2?Color.FromArgb(64,210,110):Color.FromArgb(232,228,220);}
     static Bitmap TintSetFill(Image src,Color tint,int size){
       var bmp=HighQualityScale(src,size,size);
       var rect=new Rectangle(0,0,size,size);

@@ -406,6 +406,8 @@ static class RuneUpdateRegressionTest {
     Check((int)qualityKey.Invoke(null,new object[]{2})==2,"magic rune uses quality 2");
     Check((int)qualityKey.Invoke(null,new object[]{4})==4,"hero rune uses quality 4");
     Check((int)qualityKey.Invoke(null,new object[]{5})==5,"legend rune uses quality 5");
+    var legendCol=(Color)typeof(MainForm).GetMethod("RuneLogoColor",iconFlags).Invoke(null,new object[]{5});
+    Check(legendCol.R>200&&legendCol.G>150&&legendCol.G<190&&legendCol.B<80,"legend orange matches in-game gold");
     using(var src=new Bitmap(8,8,PixelFormat.Format32bppArgb)){
       for(int y=0;y<8;y++)for(int x=0;x<8;x++)src.SetPixel(x,y,Color.FromArgb(255,224,159,75));
       var tinted=(Bitmap)typeof(MainForm).GetMethod("TintCroquisCreux",iconFlags).Invoke(null,new object[]{src,Color.FromArgb(64,210,110)});

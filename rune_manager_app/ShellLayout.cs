@@ -507,7 +507,7 @@ namespace RuneManagerModern {
       if(navShowTimer==null){navShowTimer=new Timer();navShowTimer.Interval=220;navShowTimer.Tick+=(s,e)=>{navShowTimer.Stop();navOpen=true;ApplyNavChrome();LayoutToolbar();};}
       if(navHideTimer==null){navHideTimer=new Timer();navHideTimer.Interval=180;navHideTimer.Tick+=(s,e)=>{navHideTimer.Stop();HideNavNow();};}
       if(navWatchTimer==null){navWatchTimer=new Timer();navWatchTimer.Interval=80;navWatchTimer.Tick+=WatchNavPointer;}
-      if(navArrowTimer==null){navArrowTimer=new Timer();navArrowTimer.Interval=40;navArrowTimer.Tick+=TickNavArrow;}
+      if(navArrowTimer==null){navArrowTimer=new Timer();navArrowTimer.Interval=90;navArrowTimer.Tick+=TickNavArrow;}
       HookNavPointer(leftNav);
       HookNavPointer(navRail);
       if(navRail!=null){

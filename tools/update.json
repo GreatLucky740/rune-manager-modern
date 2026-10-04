@@ -1,11 +1,17 @@
 {
-  "build": 25,
-  "version": "1.16",
+  "build": 26,
+  "version": "1.17",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Correctifs de bugs."
+    "Protection des decks : une rune retiree d'un preset n'est plus Keep si elle est sous le seuil.",
+    "RTA : lecture du monstre en grand (nom + element) dans les picks adverses. Restez appuye sur l'icone d'un monstre adverse en RTA en jeu : ca l'ajoute dans les picks ennemis (pensez a cliquer sur J'AI LE 1ER PICK ou L'ENNEMI COMMENCE).",
+    "RTA : moins d'erreurs d'element, picks plus proches du meta / synergie / leader.",
+    "Les runes affichees sur la page principale sont exactement comme en jeu."
   ],
   "notes_en": [
-    "Bug fixes."
+    "Deck protection: a rune removed from a preset is no longer Keep if it is below the threshold.",
+    "RTA: large-card monster read (name + element) into enemy picks. Hold the mouse button on an enemy monster in the in-game RTA pick/ban to add it to enemy picks in the app (be sure to click I HAVE 1ST PICK or ENEMY STARTS).",
+    "RTA: fewer element mix-ups, picks closer to meta / synergy / leader.",
+    "Runes shown on the main page now look exactly like in-game."
   ]
 }

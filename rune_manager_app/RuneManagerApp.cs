@@ -151,8 +151,8 @@ namespace RuneManagerModern {
     // affiche un compte > 0, revient a l'orange normal sinon. NormalActionBorder =
     // meme orange que les autres boutons "outils/fonction".
     readonly Color RedAlertBorder=Color.FromArgb(218,70,62), NormalActionBorder=Color.FromArgb(255,170,40);
-    const int AppBuild=25;
-    const string AppVersion="1.16";
+    const int AppBuild=26;
+    const string AppVersion="1.17";
     void SetActionBorder(Button b,bool active){SetActionBorder(b,null,active);}
     // Le cadre du badge suit la meme couleur que le contour du bouton ou il se trouve
     // (rouge si action a faire, orange sinon) au lieu d'une couleur fixe independante.
@@ -170,13 +170,23 @@ namespace RuneManagerModern {
     }
     readonly DataGridView grid=new BufferedGrid(); readonly Label status=new Label(), counters=new Label(); readonly IconBadge reappNormalBadge=new IconBadge(),reappAncientBadge=new IconBadge(),refinementBadge=new IconBadge(); readonly CountBadge improveBadge=new CountBadge(),skillBadge=new CountBadge(),worldBossBadge=new CountBadge(),spdRankBadge=new CountBadge(),updateBadge=new CountBadge(),codesBadge=new CountBadge(); readonly TextBox search=new TextBox(); readonly Label searchHint=new Label(); readonly ComboBox set=new ComboBox(),slot=new ComboBox(),action=new ComboBox(),build=new ComboBox(),runeType=new ComboBox();
     readonly Dictionary<string,Image> setIcons=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,Image> runeIcons=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly Image[] slotLayers=new Image[7]; readonly Dictionary<int,Image> worldBossMonsterIcons=new Dictionary<int,Image>(),monsterPortraits=new Dictionary<int,Image>(); readonly Dictionary<int,string> portraitPathById=new Dictionary<int,string>(); readonly Dictionary<string,string[]> portraitFilesByPrefix=new Dictionary<string,string[]>(); readonly Dictionary<long,double> upgradeCaps=new Dictionary<long,double>(),craftPotentials=new Dictionary<long,double>();
-    readonly Image[] croquis3dSlot=new Image[7]; readonly Image[] croquis3dBlankSlot=new Image[7]; readonly Dictionary<string,Bitmap> croquis3dBaseByKey=new Dictionary<string,Bitmap>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,Image> croquis3dByKey=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,Image> croquis3dPulseByKey=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,RectangleF> croquis3dOpaqueByKey=new Dictionary<string,RectangleF>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,RectangleF> croquis3dSetByKey=new Dictionary<string,RectangleF>(StringComparer.OrdinalIgnoreCase); readonly RectangleF[] croquis3dSetBounds=new RectangleF[7]; readonly RectangleF[] croquis3dOpaqueBounds=new RectangleF[7];
+    readonly Image[] croquis3dSlot=new Image[7]; readonly Image[] croquis3dBlankSlot=new Image[7]; readonly Dictionary<string,Bitmap> croquis3dBaseByKey=new Dictionary<string,Bitmap>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,Image> croquis3dByKey=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,Image> croquis3dPulseByKey=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,Bitmap> croquis3dFitByKey=new Dictionary<string,Bitmap>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,RectangleF> croquis3dOpaqueByKey=new Dictionary<string,RectangleF>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,RectangleF> croquis3dSetByKey=new Dictionary<string,RectangleF>(StringComparer.OrdinalIgnoreCase); readonly RectangleF[] croquis3dSetBounds=new RectangleF[7]; readonly RectangleF[] croquis3dOpaqueBounds=new RectangleF[7];
     static readonly Color CroquisOrange=Color.FromArgb(255,170,40),CroquisViolet=Color.FromArgb(150,90,230),CroquisBlue=Color.FromArgb(20,184,210);
     Point[] shineOuterPts,shineInnerPts; float[] shineOuterAng,shineInnerAng; int shineMapW,shineMapH;
     readonly HashSet<long> hiddenUpgradeIds=new HashSet<long>(); readonly HashSet<int> hiddenSkillTargetIds=new HashSet<int>();
-    readonly List<FileSystemWatcher> jsonWatchers=new List<FileSystemWatcher>(); readonly Timer jsonDebounce=new Timer(),jsonPollTimer=new Timer(),liveLogTimer=new Timer(),worldBossTimer=new Timer(),ancientShineTimer=new Timer(),updateCheckTimer=new Timer(); float ancientPulseT; string pendingJson="",liveLogPath="",liveLogPending="",jsonPollPath=""; DateTime lastAutoImport=DateTime.MinValue,liveLogStableSince=DateTime.MinValue; long liveLogOffset=0,liveLogObservedLength=-1,lastImportLength=0,jsonPollSize=-1; Action liveStockRefresh;
+    readonly List<FileSystemWatcher> jsonWatchers=new List<FileSystemWatcher>(); readonly Timer jsonDebounce=new Timer(),jsonPollTimer=new Timer(),liveLogTimer=new Timer(),worldBossTimer=new Timer(),ancientShineTimer=new Timer(),updateCheckTimer=new Timer(),resizeDebounce=new Timer(); float ancientPulseT; Font runeLvFont; string pendingJson="",liveLogPath="",liveLogPending="",jsonPollPath=""; DateTime lastAutoImport=DateTime.MinValue,liveLogStableSince=DateTime.MinValue; long liveLogOffset=0,liveLogObservedLength=-1,lastImportLength=0,jsonPollSize=-1; Action liveStockRefresh;
     List<RuneRow> all=new List<RuneRow>(); List<SkillUpGroup> skillGroups=new List<SkillUpGroup>(); List<SkillUpFamily> skillFamilies=new List<SkillUpFamily>(); int skillGroupsRevision,worldBossRevision; readonly List<string> liveSavedEvents=new List<string>(); readonly List<WorldBossChangeRow> worldBossChanges=new List<WorldBossChangeRow>(); string currentFile="",viewMode="normal",worldBossCalculatedFile=""; bool potentialDesc=true,liveAwaitingResponse=false,liveAwaitingRequest=false,liveRequestEquipment=false,liveRequestSkill=false,liveRequestCraft=false,showHiddenSkillTargets=false,worldBossCalculating=false; Button worldBossButton,retentionButton,rtaButton,codesButton,improveButton,skillButton,reevalButton,refinementButton,spdRankButton,importButton,potButton,obtButton,presetButton,coefficientButton,autoKeepButton,rulesButton; Panel row2Divider,row1Divider,topBar; Label titleLabel; ComboBox langCombo; PictureBox paypalButton,discordButton,twitchButton; Button updateButton; Label versionLabel; readonly ToolTip reappNormalTip=new ToolTip(),reappAncientTip=new ToolTip(),refinementTip=new ToolTip(),paypalTip=new ToolTip(),discordTip=new ToolTip(),twitchTip=new ToolTip(),searchTip=new ToolTip(),updateTip=new ToolTip(); bool applyingLang; const int Row2Gap=8; const string PaypalDonateUrl="https://www.paypal.me/greatlucky"; const string DiscordInviteUrl="https://discord.gg/YGEt9eNKuH"; const string TwitchUrl="https://www.twitch.tv/imgreatlucky"; const string UpdateManifestUrl="https://api.github.com/repos/GreatLucky740/rune-manager-modern/contents/tools/update.json"; string pendingUpdateUrl="",pendingUpdateVersion=""; string[] pendingUpdateNotes=new string[0]; bool updateAvailable,updateCheckBusy,codesRefreshBusy; WorldBossResult worldBossLatest,worldBossSeen;
     Action codesWindowFill; bool toolbarLayoutBusy;
+    [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr hWnd);
+    [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr hWnd,int nCmdShow);
+    [DllImport("user32.dll")] static extern void keybd_event(byte bVk,byte bScan,uint dwFlags,UIntPtr dwExtraInfo);
+    [DllImport("gdi32.dll")] static extern IntPtr CreateCompatibleDC(IntPtr hdc);
+    [DllImport("gdi32.dll")] static extern bool DeleteDC(IntPtr hdc);
+    [DllImport("gdi32.dll")] static extern IntPtr SelectObject(IntPtr hdc,IntPtr hgdi);
+    [DllImport("gdi32.dll")] static extern bool DeleteObject(IntPtr ho);
+    [DllImport("gdi32.dll")] static extern bool BitBlt(IntPtr hdc,int x,int y,int cx,int cy,IntPtr hdcSrc,int x1,int y1,int rop);
+    [DllImport("gdi32.dll")] static extern bool StretchBlt(IntPtr hdcDest,int xDest,int yDest,int wDest,int hDest,IntPtr hdcSrc,int xSrc,int ySrc,int wSrc,int hSrc,int rop);
+    [DllImport("gdi32.dll")] static extern int SetStretchBltMode(IntPtr hdc,int mode);
     readonly ToolTip navPinTip=new ToolTip(),navRailTip=new ToolTip();
     // Le bouton WORLD BOSS MAX change de largeur au runtime (Padding gauche 16->38
     // quand le badge de compte s'affiche), mais skillButton/rtaButton/divider/retention
@@ -255,7 +265,7 @@ namespace RuneManagerModern {
       row1Divider=new Panel();row2Divider=new Panel();
       status.ForeColor=Color.Silver;
       grid.Dock=DockStyle.Fill;grid.BackgroundColor=Grid;grid.BorderStyle=BorderStyle.None;grid.GridColor=Color.Black;grid.CellBorderStyle=DataGridViewCellBorderStyle.Single;grid.RowHeadersVisible=false;grid.AllowUserToAddRows=false;grid.AllowUserToDeleteRows=false;grid.ReadOnly=true;grid.MultiSelect=false;grid.SelectionMode=DataGridViewSelectionMode.CellSelect;grid.AutoSizeRowsMode=DataGridViewAutoSizeRowsMode.None;grid.RowTemplate.Height=56;grid.EnableHeadersVisualStyles=false;grid.ColumnHeadersHeight=44;grid.ColumnHeadersHeightSizeMode=DataGridViewColumnHeadersHeightSizeMode.DisableResizing;grid.ColumnHeadersDefaultCellStyle=new DataGridViewCellStyle{BackColor=Teal,ForeColor=Color.White,Font=new Font("Segoe UI Semibold",12),SelectionBackColor=Teal};grid.DefaultCellStyle=new DataGridViewCellStyle{BackColor=Grid,ForeColor=Color.White,Font=new Font("Segoe UI",12),SelectionBackColor=Color.FromArgb(26,70,83),SelectionForeColor=Color.White,Padding=new Padding(2,0,2,0)};grid.CellFormatting+=FormatCell;grid.CellPainting+=PaintCraftBorder;grid.KeyDown+=GridKeyDown;grid.CellMouseDown+=GridMouseDown;grid.CellToolTipTextNeeded+=(s,e)=>{if(e.RowIndex>=0){var r=grid.Rows[e.RowIndex].DataBoundItem as RuneRow;if(r!=null&&e.ColumnIndex==0)e.ToolTipText=r.Rune;}};
-      AddColumns();jsonDebounce.Interval=1200;jsonDebounce.Tick+=(s,e)=>ImportPendingJson();jsonPollTimer.Interval=1500;jsonPollTimer.Tick+=(s,e)=>PollJsonExports();liveLogTimer.Interval=500;liveLogTimer.Tick+=(s,e)=>ReadLiveLog();worldBossTimer.Interval=700;worldBossTimer.Tick+=(s,e)=>{worldBossTimer.Stop();StartWorldBossRealtimeCalculation();};ancientShineTimer.Interval=70;ancientShineTimer.Tick+=(s,e)=>{ancientPulseT+=0.040f;if(ancientPulseT>=1f)ancientPulseT-=1f;if(grid.Columns.Count>0)grid.InvalidateColumn(0);};Shown+=(s,e)=>{LayoutToolbar();TryAutoLoad();LoadWorldBossOrderEvents();LoadWorldBossRealOrder();StartJsonWatcher();StartLiveLog();ancientShineTimer.Start();StartUpdateCheck(false);StartGameCodesRefresh();if(!updateCheckTimer.Enabled){updateCheckTimer.Interval=600000;updateCheckTimer.Tick+=(t,ev)=>{StartUpdateCheck(false);StartGameCodesRefresh();};updateCheckTimer.Start();}};      Resize+=(s,e)=>{LayoutToolbar();FitColumns();};
+      AddColumns();jsonDebounce.Interval=1200;jsonDebounce.Tick+=(s,e)=>ImportPendingJson();jsonPollTimer.Interval=1500;jsonPollTimer.Tick+=(s,e)=>PollJsonExports();liveLogTimer.Interval=500;liveLogTimer.Tick+=(s,e)=>ReadLiveLog();worldBossTimer.Interval=700;worldBossTimer.Tick+=(s,e)=>{worldBossTimer.Stop();StartWorldBossRealtimeCalculation();};ancientShineTimer.Interval=90;ancientShineTimer.Tick+=(s,e)=>TickAncientShine();resizeDebounce.Interval=80;resizeDebounce.Tick+=(s,e)=>{resizeDebounce.Stop();LayoutToolbar();FitColumns();};Shown+=(s,e)=>{LayoutToolbar();TryAutoLoad();LoadWorldBossOrderEvents();LoadWorldBossRealOrder();StartJsonWatcher();StartLiveLog();ancientShineTimer.Start();StartUpdateCheck(false);StartGameCodesRefresh();if(!updateCheckTimer.Enabled){updateCheckTimer.Interval=600000;updateCheckTimer.Tick+=(t,ev)=>{StartUpdateCheck(false);StartGameCodesRefresh();};updateCheckTimer.Start();}};      Resize+=(s,e)=>{resizeDebounce.Stop();resizeDebounce.Start();};
       InitNavAutoHide();
       ApplyLanguage();
     }
@@ -859,7 +869,7 @@ namespace RuneManagerModern {
       liveLogTimer.Stop();
       string found=FindFullLog();
       liveLogPath=found.Length>0?found:Path.Combine(ActiveExportFolder(),"full_log.txt");
-      try{liveLogOffset=File.Exists(liveLogPath)?new FileInfo(liveLogPath).Length:0;liveLogObservedLength=liveLogOffset;liveLogStableSince=DateTime.UtcNow;liveLogPending="";liveAwaitingResponse=false;liveAwaitingRequest=false;liveRequestCraft=liveRequestEquipment=liveRequestSkill=false;if(File.Exists(liveLogPath)){liveLogTimer.Start();status.Text=(status.Text.Length>0?status.Text+"  •  ":"")+Loc.T("status_swex_on",Path.GetFileName(Path.GetDirectoryName(liveLogPath)));}else status.Text=Loc.T("status_swex_missing",ActiveExportFolder());}catch(Exception ex){status.Text=Loc.T("status_swex_fail",ex.Message);}
+      try{liveLogOffset=File.Exists(liveLogPath)?new FileInfo(liveLogPath).Length:0;liveLogObservedLength=liveLogOffset;liveLogStableSince=DateTime.UtcNow;liveLogPending="";liveAwaitingResponse=false;liveAwaitingRequest=false;liveRequestCraft=liveRequestEquipment=liveRequestSkill=false;if(File.Exists(liveLogPath)){liveLogTimer.Start();status.Text=(status.Text.Length>0?status.Text+"  •  ":"")+Loc.T("status_swex_on",Path.GetFileName(Path.GetDirectoryName(liveLogPath)));if(IsHandleCreated)BeginInvoke(new Action(TryShowPendingMailRuneChoice));}else status.Text=Loc.T("status_swex_missing",ActiveExportFolder());}catch(Exception ex){status.Text=Loc.T("status_swex_fail",ex.Message);}
     }
     void ReadLiveLog(){
       if(string.IsNullOrWhiteSpace(liveLogPath)||!File.Exists(liveLogPath))return;try{long observed=new FileInfo(liveLogPath).Length;if(observed!=liveLogObservedLength){liveLogObservedLength=observed;liveLogStableSince=DateTime.UtcNow;return;}if(observed==liveLogOffset||(DateTime.UtcNow-liveLogStableSince).TotalMilliseconds<400)return;using(var fs=new FileStream(liveLogPath,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete)){if(fs.Length<liveLogOffset){liveLogOffset=0;liveLogPending="";liveAwaitingResponse=false;liveAwaitingRequest=false;liveRequestCraft=liveRequestEquipment=liveRequestSkill=false;}if(fs.Length==liveLogOffset)return;fs.Seek(liveLogOffset,SeekOrigin.Begin);using(var sr=new StreamReader(fs,Encoding.UTF8,true,4096,true)){liveLogPending+=sr.ReadToEnd();liveLogOffset=fs.Position;liveLogObservedLength=liveLogOffset;}}ProcessLiveLog();}catch(IOException){}catch(UnauthorizedAccessException){}catch(Exception ex){status.Text=Loc.T("status_swex_read",ex.Message);}
@@ -919,7 +929,67 @@ namespace RuneManagerModern {
       // Ferme aussi un ancien popup de coffre encore ouvert (jamais traite) avant d'en ouvrir un
       // nouveau, pour ne pas en accumuler qui reviennent au premier plan (TopMost) sans prevenir.
       SaveRuneChoiceSeen();if(runeChoiceForm!=null&&!runeChoiceForm.IsDisposed)runeChoiceForm.Close();
-      var f=new Form{Text=Loc.T("chest_title",comparison.Choices.Count),Icon=Icon,Size=new Size(1120,520),StartPosition=FormStartPosition.CenterScreen,TopMost=true,BackColor=Bg,ForeColor=Color.White};runeChoiceForm=f;f.FormClosed+=(s,e)=>{if(runeChoiceForm==f)runeChoiceForm=null;};var title=new Label{Text=Loc.T("chest_head"),Dock=DockStyle.Top,Height=62,TextAlign=ContentAlignment.MiddleCenter,ForeColor=Color.FromArgb(255,184,45),Font=new Font("Segoe UI Semibold",18)};var g=new BufferedGrid{Dock=DockStyle.Fill,ReadOnly=true,AllowUserToAddRows=false,AllowUserToDeleteRows=false,RowHeadersVisible=false,AutoGenerateColumns=false,BackgroundColor=Bg,GridColor=Color.FromArgb(45,65,82),SelectionMode=DataGridViewSelectionMode.FullRowSelect,RowTemplate={Height=56}};g.EnableHeadersVisualStyles=false;g.ColumnHeadersHeight=42;g.ColumnHeadersDefaultCellStyle=new DataGridViewCellStyle{BackColor=Teal,ForeColor=Color.White,Font=new Font("Segoe UI Semibold",11),SelectionBackColor=Teal};g.DefaultCellStyle=new DataGridViewCellStyle{BackColor=Bg,ForeColor=Color.White,SelectionBackColor=Color.FromArgb(26,70,83),Font=new Font("Segoe UI",10)};string[] heads={Loc.T("chest_rank"),Loc.T("col_rune"),Loc.T("col_main"),Loc.T("chest_subs"),Loc.T("col_potential"),Loc.T("col_preset"),Loc.T("chest_advice")};string[] props={"Rank","Rune","Main","Subs","Potential","Preset","Advice"};int[] widths={90,190,150,330,105,150,115};for(int i=0;i<heads.Length;i++)g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=heads[i],DataPropertyName=props[i],Width=widths[i]});int rank=0;g.DataSource=comparison.Choices.Select(x=>new{Rank=++rank,Rune=x.Set+" • slot "+x.Slot+" • "+x.Quality,Main=x.MainDisplay,Subs=string.Join("  •  ",x.Subs.Select(s=>s.BaseDisplay)),Potential=x.Potential.ToString("0.000"),Preset=x.BestBuild,Advice=rank==1?Loc.T("take"):"—"}).ToList();f.Controls.Add(g);f.Controls.Add(title);f.Show(this);}
+      var f=new Form{Text=Loc.T("chest_title",comparison.Choices.Count),Icon=Icon,Size=new Size(1120,520),StartPosition=FormStartPosition.CenterScreen,TopMost=true,BackColor=Bg,ForeColor=Color.White};runeChoiceForm=f;f.FormClosed+=(s,e)=>{if(runeChoiceForm==f)runeChoiceForm=null;};var title=new Label{Text=Loc.T("chest_head"),Dock=DockStyle.Top,Height=62,TextAlign=ContentAlignment.MiddleCenter,ForeColor=Color.FromArgb(255,184,45),Font=new Font("Segoe UI Semibold",18)};var g=new BufferedGrid{Dock=DockStyle.Fill,ReadOnly=true,AllowUserToAddRows=false,AllowUserToDeleteRows=false,RowHeadersVisible=false,AutoGenerateColumns=false,BackgroundColor=Bg,GridColor=Color.FromArgb(45,65,82),SelectionMode=DataGridViewSelectionMode.FullRowSelect,RowTemplate={Height=56}};g.EnableHeadersVisualStyles=false;g.ColumnHeadersHeight=42;g.ColumnHeadersDefaultCellStyle=new DataGridViewCellStyle{BackColor=Teal,ForeColor=Color.White,Font=new Font("Segoe UI Semibold",11),SelectionBackColor=Teal};g.DefaultCellStyle=new DataGridViewCellStyle{BackColor=Bg,ForeColor=Color.White,SelectionBackColor=Color.FromArgb(26,70,83),Font=new Font("Segoe UI",10)};string[] heads={Loc.T("chest_rank"),Loc.T("col_rune"),Loc.T("col_main"),Loc.T("chest_subs"),Loc.T("col_potential"),Loc.T("col_preset"),Loc.T("chest_advice")};string[] props={"Rank","Rune","Main","Subs","Potential","Preset","Advice"};int[] widths={90,190,150,330,105,150,115};for(int i=0;i<heads.Length;i++)g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=heads[i],DataPropertyName=props[i],Width=widths[i]});int rank=0;g.DataSource=comparison.Choices.Select(x=>new{Rank=++rank,Rune=x.Set+" • slot "+x.Slot+" • "+x.Quality,Main=x.MainDisplay,Subs=string.Join("  •  ",x.Subs.Select(s=>s.BaseDisplay)),Potential=x.Potential.ToString("0.000"),Preset=x.BestBuild,Advice=rank==1?Loc.T("take"):"—"}).ToList();f.Controls.Add(g);f.Controls.Add(title);f.Shown+=(s,e)=>BringRuneChoiceForward(f);f.Show(this);BringRuneChoiceForward(f);}
+    void BringRuneChoiceForward(Form f){
+      if(f==null||f.IsDisposed)return;
+      try{
+        f.TopMost=true;f.ShowInTaskbar=true;f.WindowState=FormWindowState.Normal;f.Activate();f.BringToFront();
+        keybd_event(0x12,0,0,UIntPtr.Zero);ShowWindow(f.Handle,9);SetForegroundWindow(f.Handle);keybd_event(0x12,0,2,UIntPtr.Zero);
+      }catch{}
+    }
+    string ReadLiveLogTail(){
+      if(string.IsNullOrWhiteSpace(liveLogPath)||!File.Exists(liveLogPath))return "";
+      try{
+        using(var fs=new FileStream(liveLogPath,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete)){
+          long take=Math.Min(fs.Length,16000000);fs.Seek(fs.Length-take,SeekOrigin.Begin);
+          using(var sr=new StreamReader(fs,Encoding.UTF8,true,4096,true)){sr.ReadLine();return sr.ReadToEnd();}
+        }
+      }catch{return "";}
+    }
+    static string ExtractLastCommandJson(string text,string command){
+      if(string.IsNullOrEmpty(text)||string.IsNullOrEmpty(command))return "";
+      string needle="\"command\":\""+command+"\"";
+      int hit=text.LastIndexOf(needle,StringComparison.Ordinal);
+      if(hit<0)return "";
+      int start=text.LastIndexOf('{',hit);if(start<0)return "";
+      return SliceJsonObject(text,start);
+    }
+    static string SliceJsonObject(string text,int start){
+      int depth=0;bool inStr=false;bool esc=false;
+      for(int i=start;i<text.Length;i++){
+        char c=text[i];
+        if(inStr){if(esc)esc=false;else if(c=='\\')esc=true;else if(c=='"')inStr=false;continue;}
+        if(c=='"'){inStr=true;continue;}
+        if(c=='{')depth++;else if(c=='}'){depth--;if(depth==0)return text.Substring(start,i-start+1);}
+      }
+      return "";
+    }
+    static bool MailChoiceAlreadyTaken(string signature,string tail){
+      if(string.IsNullOrEmpty(signature)||string.IsNullOrEmpty(tail))return false;
+      string[] rids=signature.Split(',');
+      for(int i=0;i<rids.Length;i++){
+        string rid=rids[i];if(rid.Length==0)continue;
+        if(tail.IndexOf("\"selected_rid\":"+rid,StringComparison.Ordinal)>=0)return true;
+        if(tail.IndexOf("\"selected_rid\":\""+rid+"\"",StringComparison.Ordinal)>=0)return true;
+      }
+      return false;
+    }
+    bool TryShowPendingFromJson(string json,string tail){
+      if(string.IsNullOrEmpty(json))return false;
+      var choice=RuneEngine.CompareRuneChoice(all,json,false);
+      if(choice==null||choice.Choices==null||choice.Choices.Count==0)return false;
+      if(MailChoiceAlreadyTaken(choice.Signature,tail))return false;
+      ShowRuneChoiceDecision(choice);
+      return true;
+    }
+    void TryShowPendingMailRuneChoice(){
+      try{
+        string tail=ReadLiveLogTail();
+        if(string.IsNullOrEmpty(tail))return;
+        if(TryShowPendingFromJson(ExtractLastCommandJson(tail,"GetMailList"),tail))return;
+        TryShowPendingFromJson(ExtractLastCommandJson(tail,"ReceiveMail"),tail);
+      }catch{}
+    }
     void QueueJson(string path){
       if(IsIgnoredJson(path)||!File.Exists(path))return;
       if(InvokeRequired){
@@ -1027,13 +1097,15 @@ namespace RuneManagerModern {
       // recherche texte substring — demande Jeremy pour filtrer par niveau precis.
       if(s.Length>0&&s[0]=='+'&&int.TryParse(s.Substring(1),out exactLevel))q=q.Where(r=>r.Level==exactLevel);
       else if(s.Length>0)q=q.Where(r=>(r.Rune+" "+r.Main+" "+r.Innate+" "+r.Stat1+" "+r.Stat2+" "+r.Stat3+" "+r.Stat4+" "+r.Marker).IndexOf(s,StringComparison.OrdinalIgnoreCase)>=0);if(set.SelectedIndex>0)q=q.Where(r=>r.Set==(string)set.SelectedItem);if(slot.SelectedIndex>0)q=q.Where(r=>r.Slot==slot.SelectedIndex);if(action.SelectedIndex>0)q=q.Where(r=>r.Action==(string)action.SelectedItem);if(build.SelectedIndex>0)q=q.Where(r=>r.BestBuild==(string)build.SelectedItem);if(runeType.SelectedIndex==1)q=q.Where(r=>!r.Ancient);else if(runeType.SelectedIndex==2)q=q.Where(r=>r.Ancient);if(!selling&&(viewMode=="potential"||viewMode=="upgrade"))q=q.Where(r=>r.Action!="Sell");if(!selling&&viewMode=="upgrade")q=q.Where(r=>r.Potential>=RuneEngine.SeuilApres12).Where(r=>r.Level>=12).Where(r=>!hiddenUpgradeIds.Contains(r.Id)).Where(HasAvailableImprovement);if(!selling&&viewMode=="refinement")return RefinementTargetsInPriorityOrder();if(!selling&&viewMode=="reeval")return ReevalTargetsInPriorityOrder(q);return potentialDesc?q.OrderByDescending(r=>r.Potential):q.OrderBy(r=>r.Potential);}
-    void RefreshGrid(){if(grid.Columns.Count==0)return;RefreshWorldBossSaleProtection();ConfigureGridForView();var q=Filter().ToList();grid.AutoGenerateColumns=false;grid.RowTemplate.Height=56;grid.DataSource=null;grid.DataSource=q;foreach(DataGridViewRow row in grid.Rows)row.Height=56;counters.Text=Loc.T("counters",all.Count.ToString("N0"),all.Count(x=>x.Action=="Keep").ToString("N0"),all.Count(x=>x.Action=="Pwr up").ToString("N0"),all.Count(x=>x.Action=="Sell").ToString("N0"),q.Count.ToString("N0"));PlaceFilterCounters();FitColumns();grid.Invalidate(true);}
+    void RefreshGrid(){if(grid.Columns.Count==0||grid.IsDisposed)return;RefreshWorldBossSaleProtection();ConfigureGridForView();var q=Filter().ToList();grid.AutoGenerateColumns=false;BindRuneRows(q);counters.Text=Loc.T("counters",all.Count.ToString("N0"),all.Count(x=>x.Action=="Keep").ToString("N0"),all.Count(x=>x.Action=="Pwr up").ToString("N0"),all.Count(x=>x.Action=="Sell").ToString("N0"),q.Count.ToString("N0"));PlaceFilterCounters();FitColumns();}
+    void BindRuneRows(object data){grid.RowTemplate.Height=56;grid.DataSource=null;grid.DataSource=data;ApplyRuneRowHeight();}
+    void ApplyRuneRowHeight(){if(grid.IsDisposed)return;grid.RowTemplate.Height=56;for(int i=0;i<grid.Rows.Count;i++)if(grid.Rows[i].Height!=56)grid.Rows[i].Height=56;}
     void ConfigureGridForView(){bool refinement=viewMode=="refinement";grid.Columns[9].DataPropertyName="Potential";grid.Columns[9].HeaderText=Loc.T("col_potential");grid.Columns[10].DataPropertyName="Recommendation";grid.Columns[10].HeaderText=Loc.T("col_gem");grid.Columns[11].DataPropertyName=refinement?"RefinementPreset":"BestBuild";grid.Columns[11].HeaderText=refinement?Loc.T("col_refine_preset"):Loc.T("col_preset");}
-    void SortObtained(){viewMode="obtained";potentialDesc=false;ConfigureGridForView();var q=Filter().OrderByDescending(r=>r.Obtained).ThenByDescending(r=>r.Id).ToList();grid.DataSource=q;counters.Text=Loc.T("counters",all.Count.ToString("N0"),all.Count(x=>x.Action=="Keep").ToString("N0"),all.Count(x=>x.Action=="Pwr up").ToString("N0"),all.Count(x=>x.Action=="Sell").ToString("N0"),q.Count.ToString("N0"));PlaceFilterCounters();FitColumns();status.Text=Loc.T("status_obtained",q.Count.ToString("N0"));}
-    void SortReeval(){viewMode="reeval";potentialDesc=true;ConfigureGridForView();var q=Filter().ToList();grid.DataSource=q;counters.Text=Loc.T("counters_reeval",all.Count.ToString("N0"),q.Count.ToString("N0"),RuneEngine.ReappNormal,RuneEngine.ReappAncient,q.Count.ToString("N0"));PlaceFilterCounters();FitColumns();status.Text=Loc.T("status_reeval",q.Count.ToString("N0"));}
+    void SortObtained(){viewMode="obtained";potentialDesc=false;ConfigureGridForView();var q=Filter().OrderByDescending(r=>r.Obtained).ThenByDescending(r=>r.Id).ToList();BindRuneRows(q);counters.Text=Loc.T("counters",all.Count.ToString("N0"),all.Count(x=>x.Action=="Keep").ToString("N0"),all.Count(x=>x.Action=="Pwr up").ToString("N0"),all.Count(x=>x.Action=="Sell").ToString("N0"),q.Count.ToString("N0"));PlaceFilterCounters();FitColumns();status.Text=Loc.T("status_obtained",q.Count.ToString("N0"));}
+    void SortReeval(){viewMode="reeval";potentialDesc=true;ConfigureGridForView();var q=Filter().ToList();BindRuneRows(q);counters.Text=Loc.T("counters_reeval",all.Count.ToString("N0"),q.Count.ToString("N0"),RuneEngine.ReappNormal,RuneEngine.ReappAncient,q.Count.ToString("N0"));PlaceFilterCounters();FitColumns();status.Text=Loc.T("status_reeval",q.Count.ToString("N0"));}
     bool HasAvailableImprovement(RuneRow r){if(r.RecommendationInStock)return true;foreach(var s in r.Subs){bool replaced=r.RecommendSource==s.Stat&&r.RecommendTarget!=s.Stat;if(!replaced&&CanUseGrind(r,s))return true;}return false;}
-    void FitColumns(){if(grid.Columns.Count==0)return;int[] caps={90,145,105,100,245,245,245,245,90,125,390,155};for(int c=0;c<grid.Columns.Count;c++){grid.Columns[c].AutoSizeMode=DataGridViewAutoSizeColumnMode.None;if(c==0){grid.Columns[c].Width=90;continue;}int w=TextRenderer.MeasureText(grid.Columns[c].HeaderText,grid.ColumnHeadersDefaultCellStyle.Font).Width+18;int limit=Math.Min(grid.Rows.Count,220);for(int r=0;r<limit;r++){object v=grid.Rows[r].Cells[c].Value;if(v!=null)w=Math.Max(w,TextRenderer.MeasureText(Convert.ToString(v),grid.DefaultCellStyle.Font).Width+12);}grid.Columns[c].Width=Math.Min(caps[c],Math.Max(62,w));}int total=grid.Columns.Cast<DataGridViewColumn>().Sum(x=>x.Width);int spare=grid.ClientSize.Width-4-total;if(spare>0){int[] grow={4,5,6,7,10};int each=spare/grow.Length;foreach(int c in grow)grid.Columns[c].Width+=each;}}
-    void FormatCell(object sender,DataGridViewCellFormattingEventArgs e){var r=grid.Rows[e.RowIndex].DataBoundItem as RuneRow;if(r==null)return;e.CellStyle.Padding=new Padding(4);bool orange=r.Grade>=5;if(r.Action=="Sell"){e.CellStyle.BackColor=Color.FromArgb(82,20,22);if(e.ColumnIndex==0)e.CellStyle.ForeColor=orange?Color.FromArgb(255,116,22):Color.FromArgb(176,58,255);}if(e.ColumnIndex==8)e.CellStyle.ForeColor=r.Action=="Sell"?Color.FromArgb(255,110,110):Color.FromArgb(22,210,119);if(e.ColumnIndex==9)e.CellStyle.ForeColor=Color.FromArgb(116,235,184);if(e.ColumnIndex==0&&r.Action!="Sell")e.CellStyle.ForeColor=orange?Color.FromArgb(255,126,20):Color.FromArgb(183,58,255);if(e.ColumnIndex>=4&&e.ColumnIndex<=7){int si=e.ColumnIndex-4;if(si<r.Subs.Count){var s=r.Subs[si];bool replaced=r.RecommendSource==s.Stat&&r.RecommendTarget!=s.Stat;if(!replaced&&CanUseGrind(r,s))e.CellStyle=new DataGridViewCellStyle(e.CellStyle){Padding=new Padding(3),BackColor=e.CellStyle.BackColor,ForeColor=e.CellStyle.ForeColor,SelectionBackColor=e.CellStyle.SelectionBackColor,SelectionForeColor=e.CellStyle.SelectionForeColor};}}if(e.ColumnIndex==10&&r.RecommendationInStock)e.CellStyle.ForeColor=Color.FromArgb(255,105,105);}
+    void FitColumns(){if(grid.Columns.Count==0)return;int[] caps={90,145,105,100,245,245,245,245,90,125,390,155};int vis=0;try{vis=grid.DisplayedRowCount(false);}catch{}int limit=Math.Min(grid.Rows.Count,Math.Max(36,vis+12));Font body=grid.DefaultCellStyle.Font,head=grid.ColumnHeadersDefaultCellStyle.Font;for(int c=0;c<grid.Columns.Count;c++){grid.Columns[c].AutoSizeMode=DataGridViewAutoSizeColumnMode.None;if(c==0){grid.Columns[c].Width=90;continue;}int w=TextRenderer.MeasureText(grid.Columns[c].HeaderText,head).Width+18;for(int r=0;r<limit;r++){object v=grid.Rows[r].Cells[c].Value;if(v!=null)w=Math.Max(w,TextRenderer.MeasureText(Convert.ToString(v),body).Width+12);}grid.Columns[c].Width=Math.Min(caps[c],Math.Max(62,w));}int total=grid.Columns.Cast<DataGridViewColumn>().Sum(x=>x.Width);int spare=grid.ClientSize.Width-4-total;if(spare>0){int[] grow={4,5,6,7,10};int each=spare/grow.Length;foreach(int c in grow)grid.Columns[c].Width+=each;}}
+    void FormatCell(object sender,DataGridViewCellFormattingEventArgs e){var r=grid.Rows[e.RowIndex].DataBoundItem as RuneRow;if(r==null)return;e.CellStyle.Padding=new Padding(4);bool orange=r.Grade>=5;if(r.Action=="Sell"){e.CellStyle.BackColor=Color.FromArgb(82,20,22);if(e.ColumnIndex==0)e.CellStyle.ForeColor=orange?Color.FromArgb(255,116,22):Color.FromArgb(176,58,255);}if(e.ColumnIndex==8)e.CellStyle.ForeColor=r.Action=="Sell"?Color.FromArgb(255,110,110):Color.FromArgb(22,210,119);if(e.ColumnIndex==9)e.CellStyle.ForeColor=Color.FromArgb(116,235,184);if(e.ColumnIndex==0&&r.Action!="Sell")e.CellStyle.ForeColor=orange?Color.FromArgb(255,126,20):Color.FromArgb(183,58,255);if(e.ColumnIndex==10&&r.RecommendationInStock)e.CellStyle.ForeColor=Color.FromArgb(255,105,105);}
     bool IsGrindable(string s){return s=="HP+"||s=="HP%"||s=="Atk+"||s=="Atk%"||s=="Def+"||s=="Def%"||s=="Spd";}
     double MaxGrind(string s,bool a){if(s=="HP+")return a?610:550;if(s=="Atk+"||s=="Def+")return a?34:30;if(s=="HP%"||s=="Atk%"||s=="Def%")return a?12:10;if(s=="Spd")return a?6:5;return 0;}
     double MaxGrindViolet(string s,bool a){if(s=="HP+")return a?460:400;if(s=="Atk+"||s=="Def+")return a?22:18;if(s=="HP%"||s=="Atk%"||s=="Def%")return a?9:7;if(s=="Spd")return a?5:4;return 0;}
@@ -1042,16 +1114,15 @@ namespace RuneManagerModern {
     Color CraftValueColor(double value,double violetMax,double legendaryMax){const double eps=.0001;if(legendaryMax>0&&value>=legendaryMax-eps)return Color.FromArgb(255,126,20);if(violetMax>0&&value>=violetMax-eps)return Color.FromArgb(183,58,255);return Color.FromArgb(52,160,255);}
     bool HasCraftGrade(RuneRow r,string type,string stat,int grade){return RuneEngine.StockCountDetail(r,type,stat,false,grade)>0||(!r.Ancient&&RuneEngine.StockCountDetail(r,type,stat,true,grade)>0);}
     bool CanUseGrind(RuneRow r,SubStat s){if(!IsGrindable(s.Stat))return false;if(HasCraftGrade(r,"Meule",s.Stat,5)&&s.Grind<MaxGrind(s.Stat,r.Ancient))return true;if(HasCraftGrade(r,"Meule",s.Stat,4)&&s.Grind<MaxGrindViolet(s.Stat,r.Ancient))return true;return false;}
-    void PaintCraftBorder(object sender,DataGridViewCellPaintingEventArgs e){if(e.RowIndex<0)return;var r=grid.Rows[e.RowIndex].DataBoundItem as RuneRow;if(r==null)return;if(e.ColumnIndex==0){PaintRuneIcon(e,r);return;}Color? border=null;SubStat paintedStat=null;bool recommendationCell=e.ColumnIndex==10;if(e.ColumnIndex>=4&&e.ColumnIndex<=7){int i=e.ColumnIndex-4;if(i<r.Subs.Count){var s=r.Subs[i];paintedStat=s;bool replaced=r.RecommendSource==s.Stat&&r.RecommendTarget!=s.Stat;if(!replaced&&CanUseGrind(r,s))border=Color.FromArgb(34,211,238);}}else if(recommendationCell&&r.RecommendationInStock)border=Color.FromArgb(239,68,68);if(paintedStat!=null)PaintCraftText(e,r,paintedStat);else if(recommendationCell)PaintRecommendationText(e,r);else if(border.HasValue)e.Paint(e.CellBounds,DataGridViewPaintParts.All);if(border.HasValue){using(var p=new Pen(border.Value,2))e.Graphics.DrawRectangle(p,e.CellBounds.X+1,e.CellBounds.Y+1,e.CellBounds.Width-3,e.CellBounds.Height-3);}if(paintedStat!=null||recommendationCell||border.HasValue)e.Handled=true;}
+    void PaintCraftBorder(object sender,DataGridViewCellPaintingEventArgs e){if(grid.IsDisposed||e.RowIndex<0)return;RuneRow r;try{r=grid.Rows[e.RowIndex].DataBoundItem as RuneRow;}catch(ObjectDisposedException){return;}catch(ArgumentOutOfRangeException){return;}if(r==null)return;if(e.ColumnIndex==0){PaintRuneIcon(e,r);return;}Color? border=null;SubStat paintedStat=null;bool recommendationCell=e.ColumnIndex==10;if(e.ColumnIndex>=4&&e.ColumnIndex<=7){int i=e.ColumnIndex-4;if(i<r.Subs.Count){var s=r.Subs[i];paintedStat=s;bool replaced=r.RecommendSource==s.Stat&&r.RecommendTarget!=s.Stat;if(!replaced&&CanUseGrind(r,s))border=Color.FromArgb(34,211,238);}}else if(recommendationCell&&r.RecommendationInStock)border=Color.FromArgb(239,68,68);if(paintedStat!=null)PaintCraftText(e,r,paintedStat);else if(recommendationCell)PaintRecommendationText(e,r);else if(border.HasValue)e.Paint(e.CellBounds,DataGridViewPaintParts.All);if(border.HasValue){using(var p=new Pen(border.Value,2))e.Graphics.DrawRectangle(p,e.CellBounds.X+1,e.CellBounds.Y+1,e.CellBounds.Width-3,e.CellBounds.Height-3);}if(paintedStat!=null||recommendationCell||border.HasValue)e.Handled=true;}
     void PaintCraftText(DataGridViewCellPaintingEventArgs e,RuneRow r,SubStat s){e.Paint(e.CellBounds,DataGridViewPaintParts.Background|DataGridViewPaintParts.Border|DataGridViewPaintParts.SelectionBackground|DataGridViewPaintParts.Focus);string text=s.Display,first=text,grind="";int cut=text.LastIndexOf(" (+",StringComparison.Ordinal);if(cut>=0){first=text.Substring(0,cut);grind=text.Substring(cut);}Color normal=e.State.HasFlag(DataGridViewElementStates.Selected)?e.CellStyle.SelectionForeColor:e.CellStyle.ForeColor;Color firstColor=s.Gemmed?CraftValueColor(s.Value,MaxGemViolet(s.Stat,r.Ancient),MaxGemLegendary(s.Stat,r.Ancient)):normal;Color grindColor=s.Grind!=0?CraftValueColor(s.Grind,MaxGrindViolet(s.Stat,r.Ancient),MaxGrind(s.Stat,r.Ancient)):Color.FromArgb(45,210,115);Font font=e.CellStyle.Font??grid.Font;var flags=TextFormatFlags.NoPadding|TextFormatFlags.NoPrefix|TextFormatFlags.SingleLine|TextFormatFlags.VerticalCenter;int x=e.CellBounds.X+Math.Max(4,e.CellStyle.Padding.Left),y=e.CellBounds.Y,w=Math.Max(1,e.CellBounds.Right-x-3),h=e.CellBounds.Height;TextRenderer.DrawText(e.Graphics,first,font,new Rectangle(x,y,w,h),firstColor,flags);int used=TextRenderer.MeasureText(e.Graphics,first,font,new Size(int.MaxValue,h),flags).Width;if(grind.Length>0&&used<w)TextRenderer.DrawText(e.Graphics,grind,font,new Rectangle(x+used,y,w-used,h),grindColor,flags);}
     void PaintRecommendationText(DataGridViewCellPaintingEventArgs e,RuneRow r){e.Paint(e.CellBounds,DataGridViewPaintParts.Background|DataGridViewPaintParts.Border|DataGridViewPaintParts.SelectionBackground|DataGridViewPaintParts.Focus);string text=r.Recommendation??"";Color normal=e.State.HasFlag(DataGridViewElementStates.Selected)?e.CellStyle.SelectionForeColor:e.CellStyle.ForeColor;Font font=e.CellStyle.Font??grid.Font;var flags=TextFormatFlags.NoPadding|TextFormatFlags.NoPrefix|TextFormatFlags.SingleLine|TextFormatFlags.VerticalCenter;int x=e.CellBounds.X+Math.Max(4,e.CellStyle.Padding.Left),y=e.CellBounds.Y,w=Math.Max(1,e.CellBounds.Right-x-3),h=e.CellBounds.Height;int arrow=text.IndexOf(" → ",StringComparison.Ordinal);if(arrow<0){TextRenderer.DrawText(e.Graphics,text,font,new Rectangle(x,y,w,h),normal,flags);return;}string left=text.Substring(0,arrow),middle=" → ",right=text.Substring(arrow+3);bool statChange=r.RecommendSource.Length>0&&r.RecommendTarget.Length>0&&r.RecommendSource!=r.RecommendTarget;if(statChange)DrawRecommendationPart(e.Graphics,"⇄ ",font,Color.FromArgb(255,92,145),flags,ref x,y,ref w,h);var source=r.Subs.FirstOrDefault(s=>s.Stat==r.RecommendSource);Color leftColor=source!=null&&source.Gemmed?CraftValueColor(source.Value,MaxGemViolet(source.Stat,r.Ancient),MaxGemLegendary(source.Stat,r.Ancient)):Color.FromArgb(45,210,115);double targetValue=RecommendationValue(right);Color rightColor=CraftValueColor(targetValue,MaxGemViolet(r.RecommendTarget,r.Ancient),MaxGemLegendary(r.RecommendTarget,r.Ancient));DrawRecommendationPart(e.Graphics,left,font,leftColor,flags,ref x,y,ref w,h);DrawRecommendationPart(e.Graphics,middle,font,normal,flags,ref x,y,ref w,h);DrawRecommendationPart(e.Graphics,right,font,rightColor,flags,ref x,y,ref w,h);}
     void DrawRecommendationPart(Graphics g,string text,Font font,Color color,TextFormatFlags flags,ref int x,int y,ref int w,int h){if(w<=0)return;TextRenderer.DrawText(g,text,font,new Rectangle(x,y,w,h),color,flags);int used=TextRenderer.MeasureText(g,text,font,new Size(int.MaxValue,h),flags).Width;x+=used;w=Math.Max(0,w-used);}
     double RecommendationValue(string text){int plus=text.LastIndexOf('+');if(plus<0)return 0;int end=plus+1;while(end<text.Length&&(char.IsDigit(text[end])||text[end]=='.'||text[end]==','))end++;double value;return double.TryParse(text.Substring(plus+1,end-plus-1).Replace(',','.'),NumberStyles.Any,CultureInfo.InvariantCulture,out value)?value:0;}
-    static Color CroquisQualityColor(int grade){return grade>=5?CroquisOrange:grade==4?CroquisViolet:CroquisBlue;}
-    static int CroquisQualityKey(int grade){return grade>=5?5:grade==4?4:3;}
+    static Color CroquisQualityColor(int grade){return RuneLogoColor(grade);}
+    static int CroquisQualityKey(int grade){if(grade>=5)return 5;if(grade<=1)return 1;return grade;}
     Image LoadCroquis3dPreview(string setName,int slot,int grade){
       slot=Math.Max(1,Math.Min(6,slot));
-      if(!EnsureCroquisSlot(slot))return null;
       string set=string.IsNullOrEmpty(setName)?"Despair":setName;
       int q=CroquisQualityKey(grade);
       string artKey=set+"|"+slot;
@@ -1060,15 +1131,16 @@ namespace RuneManagerModern {
       Bitmap baked;
       if(!croquis3dBaseByKey.TryGetValue(artKey,out baked)||baked==null){
         string custom=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"assets","croquis-rune-3d-"+set.ToLowerInvariant()+"-slot"+slot+".png");
-        if(File.Exists(custom))baked=BakeCroquisPng(custom);
+        if(File.Exists(custom))baked=LoadPng32(custom);
         if(baked==null){
+          if(!EnsureCroquisSlot(slot))return null;
           if(set.Equals("Despair",StringComparison.OrdinalIgnoreCase))baked=new Bitmap(croquis3dSlot[slot]);
           else baked=new Bitmap(EnsureBlankSlot(slot));
         }
         croquis3dBaseByKey[artKey]=baked;
         croquis3dOpaqueByKey[artKey]=MeasureOpaqueStone(baked);
       }
-      Bitmap bmp=q>=5?baked:(q==4?TintCroquisCreux(baked,CroquisViolet):TintCroquisCreux(baked,Cyan));
+      Bitmap bmp=q>=5?baked:TintCroquisCreux(baked,RuneLogoColor(q));
       croquis3dByKey[key]=bmp;
       croquis3dOpaqueByKey[key]=croquis3dOpaqueByKey[artKey];
       return bmp;
@@ -1084,6 +1156,21 @@ namespace RuneManagerModern {
       croquis3dPulseByKey[artKey]=p;
       return p;
     }
+    static Bitmap LoadPng32(string p){
+      try{
+        using(var fs=new FileStream(p,FileMode.Open,FileAccess.Read,FileShare.Read))
+        using(var src=Image.FromStream(fs,false,false)){
+          var bmp=new Bitmap(src.Width,src.Height,PixelFormat.Format32bppArgb);
+          using(var g=Graphics.FromImage(bmp)){
+            g.Clear(Color.Transparent);
+            g.CompositingMode=CompositingMode.SourceCopy;
+            g.DrawImage(src,new Rectangle(0,0,bmp.Width,bmp.Height),0,0,src.Width,src.Height,GraphicsUnit.Pixel);
+          }
+          bmp.SetResolution(96f,96f);
+          return bmp;
+        }
+      }catch{return null;}
+    }
     static Bitmap BakeCroquisPng(string p){
       try{
         using(var fs=new FileStream(p,FileMode.Open,FileAccess.Read,FileShare.Read))
@@ -1091,17 +1178,85 @@ namespace RuneManagerModern {
           return BakeCroquisImage(src);
       }catch{return null;}
     }
+    static bool IsCutoutBackdrop(int r,int g,int b,int a){
+      if(a<8)return true;
+      int d=Math.Abs(r-g),d2=Math.Abs(g-b),d3=Math.Abs(r-b);
+      if(d2>d)d=d2;if(d3>d)d=d3;
+      if(d>14)return false;
+      int lum=(r+g+b)/3;
+      return lum<=12||lum>=190;
+    }
+    static void PunchCutoutBackdrop(Bitmap bmp){
+      if(bmp==null)return;
+      int w=bmp.Width,h=bmp.Height;
+      var data=bmp.LockBits(new Rectangle(0,0,w,h),ImageLockMode.ReadWrite,PixelFormat.Format32bppArgb);
+      int stride=data.Stride,bytes=Math.Abs(stride)*h;var buf=new byte[bytes];
+      Marshal.Copy(data.Scan0,buf,0,bytes);
+      for(int y=0;y<h;y++){
+        int row=y*stride;
+        for(int x=0;x<w;x++){
+          int i=row+x*4;
+          if(!IsCutoutBackdrop(buf[i+2],buf[i+1],buf[i],buf[i+3]))continue;
+          buf[i]=0;buf[i+1]=0;buf[i+2]=0;buf[i+3]=0;
+        }
+      }
+      Marshal.Copy(buf,0,data.Scan0,bytes);bmp.UnlockBits(data);
+    }
+    static bool HasRealAlpha(Bitmap bmp){
+      if(bmp==null)return false;
+      int w=bmp.Width,h=bmp.Height,clear=0,need=w*h/10;
+      var data=bmp.LockBits(new Rectangle(0,0,w,h),ImageLockMode.ReadOnly,PixelFormat.Format32bppArgb);
+      int stride=data.Stride,bytes=Math.Abs(stride)*h;var buf=new byte[bytes];
+      Marshal.Copy(data.Scan0,buf,0,bytes);bmp.UnlockBits(data);
+      for(int y=0;y<h;y++){
+        int row=y*stride;
+        for(int x=0;x<w;x++){
+          if(buf[row+x*4+3]>7)continue;
+          clear++;
+          if(clear>=need)return true;
+        }
+      }
+      return false;
+    }
     static Bitmap BakeCroquisImage(Image src){
+      if(src==null)return null;
+      var work=new Bitmap(src.Width,src.Height,PixelFormat.Format32bppArgb);
+      using(var copy=Graphics.FromImage(work)){
+        copy.CompositingMode=CompositingMode.SourceCopy;
+        copy.DrawImage(src,new Rectangle(0,0,work.Width,work.Height),0,0,src.Width,src.Height,GraphicsUnit.Pixel);
+      }
+      bool alreadyCutout=HasRealAlpha(work);
+      if(!alreadyCutout)PunchCutoutBackdrop(work);
+      if(alreadyCutout&&work.Width<=140&&work.Height<=140){
+        work.SetResolution(96f,96f);
+        return work;
+      }
+      RectangleF ob=MeasureOpaqueStone(work);
+      Rectangle crop=Rectangle.Round(ob);
+      if(crop.Width<8||crop.Height<8)crop=new Rectangle(0,0,work.Width,work.Height);
+      crop.Inflate(alreadyCutout?0:1,alreadyCutout?0:1);crop=Rectangle.Intersect(crop,new Rectangle(0,0,work.Width,work.Height));
+      var tight=new Bitmap(Math.Max(1,crop.Width),Math.Max(1,crop.Height),PixelFormat.Format32bppArgb);
+      using(var cg=Graphics.FromImage(tight)){
+        cg.CompositingMode=CompositingMode.SourceCopy;
+        cg.InterpolationMode=InterpolationMode.NearestNeighbor;
+        cg.PixelOffsetMode=PixelOffsetMode.HighQuality;
+        cg.DrawImage(work,new Rectangle(0,0,tight.Width,tight.Height),crop,GraphicsUnit.Pixel);
+      }
+      work.Dispose();
+      if(alreadyCutout&&tight.Width<=140&&tight.Height<=140){
+        tight.SetResolution(96f,96f);
+        return tight;
+      }
       int max=140,w,h;
-      if(src.Width<=max&&src.Height<=max){w=src.Width;h=src.Height;}
-      else if(src.Width>=src.Height){w=max;h=Math.Max(1,src.Height*w/src.Width);}
-      else{h=max;w=Math.Max(1,src.Width*h/src.Height);}
+      if(tight.Width<=max&&tight.Height<=max){w=tight.Width;h=tight.Height;}
+      else if(tight.Width>=tight.Height){w=max;h=Math.Max(1,tight.Height*w/tight.Width);}
+      else{h=max;w=Math.Max(1,tight.Width*h/tight.Height);}
       int pad=6;
       var baked=new Bitmap(w+pad*2,h+pad*2,PixelFormat.Format32bppArgb);
       using(var g=Graphics.FromImage(baked)){
         g.CompositingMode=CompositingMode.SourceOver;
         g.SmoothingMode=SmoothingMode.None;
-        g.InterpolationMode=(src.Width>max||src.Height>max)?InterpolationMode.HighQualityBicubic:InterpolationMode.NearestNeighbor;
+        g.InterpolationMode=(tight.Width>max||tight.Height>max)?InterpolationMode.HighQualityBicubic:InterpolationMode.NearestNeighbor;
         g.PixelOffsetMode=PixelOffsetMode.HighQuality;
         var dest=new Rectangle(pad,pad,w,h);
         using(var ia=new ImageAttributes()){
@@ -1114,10 +1269,12 @@ namespace RuneManagerModern {
           }));
           int[] ox={-2,2,0,0,-2,-2,2,2},oy={0,0,-2,2,-2,2,-2,2};
           for(int i=0;i<ox.Length;i++)
-            g.DrawImage(src,new Rectangle(dest.X+ox[i],dest.Y+oy[i],dest.Width,dest.Height),0,0,src.Width,src.Height,GraphicsUnit.Pixel,ia);
+            g.DrawImage(tight,new Rectangle(dest.X+ox[i],dest.Y+oy[i],dest.Width,dest.Height),0,0,tight.Width,tight.Height,GraphicsUnit.Pixel,ia);
         }
-        g.DrawImage(src,dest);
+        g.DrawImage(tight,dest,0,0,tight.Width,tight.Height,GraphicsUnit.Pixel);
       }
+      tight.Dispose();
+      baked.SetResolution(96f,96f);
       return baked;
     }
     static RectangleF MeasureOpaqueStone(Bitmap bmp){
@@ -1129,9 +1286,9 @@ namespace RuneManagerModern {
       for(int y=0;y<h;y++){
         int row=y*stride;
         for(int x=0;x<w;x++){
-          int i=row+x*4,a=buf[i+3];if(a<40)continue;
+          int i=row+x*4,a=buf[i+3];if(a<16)continue;
           int b=buf[i],gch=buf[i+1],r=buf[i+2];
-          if(r<45&&gch<45&&b<45)continue;
+          if(IsCutoutBackdrop(r,gch,b,a)&&a<180)continue;
           if(x<x0)x0=x;if(y<y0)y0=y;if(x>x1)x1=x;if(y>y1)y1=y;
         }
       }
@@ -1243,49 +1400,129 @@ namespace RuneManagerModern {
       }
       Marshal.Copy(buf,0,data.Scan0,bytes);bmp.UnlockBits(data);
     }
+    Font RuneLvFont(){if(runeLvFont==null)runeLvFont=new Font("Segoe UI Semibold",7.5f);return runeLvFont;}
+    static Size CroquisDestSize(RectangleF ob,int boxW,int boxH){
+      float cap=Math.Min(boxW,boxH);
+      float longest=Math.Max(ob.Width,ob.Height);
+      if(longest<1f)longest=1f;
+      float scale=cap/longest;
+      int dw=Math.Max(24,(int)Math.Round(ob.Width*scale));
+      int dh=Math.Max(24,(int)Math.Round(ob.Height*scale));
+      if(dw>boxW)dw=boxW;
+      if(dh>boxH)dh=boxH;
+      return new Size(dw,dh);
+    }
+    static Bitmap BlitOpaqueToSquare(Image preview,RectangleF ob,int side){
+      return BlitOpaqueToBox(preview,ob,side,side,Color.Transparent);
+    }
+    static Bitmap BlitOpaqueToBox(Image preview,RectangleF ob,int dw,int dh,Color back){
+      if(preview==null||dw<8||dh<8)return null;
+      Bitmap srcBmp=preview as Bitmap;
+      Bitmap clone=null;
+      if(srcBmp==null||srcBmp.PixelFormat!=PixelFormat.Format32bppArgb){
+        clone=new Bitmap(preview.Width,preview.Height,PixelFormat.Format32bppArgb);
+        using(var g=Graphics.FromImage(clone)){
+          g.CompositingMode=CompositingMode.SourceCopy;
+          g.DrawImage(preview,new Rectangle(0,0,clone.Width,clone.Height),0,0,preview.Width,preview.Height,GraphicsUnit.Pixel);
+        }
+        srcBmp=clone;
+      }
+      Rectangle src=Rectangle.Round(ob);
+      if(src.Width<8||src.Height<8)src=new Rectangle(0,0,srcBmp.Width,srcBmp.Height);
+      src=Rectangle.Intersect(src,new Rectangle(0,0,srcBmp.Width,srcBmp.Height));
+      if(src.Width<1||src.Height<1){if(clone!=null)clone.Dispose();return null;}
+      var bmp=new Bitmap(dw,dh,PixelFormat.Format32bppArgb);
+      bmp.SetResolution(96f,96f);
+      int br=back.R,bgc=back.G,bb=back.B,ba=back.A>=255?255:0;
+      var sd=srcBmp.LockBits(new Rectangle(0,0,srcBmp.Width,srcBmp.Height),ImageLockMode.ReadOnly,PixelFormat.Format32bppArgb);
+      int ss=sd.Stride,sbytes=Math.Abs(ss)*srcBmp.Height;var sbuf=new byte[sbytes];
+      Marshal.Copy(sd.Scan0,sbuf,0,sbytes);srcBmp.UnlockBits(sd);
+      var dd=bmp.LockBits(new Rectangle(0,0,dw,dh),ImageLockMode.WriteOnly,PixelFormat.Format32bppArgb);
+      int ds=dd.Stride,dbytes=Math.Abs(ds)*dh;var dbuf=new byte[dbytes];
+      for(int y=0;y<dh;y++){
+        int sy=src.Y+y*src.Height/dh;
+        if(sy<src.Y)sy=src.Y;if(sy>=src.Bottom)sy=src.Bottom-1;
+        int drow=y*ds,srow=sy*ss;
+        for(int x=0;x<dw;x++){
+          int sx=src.X+x*src.Width/dw;
+          if(sx<src.X)sx=src.X;if(sx>=src.Right)sx=src.Right-1;
+          int si=srow+sx*4,di=drow+x*4,sa=sbuf[si+3];
+          if(sa<8){dbuf[di]=(byte)bb;dbuf[di+1]=(byte)bgc;dbuf[di+2]=(byte)br;dbuf[di+3]=(byte)ba;continue;}
+          int sr=sbuf[si+2],sg=sbuf[si+1],sb=sbuf[si];
+          if(sa>=250){dbuf[di]=(byte)sb;dbuf[di+1]=(byte)sg;dbuf[di+2]=(byte)sr;dbuf[di+3]=255;continue;}
+          int inv=255-sa;
+          dbuf[di]=(byte)((sb*sa+bb*inv)/255);
+          dbuf[di+1]=(byte)((sg*sa+bgc*inv)/255);
+          dbuf[di+2]=(byte)((sr*sa+br*inv)/255);
+          dbuf[di+3]=ba>=255?(byte)255:(byte)sa;
+        }
+      }
+      Marshal.Copy(dbuf,0,dd.Scan0,dbytes);bmp.UnlockBits(dd);
+      if(clone!=null)clone.Dispose();
+      return bmp;
+    }
+    Bitmap FitCroquisToBox(string key,Image preview,RectangleF ob,int dw,int dh,Color back){
+      string k=key+"|"+dw+"x"+dh+"|"+back.ToArgb();
+      Bitmap cached;
+      if(croquis3dFitByKey.TryGetValue(k,out cached)&&cached!=null)return cached;
+      cached=BlitOpaqueToBox(preview,ob,dw,dh,back);
+      if(cached!=null)croquis3dFitByKey[k]=cached;
+      return cached;
+    }
+    static void DrawBitmapGdi(Graphics g,Bitmap bmp,Rectangle dest){
+      if(g==null||bmp==null||dest.Width<1||dest.Height<1)return;
+      IntPtr hdc=IntPtr.Zero,hdcSrc=IntPtr.Zero,hBmp=IntPtr.Zero,old=IntPtr.Zero;
+      try{
+        hdc=g.GetHdc();
+        hdcSrc=CreateCompatibleDC(hdc);
+        hBmp=bmp.GetHbitmap(Color.FromArgb(30,32,36));
+        old=SelectObject(hdcSrc,hBmp);
+        if(dest.Width==bmp.Width&&dest.Height==bmp.Height)BitBlt(hdc,dest.X,dest.Y,dest.Width,dest.Height,hdcSrc,0,0,0x00CC0020);
+        else{SetStretchBltMode(hdc,3);StretchBlt(hdc,dest.X,dest.Y,dest.Width,dest.Height,hdcSrc,0,0,bmp.Width,bmp.Height,0x00CC0020);}
+      }finally{
+        if(old!=IntPtr.Zero)SelectObject(hdcSrc,old);
+        if(hBmp!=IntPtr.Zero)DeleteObject(hBmp);
+        if(hdcSrc!=IntPtr.Zero)DeleteDC(hdcSrc);
+        if(hdc!=IntPtr.Zero)g.ReleaseHdc(hdc);
+      }
+    }
     private void PaintRuneIcon(DataGridViewCellPaintingEventArgs e, RuneRow r)
 		{
+			if(grid.IsDisposed){e.Handled=true;return;}
+			try{
 			e.PaintBackground(e.CellBounds, true);
-			e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+			e.Graphics.CompositingMode = CompositingMode.SourceOver;
 			e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
 			Image preview = LoadCroquis3dPreview(r.Set, r.Slot, r.Grade);
 			if (preview != null)
 			{
-				e.Graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-				int slotN=Math.Max(1,Math.Min(6,r.Slot));
-				string artKey=(string.IsNullOrEmpty(r.Set)?"Despair":r.Set)+"|"+slotN;
-				string bkey=artKey+"|"+CroquisQualityKey(r.Grade);
-				RectangleF ob;
-				if(!croquis3dOpaqueByKey.TryGetValue(bkey,out ob)||ob.Width<1f)
-					if(!croquis3dOpaqueByKey.TryGetValue(artKey,out ob)||ob.Width<1f)ob=croquis3dOpaqueBounds[slotN];
-				if(ob.Width<1f||ob.Height<1f)ob=new RectangleF(0,0,preview.Width,preview.Height);
-				float box=Math.Min(e.CellBounds.Width-8,e.CellBounds.Height-4)*0.82f;
-				float scale=Math.Min(box/preview.Width,box/preview.Height);
-				float dw=preview.Width*scale,dh=preview.Height*scale;
-				float ocx=ob.X+ob.Width*0.5f,ocy=ob.Y+ob.Height*0.5f;
-				float cellCx=e.CellBounds.X+e.CellBounds.Width*0.5f;
-				float cellCy=e.CellBounds.Y+e.CellBounds.Height*0.5f;
-				var destPreview=new RectangleF(cellCx-ocx*scale,cellCy-ocy*scale,dw,dh);
-				var clip=e.Graphics.Save();
-				e.Graphics.SetClip(e.CellBounds);
-				if(r.Ancient){
-					e.Graphics.DrawImage(preview, destPreview);
-					DrawAncientShine(e.Graphics,AncientPulse(artKey,preview),destPreview);
-				}else e.Graphics.DrawImage(preview, destPreview);
-				e.Graphics.Restore(clip);
+				int cw=e.CellBounds.Width,ch=e.CellBounds.Height;
+				if(cw<40)cw=grid.Columns[0].Width;
+				if(ch<40)ch=56;
+				int boxW=Math.Max(24,cw-6),boxH=Math.Max(24,ch-6);
+				Size destSize=CroquisDestSize(new RectangleF(0,0,preview.Width,preview.Height),boxW,boxH);
+				int dw=destSize.Width,dh=destSize.Height;
+				int dx=e.CellBounds.X+(e.CellBounds.Width-dw)/2;
+				int dy=e.CellBounds.Y+(e.CellBounds.Height-dh)/2;
+				var destPreview=new Rectangle(dx,dy,dw,dh);
+				using(var ia=new ImageAttributes()){
+					ia.SetWrapMode(WrapMode.TileFlipXY);
+					e.Graphics.DrawImage(preview,destPreview,0,0,preview.Width,preview.Height,GraphicsUnit.Pixel,ia);
+				}
+				string artKey=(string.IsNullOrEmpty(r.Set)?"Despair":r.Set)+"|"+Math.Max(1,Math.Min(6,r.Slot));
+				if(r.Ancient)DrawAncientShine(e.Graphics,AncientPulse(artKey,preview),new RectangleF(dx,dy,dw,dh));
 				string sPreview = "+" + r.Level;
 				RectangleF rectanglePreview = new RectangleF(e.CellBounds.X + 3, e.CellBounds.Bottom - 18, 28f, 15f);
 				using (SolidBrush brush2 = new SolidBrush(Color.FromArgb(235, 20, 24, 30)))
 					e.Graphics.FillRectangle(brush2, rectanglePreview);
 				using (Pen pen3 = new Pen(Color.FromArgb(105, 115, 125)))
 					e.Graphics.DrawRectangle(pen3, rectanglePreview.X, rectanglePreview.Y, rectanglePreview.Width, rectanglePreview.Height);
-				using (Font font = new Font("Segoe UI Semibold", 7.5f))
 				using (SolidBrush brush2 = new SolidBrush(Color.White))
 				{
 					StringFormat format = new StringFormat();
 					format.Alignment = StringAlignment.Center;
 					format.LineAlignment = StringAlignment.Center;
-					e.Graphics.DrawString(sPreview, font, brush2, rectanglePreview, format);
+					e.Graphics.DrawString(sPreview, RuneLvFont(), brush2, rectanglePreview, format);
 				}
 				if (r.EquippedMasterId > 0)
 				{
@@ -1410,6 +1647,7 @@ namespace RuneManagerModern {
 			}
 			e.Paint(e.CellBounds, DataGridViewPaintParts.Border);
 			e.Handled = true;
+			}catch(ObjectDisposedException){try{e.Handled=true;}catch{}}
     }
     // Les icones sources (pierres, sets) sont de grandes images redimensionnees a la
     // volee vers de tres petites tailles (badges de bouton, puces de menu). Sans ce
@@ -1675,7 +1913,7 @@ namespace RuneManagerModern {
     void GridKeyDown(object sender,KeyEventArgs e){if(e.Control&&e.KeyCode==Keys.J){e.SuppressKeyPress=true;e.Handled=true;OpenCraftMenu();}}
     void OpenCraftMenu(){if(grid.CurrentCell==null||grid.CurrentCell.RowIndex<0)return;var r=grid.Rows[grid.CurrentCell.RowIndex].DataBoundItem as RuneRow;if(r==null)return;string type="",stat="";int col=grid.CurrentCell.ColumnIndex;if(col>=4&&col<=7){int i=col-4;if(i<r.Subs.Count){type="Meule";stat=r.Subs[i].Stat;}}else if(col==10&&r.RecommendTarget.Length>0){type="Gemme";stat=r.RecommendTarget;}if(type.Length==0||stat.Length==0){status.Text="Ctrl+J : sélectionnez une statistique ou la recommandation de gemme.";return;}if(type=="Meule"&&!IsGrindable(stat)){status.Text=stat+" ne peut pas être meulée.";return;}var menu=new ContextMenuStrip{BackColor=Panel,ForeColor=Color.White,ShowImageMargin=false,Font=new Font("Segoe UI Semibold",10)};menu.Items.Add(new ToolStripLabel(type.ToUpper()+"  •  "+r.Set+"  •  "+stat){ForeColor=Cyan});menu.Items.Add(new ToolStripSeparator());AddCraftItem(menu,r,type,stat,false,4,"SET VIOLET",Color.FromArgb(151,49,230));AddCraftItem(menu,r,type,stat,false,5,"SET LEGENDAIRE",Color.FromArgb(255,112,18));if(!r.Ancient){menu.Items.Add(new ToolStripSeparator());AddCraftItem(menu,r,type,stat,true,4,"IMM. VIOLET",Color.FromArgb(151,49,230));AddCraftItem(menu,r,type,stat,true,5,"IMM. LEGENDAIRE",Color.FromArgb(255,112,18));}Rectangle cell=grid.GetCellDisplayRectangle(col,grid.CurrentCell.RowIndex,true);menu.Show(grid,new Point(cell.Left,cell.Bottom));}
     void AddCraftItem(ContextMenuStrip menu,RuneRow r,string type,string stat,bool imm,int grade,string label,Color color){int count=RuneEngine.StockCountDetail(r,type,stat,imm,grade);var item=new ToolStripMenuItem(label+"  x"+count){ForeColor=color,Enabled=count>0};item.Click+=(s,e)=>{RuneEngine.ClearStock(r,type,stat,imm,grade);if(type=="Gemme")RuneEngine.Calculate(all);RefreshAfterStockChange();int remaining=RuneEngine.StockCount(r,type,stat);status.Text=label+" "+type.ToLowerInvariant()+" "+stat+" : stock vidé — restant utilisable x"+remaining+".";};menu.Items.Add(item);}
-    void RefreshAfterStockChange(){RefreshUpgradeBadge();if(viewMode=="upgrade")RefreshGrid();else{var position=grid.FirstDisplayedScrollingRowIndex;var source=grid.DataSource;grid.DataSource=null;grid.DataSource=source;if(position>=0&&position<grid.Rows.Count)try{grid.FirstDisplayedScrollingRowIndex=position;}catch{}}grid.Invalidate(true);grid.Refresh();Application.DoEvents();}
+    void RefreshAfterStockChange(){RefreshUpgradeBadge();if(viewMode=="upgrade")RefreshGrid();else grid.Invalidate(true);}
     void ShowSkillUps(){
       if(ToggleOffTool(skillButton))return;
       if(string.IsNullOrWhiteSpace(currentFile)||!File.Exists(currentFile)){MessageBox.Show(Loc.T("import_first"),Loc.T("skill_title"),MessageBoxButtons.OK,MessageBoxIcon.Information);return;}
@@ -2520,6 +2758,28 @@ f.ShowDialog(owner);
       if(t<0.64f)return 1f-(t-0.40f)/0.24f;
       return 0f;
     }
+    void TickAncientShine(){
+      if(IsDisposed||grid.IsDisposed||!grid.IsHandleCreated)return;
+      float prev=ancientPulseT;
+      ancientPulseT+=0.05f;
+      if(ancientPulseT>=1f)ancientPulseT-=1f;
+      if(AncientPulseAmt(prev)<=0.02f&&AncientPulseAmt(ancientPulseT)<=0.02f)return;
+      if(grid.Columns.Count==0||grid.Rows.Count==0)return;
+      int first;
+      try{first=grid.FirstDisplayedScrollingRowIndex;}catch(ObjectDisposedException){return;}
+      if(first<0)return;
+      int n=0;
+      try{n=grid.DisplayedRowCount(true);}catch{return;}
+      for(int i=0;i<n;i++){
+        int idx=first+i;
+        if(idx<0||idx>=grid.Rows.Count)break;
+        RuneRow r;
+        try{r=grid.Rows[idx].DataBoundItem as RuneRow;}catch(ObjectDisposedException){return;}catch(ArgumentOutOfRangeException){break;}
+        if(r!=null&&r.Ancient){
+          try{grid.InvalidateCell(0,idx);}catch(ObjectDisposedException){return;}catch(ArgumentException){}
+        }
+      }
+    }
     void DrawAncientUnderGlow(Graphics g,Image preview,Rectangle dest){
       if(preview==null)return;
       g.SmoothingMode=SmoothingMode.None;
@@ -2561,7 +2821,7 @@ f.ShowDialog(owner);
         g.DrawImage(body,d,0,0,body.Width,body.Height,GraphicsUnit.Pixel,ia);
       }
     }
-    void ClosingWithSave(object sender,FormClosingEventArgs e){StopNavAutoHide();ancientShineTimer.Stop();jsonPollTimer.Stop();updateCheckTimer.Stop();SaveRetentionSetting();SaveEngineSettings();SaveSpdSeenBest();SaveRuneChoiceSeen();if(!SaveStock()||!SaveLiveChanges())e.Cancel=true;}
+    void ClosingWithSave(object sender,FormClosingEventArgs e){StopNavAutoHide();ancientShineTimer.Stop();resizeDebounce.Stop();jsonPollTimer.Stop();updateCheckTimer.Stop();SaveRetentionSetting();SaveEngineSettings();SaveSpdSeenBest();SaveRuneChoiceSeen();if(!SaveStock()||!SaveLiveChanges())e.Cancel=true;}
     bool SaveStock(){try{var lines=RuneEngine.Stocks.Select(x=>(x.Ancient?"1":"0")+"\t"+x.Type+"\t"+x.Set+"\t"+x.Stat+"\t"+x.Grade+"\t"+x.Amount);File.WriteAllLines(StockSavePath,lines);return true;}catch(Exception ex){MessageBox.Show(Loc.T("save_stock_fail",ex.Message),"Rune Manager",MessageBoxButtons.OK,MessageBoxIcon.Error);return false;}}
     void LoadSavedStock(string jsonPath){if(!File.Exists(StockSavePath))return;try{
       // Un export plus récent contient le stock réel du compte et ne doit jamais

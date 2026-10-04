@@ -1,6 +1,9 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using RuneManagerModern;
@@ -13,6 +16,104 @@ static class RuneUpdateRegressionTest {
     Check(RtaPickScore.SynergyWeight(5)<RtaPickScore.SynergyWeight(0),"rta synergy yields to enemy later");
     Check(RtaPickScore.TeamFitWeight(5)<RtaPickScore.TeamFitWeight(0),"rta late picks less core lock");
     Check(RtaPickScore.MatchupPoints(.62,200,.52,.25,.10,.20)>0&&RtaPickScore.MatchupPoints(.45,200,.52,.25,.10,.20)<0,"rta winning matchup scores positive");
+    Check(RtaPickScore.MetaPoints(.25,.10,20000)>RtaPickScore.MetaPoints(.04,.01,800),"rta meta pick rate beats low-use");
+    Check(RtaPickScore.LeaderPoints(.40,true)>RtaPickScore.LeaderPoints(.05,true),"rta needed leader scores more");
+    Check(RtaPickScore.OpeningScore(.52,.22,.12,.38,40000)>RtaPickScore.OpeningScore(.56,.03,.01,.02,500),"rta first pick prefers used leader over niche wr");
+    var peekList=new List<RtaMonster>{new RtaMonster{Id=1,Name="Eleni"},new RtaMonster{Id=2,Name="Leo"},new RtaMonster{Id=3,Name="Angelmon"},new RtaMonster{Id=4,Name="King Angelmon"},new RtaMonster{Id=5,Name="Giana"}};
+    string eleniCard="Normal Battle\nSelect your Monsters.\nOK\nEleni\nAttack\nMax Lv. 40\nHP 9720\nATK 867\nDEF 626\nSPD 100\nLEADER";
+    Check(RtaPeekName.LooksLikeMonsterCard(eleniCard),"held monster card is detected from Max Lv HP SPD");
+    Check(RtaPeekName.Match(eleniCard,peekList)!=null&&RtaPeekName.Match(eleniCard,peekList).Name=="Eleni","held card name Eleni maps to enemy pick");
+    Check(RtaPeekName.Match("Eleni\nGiana\nLeo",peekList)==null,"names without the hold card are ignored");
+    Check(RtaPeekName.Match("King Angelmon\nAttack\nMax Lv. 40\nHP 1\nSPD 100",peekList).Name=="King Angelmon","longer name wins over Angelmon");
+    Check(RtaPeekName.Match("Elenl\nAttack\nMax Lv. 40\nHP 1\nSPD 100",peekList).Name=="Eleni","one-letter OCR typo still maps Eleni");
+    Check(RtaPeekName.Match("Great-Lucky Attack Max Lv. ATK DEF SPD Select your Monsters. Eleni ASSASSINS 40 9720 867 626 100",peekList).Name=="Eleni","screenshot OCR without HP still maps Eleni");
+    peekList.Add(new RtaMonster{Id=6,Name="Kumar"});
+    Check(RtaPeekName.Match("HP\nMax Lv. 40\nHP 13005\nATK 593\nDEF 681\nSPD 101\nKumar",peekList).Name=="Kumar","HP-type hold card maps Kumar");
+    var tets=new List<RtaMonster>{
+      new RtaMonster{Id=31101,Name="Tetsuya",Element="water"},
+      new RtaMonster{Id=31102,Name="Tetsuya",Element="fire"},
+      new RtaMonster{Id=31103,Name="Tetsuya",Element="wind"},
+      new RtaMonster{Id=31112,Name="Fire Tetsuya",Element="fire",PickRate=.2}
+    };
+    string tetsCard="Tetsuya\nHP\nMax Lv. 40\nHP 1\nATK 1\nDEF 1\nSPD 100";
+    Check(RtaPeekName.Match(tetsCard,tets)==null,"same name without element is not guessed");
+    Check(RtaPeekName.Match(tetsCard,tets,"fire")!=null&&RtaPeekName.Match(tetsCard,tets,"fire").Id==31112,"fire gem picks fire Tetsuya not water");
+    Check(RtaPeekName.Match(tetsCard,tets,"water").Id==31101,"water gem picks water Tetsuya");
+    Check(RtaPeekName.Match("Moore\nAttack\nMax Lv. 40\nHP 1\nSPD 100",new List<RtaMonster>{new RtaMonster{Id=24511,Name="Moore",Element="water"}},"fire").Id==24511,"unique Moore still maps if gem color is misread");
+    var verm=new List<RtaMonster>{
+      new RtaMonster{Id=32601,Name="Vermilion Bird Dancer",Element="water"},
+      new RtaMonster{Id=32602,Name="Vermilion Bird Dancer",Element="fire",PickRate=.3},
+      new RtaMonster{Id=32612,Name="Fire Vermilion Bird Dancer",Element="fire",PickRate=.3}
+    };
+    string vermCard="Vermilion Bird Dancer\nAttack\nMax Lv. 40\nHP 1\nSPD 100";
+    Check(RtaPeekName.Match(vermCard,verm,"water")!=null&&RtaPeekName.Match(vermCard,verm,"water").Element=="water","water gem picks water Vermilion not fire meta");
+    using(var bmp=new System.Drawing.Bitmap(400,400)){
+      using(var g=System.Drawing.Graphics.FromImage(bmp)){
+        g.Clear(System.Drawing.Color.FromArgb(90,55,30));
+        using(var water=new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(20,170,230)))g.FillEllipse(water,176,48,32,32);
+        using(var fireArt=new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(230,70,20)))g.FillRectangle(fireArt,70,170,260,210);
+      }
+      Check(RtaPeekName.DetectElement(bmp)=="water","title gem wins over fire-colored monster art");
+    }
+    using(var bmp=new System.Drawing.Bitmap(400,400)){
+      using(var g=System.Drawing.Graphics.FromImage(bmp)){
+        g.Clear(System.Drawing.Color.FromArgb(90,55,30));
+        using(var water=new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(20,170,230)))g.FillEllipse(water,164,52,20,20);
+        using(var gold=new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(230,190,70)))g.FillRectangle(gold,210,48,140,22);
+        using(var fireArt=new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(230,70,20)))g.FillRectangle(fireArt,70,170,260,210);
+      }
+      Check(RtaPeekName.DetectElement(bmp)=="water","gold name text does not vote fire or wind");
+    }
+    string iconDir=System.IO.Path.Combine(System.IO.Path.GetTempPath(),"rta_peek_icons_"+Guid.NewGuid().ToString("N"));
+    System.IO.Directory.CreateDirectory(iconDir);
+    try{
+      using(var waterI=new System.Drawing.Bitmap(48,48)){
+        using(var g=System.Drawing.Graphics.FromImage(waterI))g.Clear(System.Drawing.Color.FromArgb(40,140,230));
+        waterI.Save(System.IO.Path.Combine(iconDir,"32601.png"));
+      }
+      using(var fireI=new System.Drawing.Bitmap(48,48)){
+        using(var g=System.Drawing.Graphics.FromImage(fireI))g.Clear(System.Drawing.Color.FromArgb(230,60,20));
+        fireI.Save(System.IO.Path.Combine(iconDir,"32602.png"));
+      }
+      using(var portrait=new System.Drawing.Bitmap(80,80)){
+        using(var g=System.Drawing.Graphics.FromImage(portrait))g.Clear(System.Drawing.Color.FromArgb(50,150,220));
+        var hit=RtaPeekName.Match(vermCard,verm,"",portrait,iconDir);
+        Check(hit!=null&&hit.Id==32601,"portrait matches water Vermilion icon not fire meta");
+      }
+      using(var portrait=new System.Drawing.Bitmap(80,80)){
+        using(var g=System.Drawing.Graphics.FromImage(portrait))g.Clear(System.Drawing.Color.FromArgb(230,60,20));
+        var hit=RtaPeekName.Match(vermCard,verm,"water",portrait,iconDir);
+        Check(hit!=null&&hit.Element=="water","water gem wins over a fire-looking portrait");
+      }
+    }finally{try{System.IO.Directory.Delete(iconDir,true);}catch{}}
+    string gemDir=@"C:\Users\Great-Lucky\Documents\Rune_Manager_Modern\Donnees\assets\rta";
+    RtaPeekName.LoadElementGems(gemDir);
+    using(var waterGem=new System.Drawing.Bitmap(System.IO.Path.Combine(gemDir,"el-water.png")))
+    using(var fireGem=new System.Drawing.Bitmap(System.IO.Path.Combine(gemDir,"el-fire.png")))
+    using(var bmp=new System.Drawing.Bitmap(420,320)){
+      using(var g=System.Drawing.Graphics.FromImage(bmp)){
+        g.Clear(System.Drawing.Color.FromArgb(90,55,30));
+        g.DrawImage(waterGem,48,40,36,36);
+        using(var fireArt=new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(230,70,20)))g.FillRectangle(fireArt,80,150,260,150);
+      }
+      Check(RtaPeekName.DetectElement(bmp)=="water","real water gem icon beats fire costume");
+    }
+    using(var fireGem=new System.Drawing.Bitmap(System.IO.Path.Combine(gemDir,"el-fire.png")))
+    using(var bmp=new System.Drawing.Bitmap(420,320)){
+      using(var g=System.Drawing.Graphics.FromImage(bmp)){
+        g.Clear(System.Drawing.Color.FromArgb(90,55,30));
+        g.DrawImage(fireGem,48,40,36,36);
+      }
+      Check(RtaPeekName.DetectElement(bmp)=="fire","real fire gem icon is fire");
+    }
+    var ino=new List<RtaMonster>{
+      new RtaMonster{Id=32111,Name="Inosuke Hashibira",Element="water"},
+      new RtaMonster{Id=32112,Name="Inosuke Hashibira",Element="fire",PickRate=.4},
+      new RtaMonster{Id=32113,Name="Inosuke Hashibira",Element="wind"}
+    };
+    string inoTip="Inosuke Hashibira\nDEMON SLAYER";
+    Check(RtaPeekName.Match(inoTip,ino)==null,"name tooltip without gem is ignored");
+    Check(RtaPeekName.Match(inoTip,ino,"water")!=null&&RtaPeekName.Match(inoTip,ino,"water").Id==32111,"tooltip plus water gem picks water Inosuke not fire meta");
     string savedLang=Loc.Lang;Loc.Lang="en";Check(Loc.T("no_preset")=="No Good Preset","english no-preset label");Loc.Lang="fr";Check(Loc.T("no_preset")=="Aucun preset","french no-preset label");Loc.Lang=savedLang;
     var scoreM=typeof(RuneEngine).GetMethod("Score",BindingFlags.NonPublic|BindingFlags.Static);
     var mainPreset=RuneEngine.ClonePreset(RuneEngine.Presets[0],"MainAccGate");
@@ -182,6 +283,70 @@ static class RuneUpdateRegressionTest {
       RuneEngine.StatGlobalFactor["Atk+"]=savedAtk;RuneEngine.StatGlobalFactor["HP%"]=savedHp;
       RuneEngine.Stocks.RemoveAll(x=>x.Id==0&&(x.Stat=="HP%"||x.Stat=="Atk+")&&x.Grade==4);
       Check(hpToAtk.RecommendTarget=="Atk+","Slow DD gems P2 HP% into P1 Atk+");
+      RuneEngine.ReplacePresets(new List<Preset>{liveFastHp});
+      var slot3Hp=new RuneRow{Id=9402,Set="Violent",Slot=3,Main="Def+",MainValue=118,Grade=5,Stars=6,Level=12,Ancient=true};
+      slot3Hp.Subs.Add(new SubStat{Stat="CtR%",Value=1});
+      slot3Hp.Subs.Add(new SubStat{Stat="HP%",Value=5});
+      slot3Hp.Subs.Add(new SubStat{Stat="CtD%",Value=25});
+      slot3Hp.Subs.Add(new SubStat{Stat="Spd",Value=11});
+      RuneEngine.Calculate(new List<RuneRow>{slot3Hp});
+      Check(slot3Hp.RecommendSource=="CtR%"&&slot3Hp.RecommendTarget=="CtR%","Fast DD gems P1 Crit Rate not P2 HP%");
+      var slot1Hp=new RuneRow{Id=9403,Set="Violent",Slot=1,Main="Def+",MainValue=118,Grade=5,Stars=6,Level=12,Ancient=true};
+      slot1Hp.Subs.Add(new SubStat{Stat="HP%",Value=5});
+      slot1Hp.Subs.Add(new SubStat{Stat="CtD%",Value=25});
+      slot1Hp.Subs.Add(new SubStat{Stat="Spd",Value=11});
+      RuneEngine.Calculate(new List<RuneRow>{slot1Hp});
+      Check(slot1Hp.RecommendSource=="HP%"&&slot1Hp.RecommendTarget=="Atk%","Fast DD slot 1 still gems P2 HP% into P1 Atk%");
+      RuneEngine.ReplacePresets(new List<Preset>{liveFastDps});
+      var flatVsCrit=new RuneRow{Id=9404,Set="Violent",Slot=5,Main="HP+",MainValue=1600,Innate="HP%",InnateValue=8,Grade=5,Stars=6,Level=12};
+      flatVsCrit.Subs.Add(new SubStat{Stat="Atk%",Value=11});
+      flatVsCrit.Subs.Add(new SubStat{Stat="CtD%",Value=10});
+      flatVsCrit.Subs.Add(new SubStat{Stat="Spd",Value=6});
+      flatVsCrit.Subs.Add(new SubStat{Stat="Atk+",Value=11});
+      RuneEngine.Calculate(new List<RuneRow>{flatVsCrit});
+      Check(flatVsCrit.RecommendSource=="Atk+"&&flatVsCrit.RecommendTarget=="CtR%","Fast DD MAX DPS gems P1 Atk flat into P1 Crit not more Spd");
+      var junkToFlat=new RuneRow{Id=9405,Set="Violent",Slot=5,Main="HP+",MainValue=1600,Innate="CtR%",InnateValue=8,Grade=5,Stars=6,Level=12};
+      junkToFlat.Subs.Add(new SubStat{Stat="Atk%",Value=11});
+      junkToFlat.Subs.Add(new SubStat{Stat="CtD%",Value=10});
+      junkToFlat.Subs.Add(new SubStat{Stat="Spd",Value=6});
+      junkToFlat.Subs.Add(new SubStat{Stat="HP%",Value=5});
+      RuneEngine.Calculate(new List<RuneRow>{junkToFlat});
+      Check(junkToFlat.RecommendSource=="HP%"&&junkToFlat.RecommendTarget=="Atk+","missing P1 Atk flat is filled from junk not by gemming Atk%");
+      var defDd=RuneEngine.MakePreset("Def DD",new[]{"P2","Non","P1","P2","Non","P2","P1","P1","P3","Non","P1"},"Guard,Blade,Rage,Will,Determination,Intangible","Despair,Violent,Fight","Def%","Def%,CtD%","Def%");
+      RuneEngine.ReplacePresets(new List<Preset>{defDd});
+      var defJunk=new RuneRow{Id=9406,Set="Will",Slot=5,Main="HP+",MainValue=1600,Innate="CtR%",InnateValue=8,Grade=5,Stars=6,Level=12};
+      defJunk.Subs.Add(new SubStat{Stat="Def%",Value=11});
+      defJunk.Subs.Add(new SubStat{Stat="CtD%",Value=10});
+      defJunk.Subs.Add(new SubStat{Stat="Spd",Value=8});
+      defJunk.Subs.Add(new SubStat{Stat="Atk%",Value=6});
+      RuneEngine.Calculate(new List<RuneRow>{defJunk});
+      Check(defJunk.RecommendSource=="Atk%"&&defJunk.RecommendTarget=="Def+","Def DD fills missing P1 Def flat from junk not Def%");
+      var defFlatVsCrit=new RuneRow{Id=9407,Set="Will",Slot=5,Main="HP+",MainValue=1600,Innate="HP%",InnateValue=8,Grade=5,Stars=6,Level=12};
+      defFlatVsCrit.Subs.Add(new SubStat{Stat="Def%",Value=11});
+      defFlatVsCrit.Subs.Add(new SubStat{Stat="CtD%",Value=10});
+      defFlatVsCrit.Subs.Add(new SubStat{Stat="Def+",Value=15});
+      RuneEngine.Calculate(new List<RuneRow>{defFlatVsCrit});
+      Check(defFlatVsCrit.RecommendSource=="Def+"&&defFlatVsCrit.RecommendTarget=="CtR%","Def DD gems P1 Def flat into P1 Crit not more Def%");
+      var bomber=RuneEngine.MakePreset("Bomber",new[]{"P2","P1","Non","P1","Non","P1","Non","Non","Non","P1","Non"},"Fatal,Will,Intangible","Focus,Violent,Fight","Atk%,Spd","Atk%","Atk%","HP%","HP%","HP%,Acc%");
+      RuneEngine.ReplacePresets(new List<Preset>{bomber});
+      var bomberJunk=new RuneRow{Id=9408,Set="Will",Slot=5,Main="HP+",MainValue=1600,Innate="Acc%",InnateValue=8,Grade=5,Stars=6,Level=12};
+      bomberJunk.Subs.Add(new SubStat{Stat="Atk%",Value=11});
+      bomberJunk.Subs.Add(new SubStat{Stat="Spd",Value=10});
+      bomberJunk.Subs.Add(new SubStat{Stat="HP%",Value=8});
+      bomberJunk.Subs.Add(new SubStat{Stat="CtR%",Value=5});
+      RuneEngine.Calculate(new List<RuneRow>{bomberJunk});
+      Check(bomberJunk.RecommendSource=="CtR%"&&bomberJunk.RecommendTarget=="Atk+","Bomber fills missing P1 Atk flat from junk not Atk%");
+      var slowDpsGem=RuneEngine.MakePreset("Slow DD MAX DPS",new[]{"Non","P1","Non","Non","Non","Non","P1","P1","Non","P1","Non"},"Blade,Rage,Violent,Will,Shield,Intangible","Focus,Fatal,Despair,Vampire,Nemesis,Revenge,Fight","Atk%","CtD%","Atk%");
+      RuneEngine.ReplacePresets(new List<Preset>{slowDpsGem});
+      var ctdVsAtkFlat=new RuneRow{Id=9409,Set="Violent",Slot=5,Main="HP+",MainValue=2448,Innate="Acc%",InnateValue=4,Grade=5,Stars=6,Level=12};
+      ctdVsAtkFlat.Subs.Add(new SubStat{Stat="CtR%",Value=11});
+      ctdVsAtkFlat.Subs.Add(new SubStat{Stat="Atk%",Value=19,Grind=21});
+      ctdVsAtkFlat.Subs.Add(new SubStat{Stat="CtD%",Value=8});
+      ctdVsAtkFlat.Subs.Add(new SubStat{Stat="Atk+",Value=20});
+      RuneEngine.Stocks.Add(new CraftStock{Type="Gemme",Set="Violent",Stat="Atk+",Grade=4,Amount=1,Ancient=false});
+      RuneEngine.Calculate(new List<RuneRow>{ctdVsAtkFlat});
+      RuneEngine.Stocks.RemoveAll(x=>x.Id==0&&x.Stat=="Atk+"&&x.Grade==4);
+      Check(ctdVsAtkFlat.RecommendSource=="CtD%"&&ctdVsAtkFlat.RecommendTarget=="CtD%","Slow DD MAX DPS gems P1 CtD not P1 Atk flat");
       var bruiserCritAcc=RuneEngine.MakePreset("Bruiser Crit/Acc",new[]{"P1","P1","P3","P1","Non","P2","P1","Non","P3","Non","Non"},"Swift,Violent,Will,Intangible","Despair,Revenge","HP%,Atk%,Spd","HP%,Atk%,CtR%","HP%,Atk%,Acc%");
       RuneEngine.ReplacePresets(new List<Preset>{bruiserCritAcc});
       var junkDef=new RuneRow{Id=9901,Set="Intangible",Slot=2,Main="HP%",MainValue=47,Grade=5,Stars=6,Level=12};
@@ -198,6 +363,14 @@ static class RuneUpdateRegressionTest {
       resToAcc.Subs.Add(new SubStat{Stat="Res%",Value=8});
       RuneEngine.Calculate(new List<RuneRow>{resToAcc});
       Check(resToAcc.RecommendSource=="Res%"&&resToAcc.RecommendTarget=="Acc%","gemming Res unlocks Acc on Bruiser Crit/Acc");
+      var defPctLeft=new RuneRow{Id=9410,Set="Swift",Slot=2,Main="HP%",MainValue=63,Innate="Acc%",InnateValue=8,Grade=5,Stars=6,Level=12};
+      defPctLeft.Subs.Add(new SubStat{Stat="Def%",Value=5});
+      defPctLeft.Subs.Add(new SubStat{Stat="Atk%",Value=13,Grind=17});
+      defPctLeft.Subs.Add(new SubStat{Stat="Spd",Value=10,Grind=6});
+      defPctLeft.Subs.Add(new SubStat{Stat="CtR%",Value=11});
+      RuneEngine.Calculate(new List<RuneRow>{defPctLeft});
+      Check(defPctLeft.RecommendSource=="Def%"&&defPctLeft.RecommendTarget=="Def%","Bruiser Crit/Acc gems leftover P3 Def% when P1s are at cap");
+      Check(defPctLeft.Recommendation.IndexOf("+13",StringComparison.Ordinal)>=0,"Def% legend gem max is 13 not 9");
     }finally{RuneEngine.ReplacePresets(coverSaved);}
     var overlay=new List<RuneRow>();
     string hammer="{\"command\":\"UpgradeRuneList\",\"ret_code\":0,\"upgrade_rune_list\":[{\"rune_id\":65236285954,\"slot_no\":3,\"rank\":14,\"class\":16,\"set_id\":13,\"upgrade_curr\":6,\"pri_eff\":[5,70],\"prefix_eff\":[0,0],\"sec_eff\":[[11,11,0,0],[6,7,0,0],[2,14,0,0]]}]}";
@@ -207,6 +380,93 @@ static class RuneUpdateRegressionTest {
     Check(overlay.Any(r=>r.Id==65236285954),"live hammer still adds a new rune during the session");
     RuneEngine.ApplyLiveEvent(overlay,"{\"command\":\"SellRune\",\"ret_code\":0,\"rune_id_list\":[65236285954]}",false);
     Check(!overlay.Any(r=>r.Id==65236285954),"sell still removes after overlay");
+    bool deckFixe=RuneEngine.SeuilVenteFixe;double deckSeuil=RuneEngine.ValeurSeuilVenteFixe;
+    RuneEngine.SeuilVenteFixe=true;RuneEngine.ValeurSeuilVenteFixe=9;
+    try{
+      var d1=new RuneRow{Id=101,Set="Violent",Slot=1,Main="HP+",MainValue=160,Grade=5,Stars=6,Level=12,Potential=5,Marker="",Action="Keep"};
+      var d2=new RuneRow{Id=102,Set="Violent",Slot=3,Main="Def+",MainValue=160,Grade=5,Stars=6,Level=12,Potential=5,Marker="",Action="Keep"};
+      var d3=new RuneRow{Id=103,Set="Violent",Slot=5,Main="HP+",MainValue=2448,Grade=5,Stars=6,Level=12,Potential=5,Marker="",Action="Keep"};
+      var deckRows=new List<RuneRow>{d1,d2,d3};
+      string otherType="{\"command\":\"setDeckList\",\"deck_type\":2,\"deck_list\":[{\"deck_type\":2,\"equip\":[{\"rune_id_list\":[103]}]}]}";
+      string fullType="{\"command\":\"setDeckList\",\"deck_type\":1,\"deck_list\":[{\"deck_type\":1,\"equip\":[{\"rune_id_list\":[101,102]}]}]}";
+      string dropOne="{\"command\":\"setDeckList\",\"deck_type\":1,\"deck_list\":[{\"deck_type\":1,\"equip\":[{\"rune_id_list\":[102]}]}]}";
+      Check(RuneEngine.ApplyLiveDeckProtection(deckRows,otherType)>0,"other deck type marks protection");
+      Check(RuneEngine.ApplyLiveDeckProtection(deckRows,fullType)>0,"arena deck marks both runes");
+      RuneEngine.ApplyRetentionRules(deckRows);
+      Check(d1.Action=="Keep"&&d2.Action=="Keep"&&d3.Action=="Keep","deck runes stay Keep below threshold while listed");
+      Check(RuneEngine.ApplyLiveDeckProtection(deckRows,dropOne)>0,"removing a rune from setDeckList unmarks it");
+      RuneEngine.ApplyRetentionRules(deckRows);
+      Check(d1.Action=="Sell"&&(d1.Marker??"").IndexOf("Deck",StringComparison.OrdinalIgnoreCase)<0,"removed deck rune is checked against the sell threshold");
+      Check(d2.Action=="Keep"&&(d2.Marker??"").IndexOf("Deck",StringComparison.OrdinalIgnoreCase)>=0,"rune still on the same deck stays protected");
+      Check(d3.Action=="Keep"&&(d3.Marker??"").IndexOf("Deck",StringComparison.OrdinalIgnoreCase)>=0,"other deck type is not unmarked");
+    }finally{RuneEngine.SeuilVenteFixe=deckFixe;RuneEngine.ValeurSeuilVenteFixe=deckSeuil;}
+    var iconFlags=BindingFlags.Static|BindingFlags.NonPublic;
+    var qualityKey=typeof(MainForm).GetMethod("CroquisQualityKey",iconFlags);
+    Check((int)qualityKey.Invoke(null,new object[]{1})==1,"normal rune uses quality 1");
+    Check((int)qualityKey.Invoke(null,new object[]{2})==2,"magic rune uses quality 2");
+    Check((int)qualityKey.Invoke(null,new object[]{4})==4,"hero rune uses quality 4");
+    Check((int)qualityKey.Invoke(null,new object[]{5})==5,"legend rune uses quality 5");
+    using(var src=new Bitmap(8,8,PixelFormat.Format32bppArgb)){
+      for(int y=0;y<8;y++)for(int x=0;x<8;x++)src.SetPixel(x,y,Color.FromArgb(255,224,159,75));
+      var tinted=(Bitmap)typeof(MainForm).GetMethod("TintCroquisCreux",iconFlags).Invoke(null,new object[]{src,Color.FromArgb(64,210,110)});
+      var p=tinted.GetPixel(3,3);
+      Check(p.G>p.R&&p.G>80,"magic tint turns orange glyph green");
+    }
+    string outlined=Path.Combine(@"C:\Users\Great-Lucky\Documents\Rune_Manager_Modern\Donnees\assets","croquis-rune-3d-violent-slot1.png");
+    if(File.Exists(outlined)){
+      var raw=(Bitmap)typeof(MainForm).GetMethod("LoadPng32",iconFlags).Invoke(null,new object[]{outlined});
+      Check(raw!=null&&raw.GetPixel(0,0).A<8,"loaded png keeps transparent corner");
+      var baked=(Bitmap)typeof(MainForm).GetMethod("BakeCroquisPng",iconFlags).Invoke(null,new object[]{outlined});
+      Check(baked!=null&&baked.Width<=160&&baked.Height<=160,"transparent rune stays icon size");
+      Check(baked.Width>40&&baked.Height>40,"cropped rune still has a stone");
+      int whiteLeft=0,clear=0;
+      for(int y=0;y<baked.Height;y++)for(int x=0;x<baked.Width;x++){
+        var c=baked.GetPixel(x,y);if(c.A<8){clear++;continue;}if(c.A>=40&&c.R>=240&&c.G>=240&&c.B>=240)whiteLeft++;
+      }
+      Check(whiteLeft<8,"cutout checkerboard is not kept as a white card");
+      Check(clear>100,"transparent icons keep a real alpha hole");
+      int dark=0;
+      for(int y=0;y<baked.Height;y++)for(int x=0;x<baked.Width;x++){
+        var c=baked.GetPixel(x,y);if(c.A>=180&&c.R<50&&c.G<50&&c.B<50)dark++;
+      }
+      Check(dark>80,"black outline around the rune is kept");
+      var blitFn=typeof(MainForm).GetMethod("BlitOpaqueToSquare",iconFlags,null,new Type[]{typeof(Image),typeof(RectangleF),typeof(int)},null);
+      var measureFn=typeof(MainForm).GetMethod("MeasureOpaqueStone",iconFlags);
+      var ob=(RectangleF)measureFn.Invoke(null,new object[]{baked});
+      var blit=(Bitmap)blitFn.Invoke(null,new object[]{baked,ob,52});
+      Check(blit!=null&&blit.Width==52&&blit.Height==52,"cell blit is a 52px square");
+      int bx0=52,by0=52,bx1=-1,by1=-1;
+      for(int y=0;y<blit.Height;y++)for(int x=0;x<blit.Width;x++){
+        var c=blit.GetPixel(x,y);
+        if(c.A<40)continue;
+        if(c.R<40&&c.G<40&&c.B<40)continue;
+        if(x<bx0)bx0=x;if(y<by0)by0=y;if(x>bx1)bx1=x;if(y>by1)by1=y;
+      }
+      Check(bx1>=0&&(bx1-bx0+1)>=40&&(by1-by0+1)>=40,"cell blit fills the square with the stone");
+      var boxFn=typeof(MainForm).GetMethod("BlitOpaqueToBox",iconFlags,null,new Type[]{typeof(Image),typeof(RectangleF),typeof(int),typeof(int),typeof(Color)},null);
+      var onGrid=(Bitmap)boxFn.Invoke(null,new object[]{baked,ob,52,52,Color.FromArgb(30,32,36)});
+      var corner=onGrid.GetPixel(1,1);
+      Check(corner.A==255&&!(corner.R<12&&corner.G<12&&corner.B<12),"transparent pixels stay the cell color not black");
+      var destFn=typeof(MainForm).GetMethod("CroquisDestSize",iconFlags);
+      string slot2Path=Path.Combine(@"C:\Users\Great-Lucky\Documents\Rune_Manager_Modern\Donnees\assets","croquis-rune-3d-violent-slot2.png");
+      if(File.Exists(slot2Path)){
+        var baked2=(Bitmap)typeof(MainForm).GetMethod("BakeCroquisPng",iconFlags).Invoke(null,new object[]{slot2Path});
+        var ob2=(RectangleF)measureFn.Invoke(null,new object[]{baked2});
+        var s1=(Size)destFn.Invoke(null,new object[]{ob,84,50});
+        var s2=(Size)destFn.Invoke(null,new object[]{ob2,84,50});
+        int max1=Math.Max(s1.Width,s1.Height),max2=Math.Max(s2.Width,s2.Height);
+        Check(Math.Abs(max1-max2)<=2,"slot 2 uses the same max size as slot 1");
+        Check(s2.Width<=s1.Height+2,"slot 2 hex is not wider than slot 1 diamond height");
+      }
+      var tintFn=typeof(MainForm).GetMethod("TintCroquisCreux",iconFlags);
+      var logoFn=typeof(MainForm).GetMethod("RuneLogoColor",iconFlags);
+      string previewDir=Path.Combine(AppDomain.CurrentDomain.BaseDirectory);
+      baked.Save(Path.Combine(previewDir,"_rune_q5.png"));
+      for(int qg=1;qg<=4;qg++){
+        var tinted=(Bitmap)tintFn.Invoke(null,new object[]{baked,(Color)logoFn.Invoke(null,new object[]{qg})});
+        tinted.Save(Path.Combine(previewDir,"_rune_q"+qg+".png"));
+      }
+    }
     var rows=RuneEngine.Import(args[0]);Check(rows.Count>0,"real inventory imported");Check(RuneEngine.PresetSlotCounts.Values.All(c=>Enumerable.Range(1,6).All(s=>RuneEngine.ScarcityBonus(c,s)>=0&&RuneEngine.ScarcityBonus(c,s)<=1)),"all inventory bonuses in [0,1]");
     var rune=rows.First(r=>r.Action=="Sell");RuneEngine.ProtectedWorldBossRuneIds.Add(rune.Id);RuneEngine.ApplyRetentionRules(rows);Check(rune.Action!="Sell","World Boss sale protection overrides low score");
     var scored=rows.First(r=>r.Potential>1);Check(RuneEngine.ExplainPotential(scored).Contains("Score brut"),"score explanation available");Check(RuneEngine.ExplainGem(scored).Contains("Preset"),"gem explanation available");
@@ -214,6 +474,10 @@ static class RuneUpdateRegressionTest {
     string dict="{\"command\":\"ReceiveMail\",\"ret_code\":0,\"mail_list\":[{\"extra\":{\"101\":"+entry+",\"102\":"+entry+",\"103\":"+entry+"}}]}";
     var before=string.Join(";",RuneEngine.PresetSlotCounts.OrderBy(x=>x.Key).Select(x=>x.Key+string.Join(",",x.Value)));var choice=RuneEngine.CompareRuneChoice(rows,dict);Check(choice!=null&&choice.Choices.Count==3,"mail dictionary chest detected");Check(before==string.Join(";",RuneEngine.PresetSlotCounts.OrderBy(x=>x.Key).Select(x=>x.Key+string.Join(",",x.Value))),"chest does not alter inventory bonuses");
     string five="{\"command\":\"OpenReward\",\"ret_code\":0,\"choices\":["+string.Join(",",Enumerable.Repeat(entry,5))+"]}";Check(RuneEngine.CompareRuneChoice(rows,five).Choices.Count==5,"five rune chest retained");
+    string ancientBox="{\"command\":\"GetMailList\",\"ret_code\":0,\"mail_list\":[{\"mail_type\":273,\"item_master_type\":49,\"item_master_id\":11,\"extra\":{\"201\":"+entry+",\"202\":"+entry+",\"203\":"+entry+",\"204\":"+entry+",\"205\":"+entry+"}}]}";
+    var ancientChoice=RuneEngine.CompareRuneChoice(rows,ancientBox);Check(ancientChoice!=null&&ancientChoice.Choices.Count==5,"ancient rune box in GetMailList is ranked");
+    Check(RuneEngine.CompareRuneChoice(rows,ancientBox)==null,"same ancient box not ranked twice");
+    var peek=RuneEngine.CompareRuneChoice(rows,ancientBox,false);Check(peek!=null&&peek.Choices.Count==5,"peek still ranks already seen ancient box");
     int presetCount=RuneEngine.Presets.Count;
     Check(presetCount>=7,"default presets loaded");
     string starterSets=System.IO.Path.Combine("rune_manager_app","defaults","parametres-runes.tsv");

@@ -172,7 +172,12 @@ namespace RuneManagerModern {
       Add("rta_col_why","Pourquoi","Why");
       Add("rta_sort_tip","Clic : du meilleur au pire, reclic pour inverser","Click: best to worst, click again to reverse");
       Add("rta_hint_first","Tes picks du tour se confirment tout seuls. Clique un pick pour l'enlever, ? pour un autre. Place les picks adverses à droite","Your picks for this turn auto-confirm. Click a pick to remove it, ? for another. Place enemy picks on the right");
-      Add("rta_hint_enemy","Place le pick adverse avec ?. Ensuite tes picks du tour se confirment tout seuls","Place the enemy pick with ?. Then your picks for the turn auto-confirm");
+      Add("rta_hint_enemy","Reste appuyé sur l'icône du pick adverse : le nom en grand se place à droite. Ou clique ?","Hold the enemy pick icon: the big name is placed on the right. Or click ?");
+      Add("rta_peek_seeing","Fiche lue : {0}…","Reading card: {0}…");
+      Add("rta_peek_placed","{0} placé en pick adverse","{0} placed as enemy pick");
+      Add("rta_peek_tip","Reste appuyé sur l'icône en jeu : le nom affiché (ex. Eleni) est lu et mis dans PICKS ADVERSES","Hold the in-game icon: the shown name (e.g. Eleni) is read into ENEMY PICKS");
+      Add("rta_peek_no_game","Fenêtre Summoners War introuvable — laisse le jeu visible","Summoners War window not found — keep the game visible");
+      Add("rta_peek_watch","Lecture du jeu… reste appuyé sur le pick adverse","Reading the game… hold the enemy pick");
       Add("rta_load","Chargement des statistiques RTA (LuckSack) saison 38…","Loading RTA stats (LuckSack) season 38…");
       Add("rta_load_live","Mise à jour meta RTA (LuckSack + SWLens)…","Updating RTA meta (LuckSack + SWLens)…");
       Add("rta_load_fail","Données RTA indisponibles : {0}","RTA data unavailable: {0}");
@@ -186,10 +191,10 @@ namespace RuneManagerModern {
       Add("rta_phase_idle","Choisis J'AI LE 1ER PICK pour voir le conseil, ou L'ENNEMI COMMENCE puis place son pick","Choose I HAVE 1ST PICK to see the advice, or ENEMY STARTS then place their pick");
       Add("rta_phase_ban","PHASE BAN  •  bannis : {0}","BAN PHASE  •  ban: {0}");
       Add("rta_phase_you_first","TU AS LE 1ER PICK  •  conseil : {0}","YOU HAVE 1ST PICK  •  advice: {0}");
-      Add("rta_phase_foe_first","L'ENNEMI A LE 1ER PICK  •  place son pick dans PICKS ADVERSES","ENEMY HAS 1ST PICK  •  place their pick in ENEMY PICKS");
+      Add("rta_phase_foe_first","L'ENNEMI A LE 1ER PICK  •  reste appuyé sur son icône, ou place-le à droite","ENEMY HAS 1ST PICK  •  hold their icon, or place it on the right");
       Add("rta_phase_answer","CONTRE SON PICK  •  tes {0} meilleurs : {1}","VS THEIR PICK  •  your best {0}: {1}");
-      Add("rta_phase_wait_two","TU AS LE 1ER PICK  •  attends ses 2 picks, place-les à droite","YOU HAVE 1ST PICK  •  wait for their 2 picks, place them on the right");
-      Add("rta_phase_wait","TOUR ADVERSE  •  place ses picks à droite, le conseil sera recalculé après","ENEMY TURN  •  place their picks on the right, advice updates after");
+      Add("rta_phase_wait_two","TU AS LE 1ER PICK  •  reste appuyé sur ses 2 picks (nom en grand)","YOU HAVE 1ST PICK  •  hold their 2 picks (big name)");
+      Add("rta_phase_wait","TOUR ADVERSE  •  reste appuyé sur ses icônes, le nom se place à droite","ENEMY TURN  •  hold their icons, the name is placed on the right");
       Add("rta_phase_one","TON PICK  •  pool {0} : {1}","YOUR PICK  •  pool {0}: {1}");
       Add("rta_phase_many","TES {0} PICKS  •  pool {1} : {2}","YOUR {0} PICKS  •  pool {1}: {2}");
       Add("rta_why_glue","Ban le lien de leur équipe • ","Ban their team glue • ");
@@ -198,6 +203,8 @@ namespace RuneManagerModern {
       Add("rta_why_syn","Synergie avec {0}","Synergy with {0}");
       Add("rta_why_vs","Contre les picks adverses • {0} matchup(s) fiable(s)","Vs enemy picks • {0} reliable matchup(s)");
       Add("rta_why_flex","Choix global solide et flexible","Solid, flexible overall pick");
+      Add("rta_why_meta","Très joué en RTA ({0} % pick)","Highly used in RTA ({0}% pick)");
+      Add("rta_why_lead","Bon leader ({0} %)","Strong leader ({0}%)");
       Add("rta_owned_eq"," (équivalent possédé)"," (owned equivalent)");
       Add("rta_pool_title","Pool RTA • {0} monstres équipés","RTA pool • {0} runed monsters");
       Add("rta_pool_fail","Optimisation RTA impossible : {0}","RTA optimization failed: {0}");

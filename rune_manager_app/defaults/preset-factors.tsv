@@ -5,8 +5,8 @@ Slow DD MAX DPS	1
 Def DD	0.9
 Bomber	0.9
 Support	1
-Support ATK	1
-Support DEF	1
+Support DEF	0.9
 PvP def	1
 Bruiser	1
-Bruiser Bomber	1
+Bruiser Crit/Acc	1
+Bruiser CritD	0.9

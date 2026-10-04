@@ -399,6 +399,14 @@ static class RuneUpdateRegressionTest {
       Check(d1.Action=="Sell"&&(d1.Marker??"").IndexOf("Deck",StringComparison.OrdinalIgnoreCase)<0,"removed deck rune is checked against the sell threshold");
       Check(d2.Action=="Keep"&&(d2.Marker??"").IndexOf("Deck",StringComparison.OrdinalIgnoreCase)>=0,"rune still on the same deck stays protected");
       Check(d3.Action=="Keep"&&(d3.Marker??"").IndexOf("Deck",StringComparison.OrdinalIgnoreCase)>=0,"other deck type is not unmarked");
+      var siege=new RuneRow{Id=104,Set="Violent",Slot=1,Main="HP+",MainValue=160,Grade=5,Stars=6,Level=12,Potential=5,Marker="Deck",Action="Keep"};
+      var worn=new RuneRow{Id=105,Set="Will",Slot=4,Main="HP%",MainValue=63,Grade=5,Stars=6,Level=12,Potential=5,Marker="",Action="Sell",Equipped=true,EquippedUnitId=9};
+      deckRows.Add(siege);deckRows.Add(worn);
+      string arenaOnly="{\"command\":\"setDeckList\",\"deck_type\":1,\"deck_list\":[{\"deck_type\":1,\"unit_id_list\":[9],\"equip\":[{\"unit_id\":9,\"rune_id_list\":[102]}]}]}";
+      Check(RuneEngine.ApplyLiveDeckProtection(deckRows,arenaOnly)>=0,"arena setDeckList after siege marker");
+      RuneEngine.ApplyRetentionRules(deckRows);
+      Check(siege.Action=="Keep"&&(siege.Marker??"").IndexOf("Deck",StringComparison.OrdinalIgnoreCase)>=0,"siege deck rune stays protected after arena setDeckList");
+      Check(worn.Action=="Keep"&&(worn.Marker??"").IndexOf("Deck",StringComparison.OrdinalIgnoreCase)>=0,"rune currently on a deck monster stays protected");
     }finally{RuneEngine.SeuilVenteFixe=deckFixe;RuneEngine.ValeurSeuilVenteFixe=deckSeuil;}
     var iconFlags=BindingFlags.Static|BindingFlags.NonPublic;
     var qualityKey=typeof(MainForm).GetMethod("CroquisQualityKey",iconFlags);

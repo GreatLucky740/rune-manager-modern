@@ -151,7 +151,7 @@ namespace RuneManagerModern {
     // affiche un compte > 0, revient a l'orange normal sinon. NormalActionBorder =
     // meme orange que les autres boutons "outils/fonction".
     readonly Color RedAlertBorder=Color.FromArgb(218,70,62), NormalActionBorder=Color.FromArgb(255,170,40);
-    const int AppBuild=28;
+    const int AppBuild=29;
     const string AppVersion="1.17";
     void SetActionBorder(Button b,bool active){SetActionBorder(b,null,active);}
     // Le cadre du badge suit la meme couleur que le contour du bouton ou il se trouve
@@ -1121,17 +1121,23 @@ namespace RuneManagerModern {
     double RecommendationValue(string text){int plus=text.LastIndexOf('+');if(plus<0)return 0;int end=plus+1;while(end<text.Length&&(char.IsDigit(text[end])||text[end]=='.'||text[end]==','))end++;double value;return double.TryParse(text.Substring(plus+1,end-plus-1).Replace(',','.'),NumberStyles.Any,CultureInfo.InvariantCulture,out value)?value:0;}
     static Color CroquisQualityColor(int grade){return RuneLogoColor(grade);}
     static int CroquisQualityKey(int grade){if(grade>=5)return 5;if(grade<=1)return 1;return grade;}
-    Image LoadCroquis3dPreview(string setName,int slot,int grade){
+    Image LoadCroquis3dPreview(string setName,int slot,int grade){return LoadCroquis3dPreview(setName,slot,grade,false);}
+    Image LoadCroquis3dPreview(string setName,int slot,int grade,bool ancient){
       slot=Math.Max(1,Math.Min(6,slot));
       string set=string.IsNullOrEmpty(setName)?"Despair":setName;
       int q=CroquisQualityKey(grade);
-      string artKey=set+"|"+slot;
+      string artKey=(ancient?"a|":"")+set+"|"+slot;
       string key=artKey+"|"+q;
       Image cached;if(croquis3dByKey.TryGetValue(key,out cached))return cached;
       Bitmap baked;
       if(!croquis3dBaseByKey.TryGetValue(artKey,out baked)||baked==null){
-        string custom=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"assets","croquis-rune-3d-"+set.ToLowerInvariant()+"-slot"+slot+".png");
+        string setFile=set.ToLowerInvariant();
+        string custom=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"assets",ancient?"croquis-rune-3d-ancient-"+setFile+"-slot"+slot+".png":"croquis-rune-3d-"+setFile+"-slot"+slot+".png");
         if(File.Exists(custom))baked=LoadPng32(custom);
+        if(baked==null&&ancient){
+          string fallback=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"assets","croquis-rune-3d-"+setFile+"-slot"+slot+".png");
+          if(File.Exists(fallback))baked=LoadPng32(fallback);
+        }
         if(baked==null){
           if(!EnsureCroquisSlot(slot))return null;
           if(set.Equals("Despair",StringComparison.OrdinalIgnoreCase))baked=new Bitmap(croquis3dSlot[slot]);
@@ -1495,7 +1501,7 @@ namespace RuneManagerModern {
 			e.PaintBackground(e.CellBounds, true);
 			e.Graphics.CompositingMode = CompositingMode.SourceOver;
 			e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-			Image preview = LoadCroquis3dPreview(r.Set, r.Slot, r.Grade);
+			Image preview = LoadCroquis3dPreview(r.Set, r.Slot, r.Grade, r.Ancient);
 			if (preview != null)
 			{
 				int cw=e.CellBounds.Width,ch=e.CellBounds.Height;
@@ -1511,7 +1517,7 @@ namespace RuneManagerModern {
 					ia.SetWrapMode(WrapMode.TileFlipXY);
 					e.Graphics.DrawImage(preview,destPreview,0,0,preview.Width,preview.Height,GraphicsUnit.Pixel,ia);
 				}
-				string artKey=(string.IsNullOrEmpty(r.Set)?"Despair":r.Set)+"|"+Math.Max(1,Math.Min(6,r.Slot));
+				string artKey=(r.Ancient?"a|":"")+(string.IsNullOrEmpty(r.Set)?"Despair":r.Set)+"|"+Math.Max(1,Math.Min(6,r.Slot));
 				if(r.Ancient)DrawAncientShine(e.Graphics,AncientPulse(artKey,preview),new RectangleF(dx,dy,dw,dh));
 				string sPreview = "+" + r.Level;
 				RectangleF rectanglePreview = new RectangleF(e.CellBounds.X + 3, e.CellBounds.Bottom - 18, 28f, 15f);

@@ -436,6 +436,21 @@ static class RuneUpdateRegressionTest {
       Check(orangeAccent>80,"legend destroy rim is orange");
       Check(cyanLeft<20,"legend destroy rim is not left cyan");
     }
+    string ancientV=Path.Combine(@"C:\Users\Great-Lucky\Documents\Rune_Manager_Modern\Donnees\assets","croquis-rune-3d-ancient-violent-slot1.png");
+    string normalV=Path.Combine(@"C:\Users\Great-Lucky\Documents\Rune_Manager_Modern\Donnees\assets","croquis-rune-3d-violent-slot1.png");
+    Check(File.Exists(ancientV),"ancient violent slot1 png is installed");
+    if(File.Exists(ancientV)&&File.Exists(normalV)){
+      var rawA=(Bitmap)typeof(MainForm).GetMethod("LoadPng32",iconFlags).Invoke(null,new object[]{ancientV});
+      var rawN=(Bitmap)typeof(MainForm).GetMethod("LoadPng32",iconFlags).Invoke(null,new object[]{normalV});
+      Check(rawA!=null&&rawA.GetPixel(0,0).A<8,"ancient png keeps transparent corner");
+      Check(rawA.Width!=rawN.Width||rawA.Height!=rawN.Height,"ancient icon is not the normal png");
+      var pulse=(Bitmap)typeof(MainForm).GetMethod("BuildAncientPulseMask",iconFlags).Invoke(null,new object[]{rawA});
+      int pulsePx=0;
+      for(int y=0;y<pulse.Height;y++)for(int x=0;x<pulse.Width;x++){
+        if(pulse.GetPixel(x,y).A>=40)pulsePx++;
+      }
+      Check(pulsePx>80,"ancient shine mask keeps looping light body");
+    }
     string outlined=Path.Combine(@"C:\Users\Great-Lucky\Documents\Rune_Manager_Modern\Donnees\assets","croquis-rune-3d-violent-slot1.png");
     if(File.Exists(outlined)){
       var raw=(Bitmap)typeof(MainForm).GetMethod("LoadPng32",iconFlags).Invoke(null,new object[]{outlined});

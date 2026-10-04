@@ -1,11 +1,11 @@
 {
-  "build": 28,
+  "build": 29,
   "version": "1.17",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Couleur legendaire comme en jeu."
+    "Halo blanc autour des runes antiques / ancient."
   ],
   "notes_en": [
-    "Legendary color matches in-game."
+    "White halo around ancient runes."
   ]
 }

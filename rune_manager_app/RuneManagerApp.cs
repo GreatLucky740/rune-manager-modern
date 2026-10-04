@@ -151,7 +151,7 @@ namespace RuneManagerModern {
     // affiche un compte > 0, revient a l'orange normal sinon. NormalActionBorder =
     // meme orange que les autres boutons "outils/fonction".
     readonly Color RedAlertBorder=Color.FromArgb(218,70,62), NormalActionBorder=Color.FromArgb(255,170,40);
-    const int AppBuild=26;
+    const int AppBuild=27;
     const string AppVersion="1.17";
     void SetActionBorder(Button b,bool active){SetActionBorder(b,null,active);}
     // Le cadre du badge suit la meme couleur que le contour du bouton ou il se trouve
@@ -1140,7 +1140,7 @@ namespace RuneManagerModern {
         croquis3dBaseByKey[artKey]=baked;
         croquis3dOpaqueByKey[artKey]=MeasureOpaqueStone(baked);
       }
-      Bitmap bmp=q>=5?baked:TintCroquisCreux(baked,RuneLogoColor(q));
+      Bitmap bmp=TintCroquisCreux(baked,RuneLogoColor(q));
       croquis3dByKey[key]=bmp;
       croquis3dOpaqueByKey[key]=croquis3dOpaqueByKey[artKey];
       return bmp;
@@ -1306,7 +1306,9 @@ namespace RuneManagerModern {
         for(int x=0;x<w;x++){
           int i=row+x*4,a=buf[i+3];if(a<80)continue;
           int b=buf[i],gch=buf[i+1],r=buf[i+2];
-          if(!(r>=155&&r>=gch+8&&b<=130&&r>=b+25))continue;
+          int mx=r;if(gch>mx)mx=gch;if(b>mx)mx=b;
+          int mn=r;if(gch<mn)mn=gch;if(b<mn)mn=b;
+          if(mx<55||mx-mn<50||mx<120)continue;
           int lum=(r*77+gch*150+b*29)>>8;
           int nr=tr*lum/169,ng=tg*lum/169,nb=tb*lum/169;
           if(nr>255)nr=255;if(ng>255)ng=255;if(nb>255)nb=255;

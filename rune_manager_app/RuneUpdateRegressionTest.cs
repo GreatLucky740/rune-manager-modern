@@ -412,6 +412,28 @@ static class RuneUpdateRegressionTest {
       var p=tinted.GetPixel(3,3);
       Check(p.G>p.R&&p.G>80,"magic tint turns orange glyph green");
     }
+    using(var cyan=new Bitmap(8,8,PixelFormat.Format32bppArgb)){
+      for(int y=0;y<8;y++)for(int x=0;x<8;x++)cyan.SetPixel(x,y,Color.FromArgb(255,69,226,200));
+      var legend=(Bitmap)typeof(MainForm).GetMethod("TintCroquisCreux",iconFlags).Invoke(null,new object[]{cyan,Color.FromArgb(255,126,20)});
+      var lp=legend.GetPixel(3,3);
+      Check(lp.R>lp.B&&lp.R>lp.G&&lp.R>180,"legend tint turns cyan glyph orange");
+    }
+    string destroySlot6=Path.Combine(@"C:\Users\Great-Lucky\Documents\Rune_Manager_Modern\Donnees\assets","croquis-rune-3d-destroy-slot6.png");
+    if(File.Exists(destroySlot6)){
+      var rawDestroy=(Bitmap)typeof(MainForm).GetMethod("LoadPng32",iconFlags).Invoke(null,new object[]{destroySlot6});
+      var legendDestroy=(Bitmap)typeof(MainForm).GetMethod("TintCroquisCreux",iconFlags).Invoke(null,new object[]{rawDestroy,Color.FromArgb(255,126,20)});
+      int orangeAccent=0,cyanLeft=0;
+      for(int y=0;y<legendDestroy.Height;y++)for(int x=0;x<legendDestroy.Width;x++){
+        var c=legendDestroy.GetPixel(x,y);if(c.A<80)continue;
+        int mx=c.R;if(c.G>mx)mx=c.G;if(c.B>mx)mx=c.B;
+        int mn=c.R;if(c.G<mn)mn=c.G;if(c.B<mn)mn=c.B;
+        if(mx-mn<50||mx<120)continue;
+        if(c.R>c.B&&c.R>c.G)orangeAccent++;
+        if(c.B>c.R+40&&c.G>c.R)cyanLeft++;
+      }
+      Check(orangeAccent>80,"legend destroy rim is orange");
+      Check(cyanLeft<20,"legend destroy rim is not left cyan");
+    }
     string outlined=Path.Combine(@"C:\Users\Great-Lucky\Documents\Rune_Manager_Modern\Donnees\assets","croquis-rune-3d-violent-slot1.png");
     if(File.Exists(outlined)){
       var raw=(Bitmap)typeof(MainForm).GetMethod("LoadPng32",iconFlags).Invoke(null,new object[]{outlined});

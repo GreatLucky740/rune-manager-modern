@@ -371,6 +371,13 @@ static class RuneUpdateRegressionTest {
       RuneEngine.Calculate(new List<RuneRow>{ctdVsAtkFlat});
       RuneEngine.Stocks.RemoveAll(x=>x.Id==0&&x.Stat=="Atk+"&&x.Grade==4);
       Check(ctdVsAtkFlat.RecommendSource=="CtD%"&&ctdVsAtkFlat.RecommendTarget=="CtD%","Slow DD MAX DPS gems P1 CtD not P1 Atk flat");
+      var pctVsFlat=new RuneRow{Id=9410,Set="Rage",Slot=4,Main="CtD%",MainValue=80,Grade=5,Stars=6,Level=12};
+      pctVsFlat.Subs.Add(new SubStat{Stat="Atk%",Value=11});
+      pctVsFlat.Subs.Add(new SubStat{Stat="CtR%",Value=13});
+      pctVsFlat.Subs.Add(new SubStat{Stat="Atk+",Value=11});
+      pctVsFlat.Subs.Add(new SubStat{Stat="HP%",Value=7});
+      RuneEngine.Calculate(new List<RuneRow>{pctVsFlat});
+      Check(pctVsFlat.RecommendSource=="Atk%"&&pctVsFlat.RecommendTarget=="Atk%","Slow DD MAX DPS gems P1 Atk% not P1 Atk flat");
       var bruiserCritAcc=RuneEngine.MakePreset("Bruiser Crit/Acc",new[]{"P1","P1","P3","P1","Non","P2","P1","Non","P3","Non","Non"},"Swift,Violent,Will,Intangible","Despair,Revenge","HP%,Atk%,Spd","HP%,Atk%,CtR%","HP%,Atk%,Acc%");
       RuneEngine.ReplacePresets(new List<Preset>{bruiserCritAcc});
       var junkDef=new RuneRow{Id=9901,Set="Intangible",Slot=2,Main="HP%",MainValue=47,Grade=5,Stars=6,Level=12};

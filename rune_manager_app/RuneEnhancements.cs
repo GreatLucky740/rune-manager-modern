@@ -16,7 +16,7 @@ namespace RuneManagerModern {
       lines.Add(Loc.T("explain_head",p.Name,source.Set,source.Slot));
       if(source.Level<12)lines.Add(Loc.T("explain_proj"));
       double points=0;
-      foreach(var sub in r.Subs){double w=Weight(p,sub.Stat,r.Set);double grind=r.Level>=12?GrindMax(sub.Stat,r.Ancient):0;double value=SubPoints(p,r,sub);points+=value;string wLab=w.ToString("0.####");if(!Grindable(sub.Stat)&&NonGrindableFactor!=1)wLab+="×"+NonGrindableFactor.ToString("0.##");lines.Add(Loc.T("explain_stat",sub.Stat,sub.Value,grind,RollMax(sub.Stat),wLab,value.ToString("0.####")));}
+      foreach(var sub in r.Subs){double w=Weight(p,sub.Stat,r.Set);double grind=SubGrind(sub.Stat,r.Ancient,r.Level>=12);double value=SubPoints(p,r,sub);points+=value;lines.Add(Loc.T("explain_stat",sub.Stat,sub.Value,grind,RollMax(sub.Stat),w.ToString("0.####"),value.ToString("0.####")));}
       double gem=r.Level>=12?GemBonus(r,p):0;points+=gem;lines.Add(Loc.T("explain_gemgain",gem.ToString("0.####")));
       double main=BonusStatPrincipale*((r.Slot==2||r.Slot==4||r.Slot==6)?Math.Max(Weight(p,r.Main,r.Set),.35):.35);points+=main;
       lines.Add(Loc.T("explain_main",main.ToString("0.####"),points.ToString("0.####")));

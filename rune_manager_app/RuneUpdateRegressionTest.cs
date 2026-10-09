@@ -199,6 +199,7 @@ static class RuneUpdateRegressionTest {
       ctdVioletMax.Subs.Add(new SubStat{Stat="CtD%",Value=8,Gemmed=true});
       RuneEngine.Calculate(new List<RuneRow>{ctdVioletMax});
       Check(!ctdVioletMax.RecommendationInStock,"CtD at violet max is not in-stock with only violet gems");
+      Check(ctdVioletMax.RecommendSource=="CtD%"&&ctdVioletMax.RecommendTarget=="CtD%"&&ctdVioletMax.Recommendation.Contains("+10"),"CtD at violet max still shows legend target 10 on screen");
       RuneEngine.Stocks.Clear();
       var support=RuneEngine.MakePreset("Support",new[]{"P1","Non","P2","P1","Non","P1","Non","Non","P2","Non","Non"},"Despair","","HP%,Spd","HP%,CtR%","HP%,Acc%","Def%","Def%","Def%");
       RuneEngine.ReplacePresets(new List<Preset>{support});

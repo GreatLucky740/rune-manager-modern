@@ -1,11 +1,11 @@
 {
-  "build": 34,
+  "build": 35,
   "version": "1.18",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Correction : Am\u00e9lioration possible ne sort plus une rune trop t\u00f4t apr\u00e8s une gemme violette (max violet respect\u00e9, pas le max l\u00e9gendaire)."
+    "Correction de bugs."
   ],
   "notes_en": [
-    "Fix: Available Upgrade no longer drops a rune too early after a purple gem (violet max used, not legend max)."
+    "Bug fixes."
   ]
 }

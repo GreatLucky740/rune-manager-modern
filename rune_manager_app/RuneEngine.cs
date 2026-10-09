@@ -701,10 +701,30 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
       }
       return pick;
     }
-    // CtR/CtD/Acc/Res cannot take grinds; Score used to under-value max rolls vs grindable %/Spd.
-    // Match Spd +12 phantom grind: Spd12=(12+5)/6, CtR12=(12/6)*factor → factor=17/12.
-    public static double NonGrindableFactor=17.0/12.0;
-    static double SubPoints(Preset p,RuneRow r,SubStat s){double w=Weight(p,s.Stat,r.Set);double part=w*(s.Value+(r.Level>=12?GrindMax(s.Stat,r.Ancient):0))/RollMax(s.Stat);if(!Grindable(s.Stat)&&NonGrindableFactor>0)part*=NonGrindableFactor;return part;}
+    // Non-grindable get a simulated grind so 1 max roll matches grindable:
+    // Crit ↔ Spd (+5), CritD/Acc/Res ↔ % (+10). Then normalize by that full package
+    // so EVERY max roll scores the same (weight * 1), e.g. Spd6 = Crit6 = CritD7 = HP%8.
+    static double NonGrindableSimGrind(string s,bool ancient){
+      if(s=="CtR%")return GrindMax("Spd",ancient);
+      if(s=="CtD%"||s=="Acc%"||s=="Res%")return GrindMax("HP%",ancient);
+      return 0;
+    }
+    static double SubGrind(string s,bool ancient,bool plus12){
+      if(!plus12)return 0;
+      if(Grindable(s))return GrindMax(s,ancient);
+      return NonGrindableSimGrind(s,ancient);
+    }
+    static double SubPoints(Preset p,RuneRow r,SubStat s){
+      double w=Weight(p,s.Stat,r.Set);if(w<=0)return 0;
+      double roll=RollMax(s.Stat);if(roll<=0)return 0;
+      double grind=SubGrind(s.Stat,r.Ancient,r.Level>=12);
+      double raw=(s.Value+grind)/roll;
+      double maxRaw=(roll+grind)/roll;
+      if(maxRaw<=0)return 0;
+      // Same points for every max roll; scale keeps old HP% package magnitude (~2.25 / ~2.5 ancient).
+      double scale=1+GrindMax("HP%",r.Ancient)/RollMax("HP%");
+      return w*(raw/maxRaw)*scale;
+    }
     static double Score(RuneRow r,Preset p){if(ForceInstantSell(r))return 0;if(!p.Preferred.Contains(r.Set)&&!p.Accepted.Contains(r.Set))return 0;double mainF=MainFit(p,r.Slot,r.Main);if((r.Slot==2||r.Slot==4||r.Slot==6)&&mainF<=0)return 0;double points=0,bestW=0;foreach(var s in r.Subs){double w=Weight(p,s.Stat,r.Set);bestW=Math.Max(bestW,w);points+=SubPoints(p,r,s);}if(r.Level>=12)points+=GemBonus(r,p);int totalRolls=r.Grade>=5?4:r.Grade==4?3:r.Grade==3?2:1;int remaining=r.Level<12?Math.Max(0,totalRolls-r.Level/3):0;points+=remaining*bestW*.75;points+=BonusStatPrincipale*((r.Slot==2||r.Slot==4||r.Slot==6)?Math.Max(Weight(p,r.Main,r.Set),.35):.35);double setF=p.Preferred.Contains(r.Set)?1:FacteurSetAcceptable;return 10*Math.Pow(Math.Max(0,points/11),1.15)*setF*mainF*p.ScoreFactor;}
     // Simule le Spd "atteignable" en projetant les rolls futurs restants sur une rune pas
     // encore +12 (ou renvoie le Spd actuel si deja +12). Utilise par les regles Stat=="Spd"
@@ -841,13 +861,14 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
     // Max roll reachable with gems actually owned (0 if none). Violet alone must not claim legend max.
     static double StockGemMax(RuneRow r,string stat){double best=0;if(HasGemGrade(r,stat,5))best=Math.Max(best,GemMax(stat,r.Ancient));if(HasGemGrade(r,stat,4))best=Math.Max(best,GemMaxViolet(stat,r.Ancient));return best;}
     static double DisplayedGemMax(RuneRow r,string stat){double stock=StockGemMax(r,stat);return stock>0?stock:GemMax(stat,r.Ancient);}
-    // Same-stat: only an owned gem that can beat current value, else theoretical legend if no stock.
-    // Different-stat: owned max, else theoretical legend.
+    // Same-stat: owned max if it beats current (violet/legend in stock); else still show
+    // theoretical legend max for the UI. Different-stat: owned max, else theoretical legend.
+    // RecommendationInStock stays false when only a weaker owned grade cannot beat current.
     static double GemRecommendMax(RuneRow r,string stat,bool same,double currentValue){
       double stock=StockGemMax(r,stat);
       if(same){
         if(stock>currentValue)return stock;
-        if(stock<=0&&GemMax(stat,r.Ancient)>currentValue)return GemMax(stat,r.Ancient);
+        if(GemMax(stat,r.Ancient)>currentValue)return GemMax(stat,r.Ancient);
         return 0;
       }
       return stock>0?stock:GemMax(stat,r.Ancient);

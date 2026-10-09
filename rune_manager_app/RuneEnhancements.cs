@@ -16,13 +16,13 @@ namespace RuneManagerModern {
       lines.Add(Loc.T("explain_head",p.Name,source.Set,source.Slot));
       if(source.Level<12)lines.Add(Loc.T("explain_proj"));
       double points=0;
-      foreach(var sub in r.Subs){double w=Weight(p,sub.Stat,r.Set);double grind=r.Level>=12?GrindMax(sub.Stat,r.Ancient):0;double value=w*(sub.Value+grind)/RollMax(sub.Stat);points+=value;lines.Add(Loc.T("explain_stat",sub.Stat,sub.Value,grind,RollMax(sub.Stat),w.ToString("0.####"),value.ToString("0.####")));}
+      foreach(var sub in r.Subs){double w=Weight(p,sub.Stat,r.Set);double grind=r.Level>=12?GrindMax(sub.Stat,r.Ancient):0;double value=SubPoints(p,r,sub);points+=value;string wLab=w.ToString("0.####");if(!Grindable(sub.Stat)&&NonGrindableFactor!=1)wLab+="×"+NonGrindableFactor.ToString("0.##");lines.Add(Loc.T("explain_stat",sub.Stat,sub.Value,grind,RollMax(sub.Stat),wLab,value.ToString("0.####")));}
       double gem=r.Level>=12?GemBonus(r,p):0;points+=gem;lines.Add(Loc.T("explain_gemgain",gem.ToString("0.####")));
       double main=BonusStatPrincipale*((r.Slot==2||r.Slot==4||r.Slot==6)?Math.Max(Weight(p,r.Main,r.Set),.35):.35);points+=main;
       lines.Add(Loc.T("explain_main",main.ToString("0.####"),points.ToString("0.####")));
-      double fit=p.Preferred.Contains(r.Set)?1:FacteurSetAcceptable,spdF;if(!StatGlobalFactor.TryGetValue("Spd",out spdF))spdF=1.1;
-      lines.Add(Loc.T("explain_formula",fit.ToString("0.###"),p.ScoreFactor.ToString("0.###"),spdF.ToString("0.###")));
-      double raw=Score(r,p),bonus=InventoryBonus(p,r.Set,r.Slot);lines.Add(Loc.T("explain_raw",raw.ToString("0.000"),bonus.ToString("0.000"),(raw+bonus).ToString("0.000")));
+      double fit=p.Preferred.Contains(r.Set)?1:FacteurSetAcceptable;
+      lines.Add(Loc.T("explain_formula",fit.ToString("0.###"),p.ScoreFactor.ToString("0.###"),"1"));
+      double raw=Score(r,p),bonus=InventoryBonus(p,r.Set,r.Slot,source.Id);lines.Add(Loc.T("explain_raw",raw.ToString("0.000"),bonus.ToString("0.000"),(raw+bonus).ToString("0.000")));
       lines.Add(Loc.T("explain_stock"));
       var matched=ScoreRules.Where(rule=>(rule.Sets.Count==0||rule.Sets.Any(x=>string.Equals(x,source.Set,StringComparison.OrdinalIgnoreCase)))&&(rule.Slots.Count==0||rule.Slots.Contains(source.Slot))&&(rule.Projected&&string.Equals(rule.Stat,"Spd",StringComparison.OrdinalIgnoreCase)?AchievableSpeed(source):CurrentStatValue(source,rule.Stat))>=rule.Threshold).ToList();
       if(matched.Count>0)lines.Add(Loc.T("explain_rules_hit",string.Join(" ; ",matched.Select(x=>x.Name+" → +"+x.Bonus.ToString("0.###"))),matched.Sum(x=>x.Bonus).ToString("0.###")));
@@ -197,20 +197,9 @@ namespace RuneManagerModern {
       var g=new BufferedGrid{Dock=DockStyle.Fill,AllowUserToAddRows=false,RowHeadersVisible=false,BackgroundColor=Color.Black,AutoSizeRowsMode=DataGridViewAutoSizeRowsMode.None,ScrollBars=ScrollBars.None};g.RowTemplate.Height=56;g.DefaultCellStyle=new DataGridViewCellStyle{BackColor=Color.Black,ForeColor=Color.White,SelectionBackColor=Color.Black};g.EnableHeadersVisualStyles=false;g.ColumnHeadersHeightSizeMode=DataGridViewColumnHeadersHeightSizeMode.DisableResizing;g.ColumnHeadersHeight=28;g.ColumnHeadersDefaultCellStyle=new DataGridViewCellStyle{BackColor=Color.Black,ForeColor=Color.White};
       var factor=new DataGridViewComboBoxColumn{Name="Factor",HeaderText=Loc.T("preset_global_col"),Width=115};for(int n=0;n<=30;n++)factor.Items.Add((n*10).ToString(CultureInfo.InvariantCulture)+"%");foreach(var p in RuneEngine.Presets){string v=Math.Round(p.ScoreFactor*100).ToString(CultureInfo.InvariantCulture)+"%";if(!factor.Items.Contains(v))factor.Items.Add(v);}g.Columns.Add(factor);
       g.Columns.Add("Preset","Preset");g.Columns[1].ReadOnly=false;g.Columns[1].Width=140;
-      string[] stats={"HP%","Atk%","Def%","Spd","Res%","Acc%","CtR%","CtD%","HP+","Atk+","Def+"};foreach(string stat in stats){var c=new DataGridViewComboBoxColumn{HeaderText=stat,Width=60};c.Items.AddRange(new object[]{Loc.T("prio_none"),"P1","P2","P3"});g.Columns.Add(c);}
+      string[] stats={"HP%","Atk%","Def%","Spd","Res%","Acc%","CtR%","CtD%","HP+","Atk+","Def+"};foreach(string stat in stats){var c=new DataGridViewComboBoxColumn{HeaderText=stat,Width=62};for(int pct=0;pct<=100;pct+=10)c.Items.Add(pct+"%");g.Columns.Add(c);}
       g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_sets_pref"),Width=280});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_sets_ok"),Width=280});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_slot2"),Width=125});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_slot2_ok"),Width=145});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_slot4"),Width=125});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_slot4_ok"),Width=145});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_slot6"),Width=125});g.Columns.Add(new DataGridViewTextBoxColumn{HeaderText=Loc.T("preset_slot6_ok"),Width=145});
-      // Ligne "globale" tout en haut : ses cellules stat (colonnes 2..12) sont des menus deroulants
-      // de POURCENTAGE (50 a 150%), pas Non/P1/P2/P3. Ca regle RuneEngine.StatGlobalFactor[stat],
-      // un multiplicateur applique dans Weight() pour TOUTES les stats de ce type, sur TOUS les
-      // presets, en plus (pas a la place) de la priorite Non/P1/P2/P3 propre a chaque preset.
-      // Ex : mettre Atk% a 90% fait que l'Atk% compte pour 90% de sa valeur normale partout.
-      int controlRow=g.Rows.Add();var controlCells=g.Rows[controlRow].Cells;controlCells[0].ReadOnly=true;controlCells[1].Value="🌐 "+Loc.T("preset_global_row");controlCells[1].ReadOnly=true;for(int n=13;n<=20;n++)controlCells[n].ReadOnly=true;
-      // Cellules remplacees par de simples DataGridViewTextBoxCell (au lieu du ComboBoxCell de
-      // la colonne) : le menu Non/P1/P2/P3 de CreatePresetMenu (PresetMenus.cs) lit les Items de
-      // la COLONNE, pas de la cellule — impossible d'y afficher une autre liste (pourcentages)
-      // en gardant un ComboBoxCell. CreatePresetMenu detecte cette ligne au contenu ("...%") et
-      // propose alors 50%-150% au lieu de Non/P1/P2/P3.
-      for(int n=0;n<stats.Length;n++){double gf;if(!RuneEngine.StatGlobalFactor.TryGetValue(stats[n],out gf))gf=1.0;string current=Math.Round(gf*100).ToString(CultureInfo.InvariantCulture)+"%";g.Rows[controlRow].Cells[n+2]=new DataGridViewTextBoxCell{Value=current};}
+      const int controlRow=-1;
       foreach(var p in RuneEngine.Presets)AddPresetDataToGrid(g,p,stats);
       ConfigureBlackPresetGrid(g);
       g.CurrentCellDirtyStateChanged+=(s,e)=>{if(g.IsCurrentCellDirty)g.CommitEdit(DataGridViewDataErrorContexts.Commit);};
@@ -234,7 +223,7 @@ namespace RuneManagerModern {
       exportBtn.Click+=(s,e)=>{g.EndEdit();ExportPresetShare(g,controlRow,stats);};
       importBtn.Click+=(s,e)=>{g.EndEdit();ImportPresetShare(g,controlRow,stats);};
       stock.Click+=(s,e)=>ShowPresetStock();
-      save.Click+=(s,e)=>{g.EndEdit();if(!TryCommitPresetGrid(g,controlRow,stats,controlCells))return;File.WriteAllLines(PresetFactorsPath,RuneEngine.Presets.Select(p=>p.Name+"\t"+p.ScoreFactor.ToString(CultureInfo.InvariantCulture)));ApplySettingsAndClose(f,Loc.T("presets_globals_saved"));};
+      save.Click+=(s,e)=>{g.EndEdit();if(!TryCommitPresetGrid(g,controlRow,stats))return;File.WriteAllLines(PresetFactorsPath,RuneEngine.Presets.Select(p=>p.Name+"\t"+p.ScoreFactor.ToString(CultureInfo.InvariantCulture)));ApplySettingsAndClose(f,Loc.T("presets_globals_saved"));};
       bool fitBusy=false;
       EventHandler fit=(s,e)=>{if(fitBusy||f.IsDisposed||g.IsDisposed||host.IsDisposed)return;if(f.ClientSize.Width<80||f.ClientSize.Height<80)return;fitBusy=true;try{FitPresetLayout(f,g,host,bar);}finally{fitBusy=false;}};
       f.SizeChanged+=fit;g.SizeChanged+=fit;f.Shown+=fit;
@@ -255,7 +244,7 @@ namespace RuneManagerModern {
       if(host.MinimumSize.Height>48)host.MinimumSize=new Size(0,48);
       if(Math.Abs(host.Height-barH)>1)host.Height=barH;
       int rows=g.Rows.Count;if(rows<=0)return;
-      int[] baseW={88,108,40,40,40,40,40,40,40,40,40,40,40,190,190,86,96,86,96,86,96};
+      int[] baseW={88,108,52,52,52,52,52,52,52,52,52,52,52,190,190,86,96,86,96,86,96};
       int n=Math.Min(baseW.Length,g.Columns.Count);
       int sum=0;for(int i=0;i<n;i++)sum+=baseW[i];
       int cw=g.ClientSize.Width;if(cw<200)cw=Math.Max(200,f.ClientSize.Width);
@@ -295,7 +284,7 @@ namespace RuneManagerModern {
       int src=g.Rows.Count-1;if(src<=controlRow)src=-1;
       int row=g.Rows.Add();
       if(src>=0){for(int c=0;c<g.Columns.Count;c++)g.Rows[row].Cells[c].Value=g.Rows[src].Cells[c].Value;}
-      else{g.Rows[row].Cells[0].Value="100%";for(int i=0;i<stats.Length;i++)g.Rows[row].Cells[i+2].Value=Loc.T("prio_none");}
+      else{g.Rows[row].Cells[0].Value="100%";for(int i=0;i<stats.Length;i++)g.Rows[row].Cells[i+2].Value="0%";}
       g.Rows[row].Cells[1].Value=name;g.Rows[row].Cells[1].ReadOnly=false;
       try{g.CurrentCell=g.Rows[row].Cells[1];}catch{}
     }
@@ -342,7 +331,7 @@ namespace RuneManagerModern {
       if(col!=null&&!col.Items.Contains(factor))col.Items.Add(factor);
       int i=g.Rows.Add();var cells=g.Rows[i].Cells;
       cells[0].Value=factor;cells[1].Value=p.Name;cells[1].ReadOnly=false;
-      for(int n=0;n<stats.Length;n++){double w;cells[n+2].Value=PriorityDisplay(p.W.TryGetValue(stats[n],out w)?w:0);}
+      for(int n=0;n<stats.Length;n++){double w;string pct=RuneEngine.FormatStatWeight(p.W.TryGetValue(stats[n],out w)?w:0);var statCol=g.Columns[n+2] as DataGridViewComboBoxColumn;if(statCol!=null&&!statCol.Items.Contains(pct))statCol.Items.Add(pct);cells[n+2].Value=pct;}
       cells[13].Value=JoinOrderedNames(p.Preferred,PresetSetOrder);cells[14].Value=JoinOrderedNames(p.Accepted,PresetSetOrder);
       HashSet<string> mains;
       cells[15].Value=p.Main.TryGetValue(2,out mains)?JoinOrderedNames(mains,Slot2Mains):"";
@@ -355,19 +344,12 @@ namespace RuneManagerModern {
     string[] BuildPresetShareLines(DataGridView g,int controlRow,string[] stats){
       var lines=new List<string>();
       lines.Add("RMM-PRESETS\t1");
-      var factors=new List<string>();
-      for(int n=0;n<stats.Length;n++){
-        string txt=Convert.ToString(g.Rows[controlRow].Cells[n+2].Value);
-        double pct;if(txt!=null&&txt.EndsWith("%")&&double.TryParse(txt.TrimEnd('%'),NumberStyles.Any,CultureInfo.InvariantCulture,out pct))factors.Add(stats[n]+"="+(pct/100.0).ToString(CultureInfo.InvariantCulture));
-        else factors.Add(stats[n]+"=1");
-      }
-      lines.Add("STATFACTOR\t"+string.Join(",",factors.ToArray()));
-      for(int i=controlRow+1;i<g.Rows.Count;i++){
+      for(int i=Math.Max(0,controlRow+1);i<g.Rows.Count;i++){
         if(g.Rows[i].IsNewRow)continue;
         var c=g.Rows[i].Cells;
         string name=(Convert.ToString(c[1].Value)??"").Trim();
         if(name.Length==0)continue;
-        var w=new string[stats.Length];for(int n=0;n<stats.Length;n++)w[n]=PriorityLabel(PriorityValue(Convert.ToString(c[n+2].Value)));
+        var w=new string[stats.Length];for(int n=0;n<stats.Length;n++)w[n]=RuneEngine.FormatStatWeight(RuneEngine.ParseStatWeight(Convert.ToString(c[n+2].Value),stats[n]));
         lines.Add("PRESET\t"+name+"\t"+string.Join(",",w)+"\t"+Convert.ToString(c[13].Value)+"\t"+Convert.ToString(c[14].Value)+"\t"+Convert.ToString(c[15].Value)+"\t"+Convert.ToString(c[17].Value)+"\t"+Convert.ToString(c[19].Value)+"\t"+Convert.ToString(c[16].Value)+"\t"+Convert.ToString(c[18].Value)+"\t"+Convert.ToString(c[20].Value)+"\t"+ParsePresetFactor(Convert.ToString(c[0].Value)).ToString(CultureInfo.InvariantCulture));
       }
       return lines.ToArray();
@@ -406,15 +388,9 @@ namespace RuneManagerModern {
         return false;
       }
       if(confirm&&MessageBox.Show(Loc.T("preset_import_confirm"),Loc.T("preset_import_title"),MessageBoxButtons.YesNo,MessageBoxIcon.Question)!=DialogResult.Yes)return false;
-      while(g.Rows.Count>controlRow+1)g.Rows.RemoveAt(controlRow+1);
-      if(statFactors.Count>0){
-        for(int n=0;n<stats.Length;n++){
-          double gf;if(!statFactors.TryGetValue(stats[n],out gf))gf=1.0;
-          g.Rows[controlRow].Cells[n+2].Value=Math.Round(gf*100).ToString(CultureInfo.InvariantCulture)+"%";
-        }
-      }
+      while(g.Rows.Count>Math.Max(0,controlRow+1))g.Rows.RemoveAt(g.Rows.Count-1);
       for(int i=0;i<presets.Count;i++)AddPresetDataToGrid(g,presets[i],stats);
-      try{if(g.Rows.Count>controlRow+1)g.CurrentCell=g.Rows[controlRow+1].Cells[1];}catch{}
+      try{if(g.Rows.Count>Math.Max(0,controlRow+1))g.CurrentCell=g.Rows[Math.Max(0,controlRow+1)].Cells[1];}catch{}
       return true;
     }
     void ExportPresetShare(DataGridView g,int controlRow,string[] stats){
@@ -433,16 +409,15 @@ namespace RuneManagerModern {
         if(ApplyPresetShare(g,controlRow,stats,lines,true))status.Text=Loc.T("preset_import_ok",g.Rows.Count-controlRow-1);
       }
     }
-    bool TryCommitPresetGrid(DataGridView g,int controlRow,string[] stats,DataGridViewCellCollection controlCells){
-      for(int n=0;n<stats.Length;n++){string txt=Convert.ToString(controlCells[n+2].Value);double pct;if(txt!=null&&txt.EndsWith("%")&&double.TryParse(txt.TrimEnd('%'),NumberStyles.Any,CultureInfo.InvariantCulture,out pct))RuneEngine.StatGlobalFactor[stats[n]]=pct/100.0;}
+    bool TryCommitPresetGrid(DataGridView g,int controlRow,string[] stats){
       var next=new List<Preset>();var seen=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-      for(int i=controlRow+1;i<g.Rows.Count;i++){
+      for(int i=Math.Max(0,controlRow+1);i<g.Rows.Count;i++){
         if(g.Rows[i].IsNewRow)continue;
         var c=g.Rows[i].Cells;
         string name=(Convert.ToString(c[1].Value)??"").Trim();
         if(name.Length==0){MessageBox.Show(Loc.T("preset_name_empty"),Loc.T("preset_win_title"),MessageBoxButtons.OK,MessageBoxIcon.Warning);return false;}
         if(!seen.Add(name)){MessageBox.Show(Loc.T("preset_name_dup",name),Loc.T("preset_win_title"),MessageBoxButtons.OK,MessageBoxIcon.Warning);return false;}
-        var w=new string[stats.Length];for(int n=0;n<stats.Length;n++)w[n]=PriorityLabel(PriorityValue(Convert.ToString(c[n+2].Value)));
+        var w=new string[stats.Length];for(int n=0;n<stats.Length;n++)w[n]=RuneEngine.FormatStatWeight(RuneEngine.ParseStatWeight(Convert.ToString(c[n+2].Value),stats[n]));
         var p=RuneEngine.MakePreset(name,w,Convert.ToString(c[13].Value),Convert.ToString(c[14].Value),Convert.ToString(c[15].Value),Convert.ToString(c[17].Value),Convert.ToString(c[19].Value),Convert.ToString(c[16].Value),Convert.ToString(c[18].Value),Convert.ToString(c[20].Value));
         p.ScoreFactor=ParsePresetFactor(Convert.ToString(c[0].Value));
         next.Add(p);
@@ -477,8 +452,8 @@ namespace RuneManagerModern {
       }
     }
     void ShowPresetStock(){
-      var f=new Form{Text=Loc.T("preset_stock_title"),Size=new Size(1150,680),StartPosition=FormStartPosition.CenterParent};var g=new BufferedGrid{Dock=DockStyle.Fill,ReadOnly=true,AllowUserToAddRows=false,RowHeadersVisible=false,AutoGenerateColumns=false};g.Columns.Add(new DataGridViewImageColumn{HeaderText="Set",Width=40,ImageLayout=DataGridViewImageCellLayout.Zoom});g.Columns.Add("Preset","Preset");g.Columns.Add("SetName","Set");for(int n=1;n<=6;n++)g.Columns.Add("S"+n,"Slot "+n+" : stock / bonus");
-      foreach(var p in RuneEngine.Presets)foreach(string setName in p.Preferred.Concat(p.Accepted).Distinct().OrderBy(x=>x)){int[] c;if(!RuneEngine.PresetSlotCounts.TryGetValue(p.Name+"|"+setName,out c))c=new int[6];var values=new List<object>{GetSetIcon(setName),p.Name,setName};for(int n=1;n<=6;n++)values.Add(c[n-1]+" / +"+RuneEngine.ScarcityBonus(c,n).ToString("0.000"));g.Rows.Add(values.ToArray());}g.AutoSizeColumnsMode=DataGridViewAutoSizeColumnsMode.AllCells;f.Controls.Add(g);f.ShowDialog(this);
+      var f=new Form{Text=Loc.T("preset_stock_title"),Size=new Size(980,680),StartPosition=FormStartPosition.CenterParent};var g=new BufferedGrid{Dock=DockStyle.Fill,ReadOnly=true,AllowUserToAddRows=false,RowHeadersVisible=false,AutoGenerateColumns=false};g.Columns.Add(new DataGridViewImageColumn{HeaderText="Set",Width=40,ImageLayout=DataGridViewImageCellLayout.Zoom});g.Columns.Add("SetName","Set");for(int n=1;n<=6;n++)g.Columns.Add("S"+n,"Slot "+n+" : stock / bonus");
+      foreach(string setName in RuneEngine.AutoKeepThresholds.Keys.OrderBy(x=>x,StringComparer.OrdinalIgnoreCase)){int[] c;if(!RuneEngine.PresetSlotCounts.TryGetValue(setName,out c)||c==null)c=new int[6];var values=new List<object>{GetSetIcon(setName),setName};for(int n=1;n<=6;n++)values.Add(c[n-1]+(c[n-1]<=RuneEngine.StockSlotTarget?" / +1":" / top "+RuneEngine.StockSlotTarget+" +1"));g.Rows.Add(values.ToArray());}g.AutoSizeColumnsMode=DataGridViewAutoSizeColumnsMode.AllCells;f.Controls.Add(g);f.ShowDialog(this);
     }
     // Bouton "Règles" : liste toutes les regles de bonus/malus pur (RuneEngine.ScoreRules),
     // appliquees une fois sur le Potential final (voir RuneEngine.RuleBonus), INDEPENDANTES

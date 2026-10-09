@@ -318,7 +318,7 @@ namespace RuneManagerModern {
       Add("explain_main","Principale : +{0} ; total pondéré = {1}","Main: +{0}; weighted total = {1}");
       Add("explain_formula","10 × (total / 11)^1,15 × set {0} × preset {1} × SPD {2}","10 × (total / 11)^1.15 × set {0} × preset {1} × SPD {2}");
       Add("explain_raw","Score brut {0} + bonus stock {1} = {2}","Raw score {0} + stock bonus {1} = {2}");
-      Add("explain_stock","Bonus stock : (max − stock du slot) / (max − min) ; 0 si tous égaux. Maximum +1, aucun malus d'abondance.","Stock bonus: (max − slot stock) / (max − min); 0 if all equal. Maximum +1, no abundance penalty.");
+      Add("explain_stock","Bonus stock : les 10 meilleures runes +12 du set sur ce slot gardent +1 ; au-delà (11e…) le bonus tombe. Compte par set, pas par preset.","Stock bonus: the top 10 +12 runes of this set on this slot keep +1; extras (11th+) lose it. Counted by set, not by preset.");
       Add("explain_rules_hit","Règles déclenchées : {0} — total +{1}","Triggered rules: {0} — total +{1}");
       Add("explain_rules_none","Aucune règle déclenchée.","No rule triggered.");
       Add("explain_weights","Poids : P1={0}, P2={1}, P3={2} ; fixes ×0,55/0,45 ; CR/CD/ACC/RES ×1,3 ; RES Energy/Endure et ACC Seal/Fight/Despair/Focus ×1,15 ; SPD ×1,1 sur toutes les runes ; presets rapides ×1,05.","Weights: P1={0}, P2={1}, P3={2}; flats ×0.55/0.45; CR/CD/ACC/RES ×1.3; RES Energy/Endure and ACC Seal/Fight/Despair/Focus ×1.15; SPD ×1.1 on every rune; fast presets ×1.05.");
@@ -342,8 +342,8 @@ namespace RuneManagerModern {
       Add("preset_slot6_ok","Slot 6 acceptable","Slot 6 accepted");
       Add("preset_global_row","Valeur globale par stat","Global value per stat");
       Add("preset_stock_btn","RÉCAP STOCK / BONUS","STOCK / BONUS SUMMARY");
-      Add("presets_globals_saved","Presets et valeurs globales enregistrés.","Presets and global values saved.");
-      Add("preset_stock_title","Stock par preset / set / slot — bonus maximum +1 point","Stock by preset / set / slot — max bonus +1");
+      Add("presets_globals_saved","Presets enregistrés.","Presets saved.");
+      Add("preset_stock_title","Stock par set / slot — top 10 gardent +1","Stock by set / slot — top 10 keep +1");
       Add("preset_add","AJOUTER UN PRESET","ADD PRESET");
       Add("preset_new","Preset {0}","Preset {0}");
       Add("preset_name_empty","Chaque preset doit avoir un nom.","Every preset needs a name.");

@@ -145,14 +145,14 @@ namespace RuneManagerModern {
     }
   }
   sealed partial class MainForm:Form {
-    readonly Color Bg=Color.FromArgb(7,13,22), Panel=Color.FromArgb(15,25,39), Teal=Color.FromArgb(17,130,121), Cyan=Color.FromArgb(20,184,210), Grid=Color.FromArgb(30,32,36);
+    readonly Color Bg=Color.FromArgb(7,13,22), Panel=Color.FromArgb(15,25,39), Teal=Color.FromArgb(17,130,121), Cyan=Color.FromArgb(20,184,210), Grid=Color.FromArgb(15,25,39);
     // Contour rouge = "action a faire" (idee de Jeremy, etendue depuis World Boss a
     // Skill-up et Tri Amelioration) : bordure du bouton passe en rouge quand son badge
     // affiche un compte > 0, revient a l'orange normal sinon. NormalActionBorder =
     // meme orange que les autres boutons "outils/fonction".
     readonly Color RedAlertBorder=Color.FromArgb(218,70,62), NormalActionBorder=Color.FromArgb(255,170,40);
-    const int AppBuild=32;
-    const string AppVersion="1.17";
+    const int AppBuild=33;
+    const string AppVersion="1.18";
     void SetActionBorder(Button b,bool active){SetActionBorder(b,null,active);}
     // Le cadre du badge suit la meme couleur que le contour du bouton ou il se trouve
     // (rouge si action a faire, orange sinon) au lieu d'une couleur fixe independante.
@@ -170,7 +170,7 @@ namespace RuneManagerModern {
     }
     readonly DataGridView grid=new BufferedGrid(); readonly Label status=new Label(), counters=new Label(); readonly IconBadge reappNormalBadge=new IconBadge(),reappAncientBadge=new IconBadge(),refinementBadge=new IconBadge(); readonly CountBadge improveBadge=new CountBadge(),skillBadge=new CountBadge(),worldBossBadge=new CountBadge(),spdRankBadge=new CountBadge(),updateBadge=new CountBadge(),codesBadge=new CountBadge(); readonly TextBox search=new TextBox(); readonly Label searchHint=new Label(); readonly ComboBox set=new ComboBox(),slot=new ComboBox(),action=new ComboBox(),build=new ComboBox(),runeType=new ComboBox();
     readonly Dictionary<string,Image> setIcons=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,Image> runeIcons=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly Image[] slotLayers=new Image[7]; readonly Dictionary<int,Image> worldBossMonsterIcons=new Dictionary<int,Image>(),monsterPortraits=new Dictionary<int,Image>(); readonly Dictionary<int,string> portraitPathById=new Dictionary<int,string>(); readonly Dictionary<string,string[]> portraitFilesByPrefix=new Dictionary<string,string[]>(); readonly Dictionary<long,double> upgradeCaps=new Dictionary<long,double>(),craftPotentials=new Dictionary<long,double>();
-    readonly Image[] croquis3dSlot=new Image[7]; readonly Image[] croquis3dBlankSlot=new Image[7]; readonly Dictionary<string,Bitmap> croquis3dBaseByKey=new Dictionary<string,Bitmap>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,Image> croquis3dByKey=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,Image> croquis3dPulseByKey=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,Bitmap> croquis3dFitByKey=new Dictionary<string,Bitmap>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,RectangleF> croquis3dOpaqueByKey=new Dictionary<string,RectangleF>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,RectangleF> croquis3dSetByKey=new Dictionary<string,RectangleF>(StringComparer.OrdinalIgnoreCase); readonly RectangleF[] croquis3dSetBounds=new RectangleF[7]; readonly RectangleF[] croquis3dOpaqueBounds=new RectangleF[7];
+    readonly Image[] croquis3dSlot=new Image[7]; readonly Image[] croquis3dBlankSlot=new Image[7]; readonly Dictionary<string,Bitmap> croquis3dBaseByKey=new Dictionary<string,Bitmap>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,Image> croquis3dByKey=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,Image> croquis3dPulseByKey=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,Image> croquis3dGifByKey=new Dictionary<string,Image>(StringComparer.OrdinalIgnoreCase); readonly HashSet<Image> ancientGifAnimating=new HashSet<Image>(); readonly EventHandler ancientGifHandler; readonly Dictionary<string,Bitmap> croquis3dFitByKey=new Dictionary<string,Bitmap>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,RectangleF> croquis3dOpaqueByKey=new Dictionary<string,RectangleF>(StringComparer.OrdinalIgnoreCase); readonly Dictionary<string,RectangleF> croquis3dSetByKey=new Dictionary<string,RectangleF>(StringComparer.OrdinalIgnoreCase); readonly RectangleF[] croquis3dSetBounds=new RectangleF[7]; readonly RectangleF[] croquis3dOpaqueBounds=new RectangleF[7];
     static readonly Color CroquisOrange=Color.FromArgb(255,170,40),CroquisViolet=Color.FromArgb(150,90,230),CroquisBlue=Color.FromArgb(20,184,210);
     Point[] shineOuterPts,shineInnerPts; float[] shineOuterAng,shineInnerAng; int shineMapW,shineMapH;
     readonly HashSet<long> hiddenUpgradeIds=new HashSet<long>(); readonly HashSet<int> hiddenSkillTargetIds=new HashSet<int>();
@@ -210,7 +210,7 @@ namespace RuneManagerModern {
     string RuneChoiceSeenSavePath {get{return Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"choix-rune-vus.tsv");}}
     Form runeChoiceForm,reappDecisionForm,refineDecisionForm;
     Dictionary<string,double> spdSeenBest=new Dictionary<string,double>(StringComparer.OrdinalIgnoreCase);
-    public MainForm(){LoadRetentionSetting();LoadEngineSettings();RuneEngine.StatGlobalFactor["Spd"]=1.1;SaveEngineSettings();LoadSpdSeenBest();LoadRuneChoiceSeen();RuneEngine.RuneChoiceDetected+=ShowRuneChoiceDecision;Text=Loc.T("app_title");Icon=LoadAppIcon();WindowState=FormWindowState.Maximized;MinimumSize=ToolbarMinSize();BackColor=Bg;ForeColor=Color.White;Font=new Font("Segoe UI",10);KeyPreview=true;FormClosing+=ClosingWithSave;BuildUi();InstallRuneEnhancements();}
+    public MainForm(){ancientGifHandler=OnAncientGifFrame;LoadRetentionSetting();LoadEngineSettings();SaveEngineSettings();LoadSpdSeenBest();LoadRuneChoiceSeen();RuneEngine.RuneChoiceDetected+=ShowRuneChoiceDecision;Text=Loc.T("app_title");Icon=LoadAppIcon();WindowState=FormWindowState.Maximized;MinimumSize=ToolbarMinSize();BackColor=Bg;ForeColor=Color.White;Font=new Font("Segoe UI",10);KeyPreview=true;FormClosing+=ClosingWithSave;BuildUi();InstallRuneEnhancements();}
     static Size ToolbarMinSize(){
       int mw=640,mh=420;
       try{
@@ -1105,7 +1105,7 @@ namespace RuneManagerModern {
     void SortReeval(){viewMode="reeval";potentialDesc=true;ConfigureGridForView();var q=Filter().ToList();BindRuneRows(q);counters.Text=Loc.T("counters_reeval",all.Count.ToString("N0"),q.Count.ToString("N0"),RuneEngine.ReappNormal,RuneEngine.ReappAncient,q.Count.ToString("N0"));PlaceFilterCounters();FitColumns();status.Text=Loc.T("status_reeval",q.Count.ToString("N0"));}
     bool HasAvailableImprovement(RuneRow r){if(r.RecommendationInStock)return true;foreach(var s in r.Subs){bool replaced=r.RecommendSource==s.Stat&&r.RecommendTarget!=s.Stat;if(!replaced&&CanUseGrind(r,s))return true;}return false;}
     void FitColumns(){if(grid.Columns.Count==0)return;int[] caps={90,145,105,100,245,245,245,245,90,125,390,155};int vis=0;try{vis=grid.DisplayedRowCount(false);}catch{}int limit=Math.Min(grid.Rows.Count,Math.Max(36,vis+12));Font body=grid.DefaultCellStyle.Font,head=grid.ColumnHeadersDefaultCellStyle.Font;for(int c=0;c<grid.Columns.Count;c++){grid.Columns[c].AutoSizeMode=DataGridViewAutoSizeColumnMode.None;if(c==0){grid.Columns[c].Width=90;continue;}int w=TextRenderer.MeasureText(grid.Columns[c].HeaderText,head).Width+18;for(int r=0;r<limit;r++){object v=grid.Rows[r].Cells[c].Value;if(v!=null)w=Math.Max(w,TextRenderer.MeasureText(Convert.ToString(v),body).Width+12);}grid.Columns[c].Width=Math.Min(caps[c],Math.Max(62,w));}int total=grid.Columns.Cast<DataGridViewColumn>().Sum(x=>x.Width);int spare=grid.ClientSize.Width-4-total;if(spare>0){int[] grow={4,5,6,7,10};int each=spare/grow.Length;foreach(int c in grow)grid.Columns[c].Width+=each;}}
-    void FormatCell(object sender,DataGridViewCellFormattingEventArgs e){var r=grid.Rows[e.RowIndex].DataBoundItem as RuneRow;if(r==null)return;e.CellStyle.Padding=new Padding(4);bool orange=r.Grade>=5;if(r.Action=="Sell"){e.CellStyle.BackColor=Color.FromArgb(82,20,22);if(e.ColumnIndex==0)e.CellStyle.ForeColor=orange?Color.FromArgb(255,116,22):Color.FromArgb(176,58,255);}if(e.ColumnIndex==8)e.CellStyle.ForeColor=r.Action=="Sell"?Color.FromArgb(255,110,110):Color.FromArgb(22,210,119);if(e.ColumnIndex==9)e.CellStyle.ForeColor=Color.FromArgb(116,235,184);if(e.ColumnIndex==0&&r.Action!="Sell")e.CellStyle.ForeColor=orange?Color.FromArgb(255,126,20):Color.FromArgb(183,58,255);if(e.ColumnIndex==10&&r.RecommendationInStock)e.CellStyle.ForeColor=Color.FromArgb(255,105,105);}
+    void FormatCell(object sender,DataGridViewCellFormattingEventArgs e){var r=grid.Rows[e.RowIndex].DataBoundItem as RuneRow;if(r==null)return;e.CellStyle.Padding=new Padding(4);bool orange=CroquisPaintGrade(r.Grade,r.Level)>=5;if(r.Action=="Sell"){e.CellStyle.BackColor=Color.FromArgb(82,20,22);if(e.ColumnIndex==0)e.CellStyle.ForeColor=orange?Color.FromArgb(255,116,22):Color.FromArgb(176,58,255);}if(e.ColumnIndex==8)e.CellStyle.ForeColor=r.Action=="Sell"?Color.FromArgb(255,110,110):Color.FromArgb(22,210,119);if(e.ColumnIndex==9)e.CellStyle.ForeColor=Color.FromArgb(116,235,184);if(e.ColumnIndex==0&&r.Action!="Sell")e.CellStyle.ForeColor=orange?Color.FromArgb(255,126,20):Color.FromArgb(183,58,255);if(e.ColumnIndex==10&&r.RecommendationInStock)e.CellStyle.ForeColor=Color.FromArgb(255,105,105);}
     bool IsGrindable(string s){return s=="HP+"||s=="HP%"||s=="Atk+"||s=="Atk%"||s=="Def+"||s=="Def%"||s=="Spd";}
     double MaxGrind(string s,bool a){if(s=="HP+")return a?610:550;if(s=="Atk+"||s=="Def+")return a?34:30;if(s=="HP%"||s=="Atk%"||s=="Def%")return a?12:10;if(s=="Spd")return a?6:5;return 0;}
     double MaxGrindViolet(string s,bool a){if(s=="HP+")return a?460:400;if(s=="Atk+"||s=="Def+")return a?22:18;if(s=="HP%"||s=="Atk%"||s=="Def%")return a?9:7;if(s=="Spd")return a?5:4;return 0;}
@@ -1121,6 +1121,7 @@ namespace RuneManagerModern {
     double RecommendationValue(string text){int plus=text.LastIndexOf('+');if(plus<0)return 0;int end=plus+1;while(end<text.Length&&(char.IsDigit(text[end])||text[end]=='.'||text[end]==','))end++;double value;return double.TryParse(text.Substring(plus+1,end-plus-1).Replace(',','.'),NumberStyles.Any,CultureInfo.InvariantCulture,out value)?value:0;}
     static Color CroquisQualityColor(int grade){return RuneLogoColor(grade);}
     static int CroquisQualityKey(int grade){if(grade>=5)return 5;if(grade<=1)return 1;return grade;}
+    static int CroquisPaintGrade(int grade,int level){if(level>=15&&grade<5)return 5;return CroquisQualityKey(grade);}
     Image LoadCroquis3dPreview(string setName,int slot,int grade){return LoadCroquis3dPreview(setName,slot,grade,false);}
     Image LoadCroquis3dPreview(string setName,int slot,int grade,bool ancient){
       slot=Math.Max(1,Math.Min(6,slot));
@@ -1129,6 +1130,16 @@ namespace RuneManagerModern {
       string artKey=(ancient?"a|":"")+set+"|"+slot;
       string key=artKey+"|"+q;
       Image cached;if(croquis3dByKey.TryGetValue(key,out cached))return cached;
+      if(ancient){
+        Image gif=LoadAncientGif(set,slot);
+        if(gif!=null){
+          croquis3dByKey[key]=gif;
+          RectangleF gob=new RectangleF(0,0,gif.Width,gif.Height);
+          croquis3dOpaqueByKey[artKey]=gob;
+          croquis3dOpaqueByKey[key]=gob;
+          return gif;
+        }
+      }
       Bitmap baked;
       if(!croquis3dBaseByKey.TryGetValue(artKey,out baked)||baked==null){
         string setFile=set.ToLowerInvariant();
@@ -1150,6 +1161,62 @@ namespace RuneManagerModern {
       croquis3dByKey[key]=bmp;
       croquis3dOpaqueByKey[key]=croquis3dOpaqueByKey[artKey];
       return bmp;
+    }
+    string FindAncientGifPath(string set,int slot){
+      string root=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"assets","ancient-gif");
+      if(!Directory.Exists(root))return null;
+      string setDir=Path.Combine(root,set);
+      if(!Directory.Exists(setDir)){
+        string[] dirs=Directory.GetDirectories(root);
+        for(int i=0;i<dirs.Length;i++)
+          if(string.Equals(Path.GetFileName(dirs[i]),set,StringComparison.OrdinalIgnoreCase)){setDir=dirs[i];break;}
+      }
+      if(!Directory.Exists(setDir))return null;
+      string want=set+"slot"+slot;
+      string[] files=Directory.GetFiles(setDir,"*.gif");
+      for(int i=0;i<files.Length;i++)
+        if(string.Equals(Path.GetFileNameWithoutExtension(files[i]),want,StringComparison.OrdinalIgnoreCase))return files[i];
+      return null;
+    }
+    Image LoadAncientGif(string set,int slot){
+      string gifKey="gif|"+set+"|"+slot;
+      Image cached;
+      if(croquis3dGifByKey.TryGetValue(gifKey,out cached))return cached;
+      string path=FindAncientGifPath(set,slot);
+      if(path==null||!File.Exists(path))return null;
+      try{
+        var ms=new MemoryStream(File.ReadAllBytes(path));
+        Image gif=Image.FromStream(ms);
+        croquis3dGifByKey[gifKey]=gif;
+        if(ImageAnimator.CanAnimate(gif)&&ancientGifAnimating.Add(gif)&&ancientGifHandler!=null)
+          ImageAnimator.Animate(gif,ancientGifHandler);
+        return gif;
+      }catch{return null;}
+    }
+    void OnAncientGifFrame(object sender,EventArgs e){
+      if(IsDisposed||grid==null||grid.IsDisposed||!grid.IsHandleCreated)return;
+      if(grid.InvokeRequired){
+        try{grid.BeginInvoke(ancientGifHandler,sender,e);}catch(ObjectDisposedException){}catch(InvalidOperationException){}
+        return;
+      }
+      InvalidateVisibleAncientIcons();
+    }
+    void InvalidateVisibleAncientIcons(){
+      if(grid.IsDisposed||grid.Columns.Count==0||grid.Rows.Count==0)return;
+      int first;
+      try{first=grid.FirstDisplayedScrollingRowIndex;}catch(ObjectDisposedException){return;}
+      if(first<0)return;
+      int n=0;
+      try{n=grid.DisplayedRowCount(true);}catch{return;}
+      for(int i=0;i<n;i++){
+        int idx=first+i;
+        if(idx<0||idx>=grid.Rows.Count)break;
+        RuneRow r;
+        try{r=grid.Rows[idx].DataBoundItem as RuneRow;}catch(ObjectDisposedException){return;}catch(ArgumentOutOfRangeException){break;}
+        if(r!=null&&r.Ancient){
+          try{grid.InvalidateCell(0,idx);}catch(ObjectDisposedException){return;}catch(ArgumentException){}
+        }
+      }
     }
     Bitmap EnsureBlankSlot(int slot){
       if(croquis3dBlankSlot[slot]==null)croquis3dBlankSlot[slot]=InpaintOrangeGlyph((Bitmap)croquis3dSlot[slot]);
@@ -1420,6 +1487,11 @@ namespace RuneManagerModern {
       if(dh>boxH)dh=boxH;
       return new Size(dw,dh);
     }
+    static Size CroquisIconPaintSize(Image preview,Image sizeMatch,int boxW,int boxH){
+      Image src=sizeMatch!=null?sizeMatch:preview;
+      if(src==null)return new Size(Math.Max(24,boxW),Math.Max(24,boxH));
+      return CroquisDestSize(new RectangleF(0,0,src.Width,src.Height),boxW,boxH);
+    }
     static Bitmap BlitOpaqueToSquare(Image preview,RectangleF ob,int side){
       return BlitOpaqueToBox(preview,ob,side,side,Color.Transparent);
     }
@@ -1483,7 +1555,7 @@ namespace RuneManagerModern {
       try{
         hdc=g.GetHdc();
         hdcSrc=CreateCompatibleDC(hdc);
-        hBmp=bmp.GetHbitmap(Color.FromArgb(30,32,36));
+        hBmp=bmp.GetHbitmap(Color.FromArgb(15,25,39));
         old=SelectObject(hdcSrc,hBmp);
         if(dest.Width==bmp.Width&&dest.Height==bmp.Height)BitBlt(hdc,dest.X,dest.Y,dest.Width,dest.Height,hdcSrc,0,0,0x00CC0020);
         else{SetStretchBltMode(hdc,3);StretchBlt(hdc,dest.X,dest.Y,dest.Width,dest.Height,hdcSrc,0,0,bmp.Width,bmp.Height,0x00CC0020);}
@@ -1499,51 +1571,34 @@ namespace RuneManagerModern {
 			if(grid.IsDisposed){e.Handled=true;return;}
 			try{
 			e.PaintBackground(e.CellBounds, true);
+			e.Paint(e.CellBounds, DataGridViewPaintParts.Border);
 			e.Graphics.CompositingMode = CompositingMode.SourceOver;
 			e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-			Image preview = LoadCroquis3dPreview(r.Set, r.Slot, r.Grade, r.Ancient);
+			Image preview = LoadCroquis3dPreview(r.Set, r.Slot, CroquisPaintGrade(r.Grade,r.Level), r.Ancient);
 			if (preview != null)
 			{
 				int cw=e.CellBounds.Width,ch=e.CellBounds.Height;
 				if(cw<40)cw=grid.Columns[0].Width;
 				if(ch<40)ch=56;
-				int boxW=Math.Max(24,cw-6),boxH=Math.Max(24,ch-6);
-				Size destSize=CroquisDestSize(new RectangleF(0,0,preview.Width,preview.Height),boxW,boxH);
+				int pad=r.Ancient?2:6;
+				int boxW=Math.Max(24,cw-pad),boxH=Math.Max(24,ch-pad);
+				Image sizeMatch=null;
+				if(r.Ancient)sizeMatch=LoadCroquis3dPreview(r.Set,r.Slot,CroquisPaintGrade(r.Grade,r.Level),false);
+				Size destSize=CroquisIconPaintSize(preview,sizeMatch,boxW,boxH);
 				int dw=destSize.Width,dh=destSize.Height;
 				int dx=e.CellBounds.X+(e.CellBounds.Width-dw)/2;
 				int dy=e.CellBounds.Y+(e.CellBounds.Height-dh)/2;
 				var destPreview=new Rectangle(dx,dy,dw,dh);
-				using(var ia=new ImageAttributes()){
-					ia.SetWrapMode(WrapMode.TileFlipXY);
-					e.Graphics.DrawImage(preview,destPreview,0,0,preview.Width,preview.Height,GraphicsUnit.Pixel,ia);
-				}
-				string artKey=(r.Ancient?"a|":"")+(string.IsNullOrEmpty(r.Set)?"Despair":r.Set)+"|"+Math.Max(1,Math.Min(6,r.Slot));
-				if(r.Ancient)DrawAncientShine(e.Graphics,AncientPulse(artKey,preview),new RectangleF(dx,dy,dw,dh));
-				string sPreview = "+" + r.Level;
-				RectangleF rectanglePreview = new RectangleF(e.CellBounds.X + 3, e.CellBounds.Bottom - 18, 28f, 15f);
-				using (SolidBrush brush2 = new SolidBrush(Color.FromArgb(235, 20, 24, 30)))
-					e.Graphics.FillRectangle(brush2, rectanglePreview);
-				using (Pen pen3 = new Pen(Color.FromArgb(105, 115, 125)))
-					e.Graphics.DrawRectangle(pen3, rectanglePreview.X, rectanglePreview.Y, rectanglePreview.Width, rectanglePreview.Height);
-				using (SolidBrush brush2 = new SolidBrush(Color.White))
-				{
-					StringFormat format = new StringFormat();
-					format.Alignment = StringAlignment.Center;
-					format.LineAlignment = StringAlignment.Center;
-					e.Graphics.DrawString(sPreview, RuneLvFont(), brush2, rectanglePreview, format);
-				}
-				if (r.EquippedMasterId > 0)
-				{
-					Image image = WorldBossMonsterIcon(r.EquippedMasterId, "", "");
-					if (image != null)
-					{
-						Rectangle rect = new Rectangle(e.CellBounds.Right - 27, e.CellBounds.Bottom - 27, 25, 25);
-						e.Graphics.DrawImage(image, rect);
-						using (Pen pen3 = new Pen(Color.FromArgb(235, 255, 255, 255), 1.5f))
-							e.Graphics.DrawRectangle(pen3, rect);
+				if(r.Ancient){
+					ImageAnimator.UpdateFrames(preview);
+					e.Graphics.DrawImage(preview,destPreview,0,0,preview.Width,preview.Height,GraphicsUnit.Pixel);
+				}else{
+					using(var ia=new ImageAttributes()){
+						ia.SetWrapMode(WrapMode.TileFlipXY);
+						e.Graphics.DrawImage(preview,destPreview,0,0,preview.Width,preview.Height,GraphicsUnit.Pixel,ia);
 					}
 				}
-				e.Paint(e.CellBounds, DataGridViewPaintParts.Border);
+				DrawRuneCellOverlays(e.Graphics,e.CellBounds,r);
 				e.Handled = true;
 				return;
 			}
@@ -1582,7 +1637,7 @@ namespace RuneManagerModern {
 			{
 				array3[i] = new PointF(num9 + (array2[i].X + 16f) * num11, num10 + (array2[i].Y + 16f) * num11);
 			}
-			Color color = ((r.Grade >= 5) ? Color.FromArgb(255, 126, 20) : ((r.Grade == 4) ? Color.FromArgb(178, 62, 255) : Color.FromArgb(52, 160, 255)));
+			Color color = ((CroquisPaintGrade(r.Grade,r.Level) >= 5) ? Color.FromArgb(255, 126, 20) : ((r.Grade == 4) ? Color.FromArgb(178, 62, 255) : Color.FromArgb(52, 160, 255)));
 			using (GraphicsPath graphicsPath = new GraphicsPath())
 			{
 				graphicsPath.AddPolygon(array3);
@@ -1619,43 +1674,25 @@ namespace RuneManagerModern {
 					e.Graphics.DrawPath(pen2, graphicsPath);
 				}
 			}
-			string s = "+" + r.Level;
-			RectangleF rectangleF = new RectangleF(num9 + 30f, num10 + 34f, 28f, 15f);
-			using (SolidBrush brush2 = new SolidBrush(Color.FromArgb(235, 20, 24, 30)))
-			{
-				e.Graphics.FillRectangle(brush2, rectangleF);
-			}
-			using (Pen pen3 = new Pen(Color.FromArgb(105, 115, 125)))
-			{
-				e.Graphics.DrawRectangle(pen3, rectangleF.X, rectangleF.Y, rectangleF.Width, rectangleF.Height);
-			}
-			using (Font font = new Font("Segoe UI Semibold", 7.5f))
-			{
-				using (SolidBrush brush2 = new SolidBrush(Color.White))
-				{
-					StringFormat stringFormat = new StringFormat();
-					stringFormat.Alignment = StringAlignment.Center;
-					stringFormat.LineAlignment = StringAlignment.Center;
-					StringFormat format = stringFormat;
-					e.Graphics.DrawString(s, font, brush2, rectangleF, format);
-				}
-			}
-			if (r.EquippedMasterId > 0)
-			{
-				Image image = WorldBossMonsterIcon(r.EquippedMasterId, "", "");
-				if (image != null)
-				{
-					Rectangle rect = new Rectangle(e.CellBounds.X + 2, e.CellBounds.Y + 2, 25, 25);
-					e.Graphics.DrawImage(image, rect);
-					using (Pen pen3 = new Pen(Color.FromArgb(235, 255, 255, 255), 1.5f))
-					{
-						e.Graphics.DrawRectangle(pen3, rect);
-					}
-				}
-			}
-			e.Paint(e.CellBounds, DataGridViewPaintParts.Border);
+			DrawRuneCellOverlays(e.Graphics,e.CellBounds,r);
 			e.Handled = true;
 			}catch(ObjectDisposedException){try{e.Handled=true;}catch{}}
+    }
+    void DrawRuneCellOverlays(Graphics g,Rectangle cell,RuneRow r){
+      string s="+"+r.Level;
+      RectangleF lv=new RectangleF(cell.X+3,cell.Bottom-18,28f,15f);
+      using(var b=new SolidBrush(Color.FromArgb(235,20,24,30)))g.FillRectangle(b,lv);
+      using(var p=new Pen(Color.FromArgb(105,115,125)))g.DrawRectangle(p,lv.X,lv.Y,lv.Width,lv.Height);
+      using(var b=new SolidBrush(Color.White)){
+        var fmt=new StringFormat();fmt.Alignment=StringAlignment.Center;fmt.LineAlignment=StringAlignment.Center;
+        g.DrawString(s,RuneLvFont(),b,lv,fmt);
+      }
+      if(r.EquippedMasterId<=0)return;
+      Image face=WorldBossMonsterIcon(r.EquippedMasterId,"","");
+      if(face==null)return;
+      var rect=new Rectangle(cell.Right-27,cell.Bottom-27,25,25);
+      g.DrawImage(face,rect);
+      using(var p=new Pen(Color.FromArgb(235,255,255,255),1.5f))g.DrawRectangle(p,rect);
     }
     // Les icones sources (pierres, sets) sont de grandes images redimensionnees a la
     // volee vers de tres petites tailles (badges de bouton, puces de menu). Sans ce
@@ -2645,10 +2682,10 @@ f.ShowDialog(owner);
       f.Load+=(s,e)=>{close.Location=new Point(bottom.ClientSize.Width-close.Width-14,10);close.Anchor=AnchorStyles.Top|AnchorStyles.Right;};
       OpenToolFrom(spdRankButton,f,760,false);
     }
-    string PriorityLabel(double v){return v==1?"P1":v==2?"P2":v==3?"P3":"Non";}string PriorityDisplay(double v){return v==1?"P1":v==2?"P2":v==3?"P3":Loc.T("prio_none");}double PriorityValue(string s){return s=="P1"?1:s=="P2"?2:s=="P3"?3:0;}double ParsePresetFactor(string text){if(string.IsNullOrWhiteSpace(text))return 1;string raw=text.Trim();bool pct=raw.EndsWith("%");if(pct)raw=raw.TrimEnd('%');double v;if(!TryDouble(raw,out v))return 1;if(pct||v>3)v=v/100.0;return Math.Max(0,Math.Min(3,v));}void ReplaceSet(HashSet<string> target,string text){target.Clear();foreach(string s in (text??"").Split(',')){string v=s.Trim();if(v.Length>0)target.Add(v);}}bool TryDouble(string s,out double v){return double.TryParse(s.Replace(',','.'),NumberStyles.Any,CultureInfo.InvariantCulture,out v);}
+    string PriorityLabel(double v){return RuneEngine.FormatStatWeight(v);}string PriorityDisplay(double v){return RuneEngine.FormatStatWeight(v);}double PriorityValue(string s){return RuneEngine.ParseStatWeight(s,"");}double ParsePresetFactor(string text){if(string.IsNullOrWhiteSpace(text))return 1;string raw=text.Trim();bool pct=raw.EndsWith("%");if(pct)raw=raw.TrimEnd('%');double v;if(!TryDouble(raw,out v))return 1;if(pct||v>3)v=v/100.0;return Math.Max(0,Math.Min(3,v));}void ReplaceSet(HashSet<string> target,string text){target.Clear();foreach(string s in (text??"").Split(',')){string v=s.Trim();if(v.Length>0)target.Add(v);}}bool TryDouble(string s,out double v){return double.TryParse(s.Replace(',','.'),NumberStyles.Any,CultureInfo.InvariantCulture,out v);}
     void ApplySettingsAndClose(Form f,string message){SaveEngineSettings();upgradeCaps.Clear();craftPotentials.Clear();SaveLiveChanges();if(all.Count>0)RuneEngine.Calculate(all);RefreshUpgradeBadge();FillFilters();RefreshGrid();status.Text=message;f.DialogResult=DialogResult.OK;f.Close();}
-    void SaveEngineSettings(){try{var lines=new List<string>();lines.Add("COEFF\t"+string.Join("\t",new[]{RuneEngine.PoidsP1,RuneEngine.PoidsP2,RuneEngine.PoidsP3,RuneEngine.BonusStatPrincipale,RuneEngine.FacteurSetAcceptable,RuneEngine.FacteurMainAcceptable,RuneEngine.SeuilApres12}.Select(x=>x.ToString(CultureInfo.InvariantCulture))));lines.Add("SKILLHIDDEN\t"+string.Join(",",hiddenSkillTargetIds.OrderBy(x=>x)));string[] stats={"HP%","Atk%","Def%","Spd","Res%","Acc%","CtR%","CtD%","HP+","Atk+","Def+"};foreach(var p in RuneEngine.Presets)lines.Add("PRESET\t"+p.Name+"\t"+string.Join(",",stats.Select(x=>PriorityLabel(p.W[x])))+"\t"+JoinOrderedNames(p.Preferred,PresetSetOrder)+"\t"+JoinOrderedNames(p.Accepted,PresetSetOrder)+"\t"+JoinOrderedNames(p.Main[2],Slot2Mains)+"\t"+JoinOrderedNames(p.Main[4],Slot4Mains)+"\t"+JoinOrderedNames(p.Main[6],Slot6Mains)+"\t"+JoinOrderedNames(p.MainAccepted[2],Slot2Mains)+"\t"+JoinOrderedNames(p.MainAccepted[4],Slot4Mains)+"\t"+JoinOrderedNames(p.MainAccepted[6],Slot6Mains));foreach(var kv in RuneEngine.AutoKeepThresholds)lines.Add("AUTOKEEP\t"+kv.Key+"\t"+string.Join(",",AutoKeepStats.Select(st=>{double v;return st+"="+(kv.Value.TryGetValue(st,out v)?v:0).ToString(CultureInfo.InvariantCulture);})));lines.Add("STATFACTOR\t"+string.Join(",",stats.Select(x=>{double v;return x+"="+(RuneEngine.StatGlobalFactor.TryGetValue(x,out v)?v:1.0).ToString(CultureInfo.InvariantCulture);})));lines.Add("LANG\t"+Loc.Lang);lines.Add("NAVPIN\t"+(navPinned?"1":"0"));File.WriteAllLines(SettingsSavePath,lines);}catch(Exception ex){MessageBox.Show(Loc.T("save_settings_fail",ex.Message),"Rune Manager",MessageBoxButtons.OK,MessageBoxIcon.Error);}}
-    void LoadEngineSettings(){if(!File.Exists(SettingsSavePath))return;try{var loadedPresets=new List<Preset>();string[] stats={"HP%","Atk%","Def%","Spd","Res%","Acc%","CtR%","CtD%","HP+","Atk+","Def+"};foreach(string line in File.ReadAllLines(SettingsSavePath)){string[] x=line.Split('\t');if(x[0]=="COEFF"&&x.Length>=8){double[] v=new double[x.Length-1];bool ok=true;for(int i=0;i<v.Length;i++)ok&=TryDouble(x[i+1],out v[i]);if(ok){RuneEngine.PoidsP1=v[0];RuneEngine.PoidsP2=v[1];RuneEngine.PoidsP3=v[2];RuneEngine.BonusStatPrincipale=v[3];RuneEngine.FacteurSetAcceptable=v[4];RuneEngine.FacteurMainAcceptable=v[5];RuneEngine.SeuilApres12=v.Length>=8?v[7]:v[6];}}else if(x[0]=="SKILLHIDDEN"&&x.Length>1){foreach(string raw in x[1].Split(',')){int id;if(int.TryParse(raw,out id)&&id>0)hiddenSkillTargetIds.Add(id);}}else if(x.Length>=8&&x[0]=="PRESET"){loadedPresets.Add(x.Length>=11?RuneEngine.MakePreset(x[1],x[2].Split(','),x[3],x[4],x[5],x[6],x[7],x[8],x[9],x[10]):RuneEngine.MakePreset(x[1],x[2].Split(','),x[3],x[4],x[5],x[6],x[7]));}else if(x[0]=="AUTOKEEP"&&x.Length>=3){Dictionary<string,double> row;if(!RuneEngine.AutoKeepThresholds.TryGetValue(x[1],out row)){row=new Dictionary<string,double>(StringComparer.OrdinalIgnoreCase);RuneEngine.AutoKeepThresholds[x[1]]=row;}foreach(string pair in x[2].Split(',')){int eq=pair.IndexOf('=');if(eq<=0)continue;string statName=pair.Substring(0,eq);double v;if(TryDouble(pair.Substring(eq+1),out v))row[statName]=v;}}else if(x[0]=="STATFACTOR"&&x.Length>=2){foreach(string pair in x[1].Split(',')){int eq=pair.IndexOf('=');if(eq<=0)continue;string statName=pair.Substring(0,eq);double v;if(TryDouble(pair.Substring(eq+1),out v))RuneEngine.StatGlobalFactor[statName]=v;}}else if(x[0]=="NAVPIN"&&x.Length>=2){navPinned=x[1]=="1";}else if(x[0]=="LANG"&&x.Length>=2){string l=(x[1]??"").Trim().ToLowerInvariant();if(l=="en"||l=="fr")Loc.Lang=l;}}if(loadedPresets.Count>0)RuneEngine.ReplacePresets(loadedPresets);}catch{}}
+    void SaveEngineSettings(){try{var lines=new List<string>();lines.Add("COEFF\t"+string.Join("\t",new[]{RuneEngine.PoidsP1,RuneEngine.PoidsP2,RuneEngine.PoidsP3,RuneEngine.BonusStatPrincipale,RuneEngine.FacteurSetAcceptable,RuneEngine.FacteurMainAcceptable,RuneEngine.SeuilApres12}.Select(x=>x.ToString(CultureInfo.InvariantCulture))));lines.Add("SKILLHIDDEN\t"+string.Join(",",hiddenSkillTargetIds.OrderBy(x=>x)));string[] stats={"HP%","Atk%","Def%","Spd","Res%","Acc%","CtR%","CtD%","HP+","Atk+","Def+"};foreach(var p in RuneEngine.Presets)lines.Add("PRESET\t"+p.Name+"\t"+string.Join(",",stats.Select(x=>PriorityLabel(p.W[x])))+"\t"+JoinOrderedNames(p.Preferred,PresetSetOrder)+"\t"+JoinOrderedNames(p.Accepted,PresetSetOrder)+"\t"+JoinOrderedNames(p.Main[2],Slot2Mains)+"\t"+JoinOrderedNames(p.Main[4],Slot4Mains)+"\t"+JoinOrderedNames(p.Main[6],Slot6Mains)+"\t"+JoinOrderedNames(p.MainAccepted[2],Slot2Mains)+"\t"+JoinOrderedNames(p.MainAccepted[4],Slot4Mains)+"\t"+JoinOrderedNames(p.MainAccepted[6],Slot6Mains));foreach(var kv in RuneEngine.AutoKeepThresholds)lines.Add("AUTOKEEP\t"+kv.Key+"\t"+string.Join(",",AutoKeepStats.Select(st=>{double v;return st+"="+(kv.Value.TryGetValue(st,out v)?v:0).ToString(CultureInfo.InvariantCulture);})));lines.Add("LANG\t"+Loc.Lang);lines.Add("NAVPIN\t"+(navPinned?"1":"0"));File.WriteAllLines(SettingsSavePath,lines);}catch(Exception ex){MessageBox.Show(Loc.T("save_settings_fail",ex.Message),"Rune Manager",MessageBoxButtons.OK,MessageBoxIcon.Error);}}
+    void LoadEngineSettings(){if(!File.Exists(SettingsSavePath))return;try{var loadedPresets=new List<Preset>();string[] stats={"HP%","Atk%","Def%","Spd","Res%","Acc%","CtR%","CtD%","HP+","Atk+","Def+"};foreach(string line in File.ReadAllLines(SettingsSavePath)){string[] x=line.Split('\t');if(x[0]=="COEFF"&&x.Length>=8){double[] v=new double[x.Length-1];bool ok=true;for(int i=0;i<v.Length;i++)ok&=TryDouble(x[i+1],out v[i]);if(ok){RuneEngine.PoidsP1=v[0];RuneEngine.PoidsP2=v[1];RuneEngine.PoidsP3=v[2];RuneEngine.BonusStatPrincipale=v[3];RuneEngine.FacteurSetAcceptable=v[4];RuneEngine.FacteurMainAcceptable=v[5];RuneEngine.SeuilApres12=v.Length>=8?v[7]:v[6];}}else if(x[0]=="SKILLHIDDEN"&&x.Length>1){foreach(string raw in x[1].Split(',')){int id;if(int.TryParse(raw,out id)&&id>0)hiddenSkillTargetIds.Add(id);}}else if(x.Length>=8&&x[0]=="PRESET"){loadedPresets.Add(x.Length>=11?RuneEngine.MakePreset(x[1],x[2].Split(','),x[3],x[4],x[5],x[6],x[7],x[8],x[9],x[10]):RuneEngine.MakePreset(x[1],x[2].Split(','),x[3],x[4],x[5],x[6],x[7]));}else if(x[0]=="AUTOKEEP"&&x.Length>=3){Dictionary<string,double> row;if(!RuneEngine.AutoKeepThresholds.TryGetValue(x[1],out row)){row=new Dictionary<string,double>(StringComparer.OrdinalIgnoreCase);RuneEngine.AutoKeepThresholds[x[1]]=row;}foreach(string pair in x[2].Split(',')){int eq=pair.IndexOf('=');if(eq<=0)continue;string statName=pair.Substring(0,eq);double v;if(TryDouble(pair.Substring(eq+1),out v))row[statName]=v;}}else if(x[0]=="NAVPIN"&&x.Length>=2){navPinned=x[1]=="1";}else if(x[0]=="LANG"&&x.Length>=2){string l=(x[1]??"").Trim().ToLowerInvariant();if(l=="en"||l=="fr")Loc.Lang=l;}}if(loadedPresets.Count>0)RuneEngine.ReplacePresets(loadedPresets);}catch{}}
     void LoadRetentionSetting(){try{if(!File.Exists(RetentionSavePath))return;string raw=File.ReadAllText(RetentionSavePath).Trim();string[] x=raw.Split('\t');int limit;double value;if(x.Length>=2&&x[0]=="FIXED"&&TryDouble(x[1],out value)){RuneEngine.SeuilVenteFixe=true;RuneEngine.ValeurSeuilVenteFixe=Math.Max(0,value);RuneEngine.SeuilApres12=RuneEngine.ValeurSeuilVenteFixe;}else if(x.Length>=2&&x[0]=="DYNAMIC"&&int.TryParse(x[1],out limit)){RuneEngine.SeuilVenteFixe=false;RuneEngine.LimiteRunesConservees=Math.Max(10,Math.Min(10000,limit));}else if(int.TryParse(raw,out limit)){RuneEngine.SeuilVenteFixe=false;RuneEngine.LimiteRunesConservees=Math.Max(10,Math.Min(10000,limit));}
       // Champs supplémentaires "économie de mana" ajoutés après coup sur la même ligne
       // (MANA\t0/1\tmarge) — position variable donc on la cherche au lieu d'un index fixe.
@@ -2767,26 +2804,8 @@ f.ShowDialog(owner);
       return 0f;
     }
     void TickAncientShine(){
-      if(IsDisposed||grid.IsDisposed||!grid.IsHandleCreated)return;
-      float prev=ancientPulseT;
-      ancientPulseT+=0.05f;
-      if(ancientPulseT>=1f)ancientPulseT-=1f;
-      if(AncientPulseAmt(prev)<=0.02f&&AncientPulseAmt(ancientPulseT)<=0.02f)return;
-      if(grid.Columns.Count==0||grid.Rows.Count==0)return;
-      int first;
-      try{first=grid.FirstDisplayedScrollingRowIndex;}catch(ObjectDisposedException){return;}
-      if(first<0)return;
-      int n=0;
-      try{n=grid.DisplayedRowCount(true);}catch{return;}
-      for(int i=0;i<n;i++){
-        int idx=first+i;
-        if(idx<0||idx>=grid.Rows.Count)break;
-        RuneRow r;
-        try{r=grid.Rows[idx].DataBoundItem as RuneRow;}catch(ObjectDisposedException){return;}catch(ArgumentOutOfRangeException){break;}
-        if(r!=null&&r.Ancient){
-          try{grid.InvalidateCell(0,idx);}catch(ObjectDisposedException){return;}catch(ArgumentException){}
-        }
-      }
+      if(croquis3dGifByKey.Count==0)return;
+      InvalidateVisibleAncientIcons();
     }
     void DrawAncientUnderGlow(Graphics g,Image preview,Rectangle dest){
       if(preview==null)return;
@@ -2829,7 +2848,7 @@ f.ShowDialog(owner);
         g.DrawImage(body,d,0,0,body.Width,body.Height,GraphicsUnit.Pixel,ia);
       }
     }
-    void ClosingWithSave(object sender,FormClosingEventArgs e){StopNavAutoHide();ancientShineTimer.Stop();resizeDebounce.Stop();jsonPollTimer.Stop();updateCheckTimer.Stop();SaveRetentionSetting();SaveEngineSettings();SaveSpdSeenBest();SaveRuneChoiceSeen();if(!SaveStock()||!SaveLiveChanges())e.Cancel=true;}
+    void ClosingWithSave(object sender,FormClosingEventArgs e){StopNavAutoHide();ancientShineTimer.Stop();foreach(Image gif in croquis3dGifByKey.Values){try{if(ancientGifHandler!=null)ImageAnimator.StopAnimate(gif,ancientGifHandler);}catch{}}resizeDebounce.Stop();jsonPollTimer.Stop();updateCheckTimer.Stop();SaveRetentionSetting();SaveEngineSettings();SaveSpdSeenBest();SaveRuneChoiceSeen();if(!SaveStock()||!SaveLiveChanges())e.Cancel=true;}
     bool SaveStock(){try{var lines=RuneEngine.Stocks.Select(x=>(x.Ancient?"1":"0")+"\t"+x.Type+"\t"+x.Set+"\t"+x.Stat+"\t"+x.Grade+"\t"+x.Amount);File.WriteAllLines(StockSavePath,lines);return true;}catch(Exception ex){MessageBox.Show(Loc.T("save_stock_fail",ex.Message),"Rune Manager",MessageBoxButtons.OK,MessageBoxIcon.Error);return false;}}
     void LoadSavedStock(string jsonPath){if(!File.Exists(StockSavePath))return;try{
       // Un export plus récent contient le stock réel du compte et ne doit jamais

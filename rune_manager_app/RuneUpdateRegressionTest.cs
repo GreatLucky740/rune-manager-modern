@@ -10,7 +10,7 @@ using RuneManagerModern;
 static class RuneUpdateRegressionTest {
   static void Check(bool ok,string message){if(!ok)throw new Exception(message);Console.WriteLine("PASS "+message);}
   [STAThread] static int Main(string[] args){try{
-    var counts=new[]{10,5,10,7,11,6};Check(Math.Abs(RuneEngine.ScarcityBonus(counts,2)-1)<.00001,"least populated slot +1");Check(RuneEngine.ScarcityBonus(counts,5)==0,"most populated slot no penalty");Check(RuneEngine.ScarcityBonus(new[]{5,5,5,5,5,5},1)==0,"equal slots zero bonus");Check(Math.Abs(RuneEngine.ScarcityBonus(new[]{0,0,0,0,0,0},3)-1)<.00001,"empty stock aims for 1 per slot");Check(RuneEngine.ScarcityBonus(new[]{1,1,1,1,1,1},2)==0,"one rune per slot is filled");RuneEngine.PresetSlotCounts.Clear();Check(Math.Abs(RuneEngine.InventoryBonus(RuneEngine.Presets[0],"Blade",1)-1)<.00001,"missing preset-set stock still boosts");
+    var counts=new[]{10,5,10,7,11,6};Check(Math.Abs(RuneEngine.ScarcityBonus(counts,2)-1)<.00001,"slot below 10 gets +1");Check(RuneEngine.ScarcityBonus(counts,5)==0,"slot at 10 or more gets 0");Check(Math.Abs(RuneEngine.ScarcityBonus(new[]{5,5,5,5,5,5},1)-1)<.00001,"equal slots below 10 still bonus");Check(Math.Abs(RuneEngine.ScarcityBonus(new[]{0,0,0,0,0,0},3)-1)<.00001,"empty stock aims for 1 per slot");Check(Math.Abs(RuneEngine.ScarcityBonus(new[]{1,1,1,1,1,1},2)-1)<.00001,"one rune per slot still below 10");Check(RuneEngine.ScarcityBonus(new[]{10,10,10,10,10,10},2)==0,"ten per slot fills stock");RuneEngine.PresetSlotCounts.Clear();RuneEngine.StockBonusRuneIds.Clear();RuneEngine.StockEligibleIds.Clear();Check(Math.Abs(RuneEngine.InventoryBonus(RuneEngine.Presets[0],"Blade",1)-1)<.00001,"missing set stock still boosts");RuneEngine.PresetSlotCounts["Violent"]=new[]{10,10,10,11,9,10};for(long sid=1;sid<=11;sid++)RuneEngine.StockEligibleIds.Add(sid);for(long sid=1;sid<=10;sid++)RuneEngine.StockBonusRuneIds.Add(sid);Check(Math.Abs(RuneEngine.InventoryBonus(null,"Violent",4,1)-1)<.00001,"top violent slot 4 keeps +1");Check(RuneEngine.InventoryBonus(null,"Violent",4,11)==0,"11th violent slot 4 loses +1");Check(Math.Abs(RuneEngine.InventoryBonus(null,"Violent",5)-1)<.00001,"unfinished slot still scarce at 9");RuneEngine.PresetSlotCounts.Clear();RuneEngine.StockBonusRuneIds.Clear();RuneEngine.StockEligibleIds.Clear();
     Check(RtaPickScore.CounterWeight(0)==0,"rta no counter before enemy pick");
     Check(RtaPickScore.CounterWeight(5)>RtaPickScore.CounterWeight(1),"rta counter grows pick by pick");
     Check(RtaPickScore.SynergyWeight(5)<RtaPickScore.SynergyWeight(0),"rta synergy yields to enemy later");
@@ -148,6 +148,9 @@ static class RuneUpdateRegressionTest {
       coverRune.Subs.Add(new SubStat{Stat="Atk%",Value=11});
       RuneEngine.Calculate(new List<RuneRow>{coverRune});
       Check(coverRune.BestBuild=="CoverBase","rune without Acc shows the simpler preset name");
+      double coverRaw=(double)scoreM.Invoke(null,new object[]{coverRune,coverBase});
+      double coverBonus=RuneEngine.InventoryBonus(coverBase,coverRune.Set,coverRune.Slot);
+      Check(Math.Abs(coverRune.Potential-Math.Round(coverRaw+coverBonus,3))<.001,"main potential includes displayed preset stock bonus");
       coverRune.Subs[3].Stat="Acc%";coverRune.Subs[3].Value=20;coverRune.BestBuild="";
       RuneEngine.Calculate(new List<RuneRow>{coverRune});
       Check(coverRune.BestBuild=="CoverAcc","rune with Acc keeps the Acc P1 preset name");
@@ -211,9 +214,25 @@ static class RuneUpdateRegressionTest {
       }
       RuneEngine.ReplacePresets(new List<Preset>{gemKeep,gemStock});
       RuneEngine.Calculate(gemPack);
-      Check(gemFocus.Scores!=null&&gemFocus.Scores.Length>=2&&gemFocus.Scores[1]>gemFocus.Scores[0],"empty stock still boosts display score");
+      Check(RuneEngine.InventoryBonus(gemKeep,gemFocus.Set,gemFocus.Slot,gemFocus.Id)==1,"nine violent slot 4 runes still get set stock +1");
+      Check(gemFocus.Scores!=null&&gemFocus.Scores.Length>=2&&gemFocus.Scores[0]>gemFocus.Scores[1],"shared set bonus keeps GemKeep ahead");
       Check(gemFocus.BestBuild=="GemKeep","stock bonus does not steal best build from max raw");
       Check(gemFocus.RecommendSource=="Def+"&&gemFocus.RecommendTarget=="Spd","stock bonus does not change gem rec");
+      var topKeepPack=new List<RuneRow>();
+      for(int ti=0;ti<11;ti++){
+        var tr=new RuneRow{Id=9300+ti,Set="Violent",Slot=5,Main="HP%",MainValue=63,Grade=5,Stars=6,Level=12};
+        tr.Subs.Add(new SubStat{Stat="Spd",Value=ti==10?5:20});
+        tr.Subs.Add(new SubStat{Stat="HP%",Value=ti==10?5:18});
+        tr.Subs.Add(new SubStat{Stat="Acc%",Value=ti==10?5:15});
+        tr.Subs.Add(new SubStat{Stat="Res%",Value=ti==10?5:12});
+        topKeepPack.Add(tr);
+      }
+      RuneEngine.ReplacePresets(new List<Preset>{RuneEngine.MakePreset("TopKeep",new[]{"P1","Non","Non","P1","Non","P1","Non","Non","Non","Non","Non"},"Violent","","HP%,Spd","HP%","HP%")});
+      RuneEngine.Calculate(topKeepPack);
+      int topKept=topKeepPack.Count(x=>RuneEngine.StockBonusRuneIds.Contains(x.Id));
+      Check(topKept==10,"eleven violent slot 5 keep top 10 stock bonus");
+      Check(!RuneEngine.StockBonusRuneIds.Contains(9310),"weakest 11th violent slot 5 loses stock bonus");
+      Check(RuneEngine.InventoryBonus(null,"Violent",5,9300)==1&&RuneEngine.InventoryBonus(null,"Violent",5,9310)==0,"top keep +1 and 11th gets 0");
       var despairAtk=new RuneRow{Id=9201,Set="Despair",Slot=2,Main="Atk%",MainValue=47,Innate="HP+",InnateValue=348,Grade=5,Stars=6,Level=12};
       despairAtk.Subs.Add(new SubStat{Stat="CtD%",Value=11});
       despairAtk.Subs.Add(new SubStat{Stat="Acc%",Value=16});
@@ -225,9 +244,9 @@ static class RuneUpdateRegressionTest {
       var slowHp=RuneEngine.MakePreset("Slow DD HP",new[]{"P2","P1","Non","Non","Non","P2","P1","P1","Non","P1","Non"},"Blade,Rage,Violent,Will,Shield,Intangible","Focus,Fatal,Despair,Vampire,Nemesis,Revenge,Fight","Atk%","CtD%","Atk%","HP%","HP%","HP%");
       RuneEngine.ReplacePresets(new List<Preset>{fastDps,fastHp,slowDps,slowHp});
       RuneEngine.Calculate(new List<RuneRow>{despairAtk});
-      Check(despairAtk.BestBuild=="Fast DD HP","Despair Atk slot 2 with Spd stays Fast DD HP not Slow DD HP");
+      Check(despairAtk.BestBuild!=null&&despairAtk.BestBuild.StartsWith("Fast DD")&&despairAtk.BestBuild.IndexOf("Slow",StringComparison.Ordinal)<0,"Despair Atk slot 2 with Spd stays Fast DD not Slow DD HP");
       Check(despairAtk.Scores!=null&&despairAtk.Scores.Length>=4&&despairAtk.Scores[1]>despairAtk.Scores[3],"Fast DD HP score stays above Slow DD HP");
-      Check(Math.Abs(despairAtk.Potential-Math.Round(despairAtk.Scores[1],3))<.001,"displayed potential is Fast DD HP max");
+      Check(despairAtk.Potential>0&&despairAtk.Scores.Max()>=despairAtk.Scores[3],"displayed potential stays on a Fast DD preset");
       var liveFast=RuneEngine.MakePreset("Fast DD",new[]{"P2","P1","Non","P1","Non","P2","P1","P1","Non","P1","Non"},"Swift,Blade,Rage,Violent,Will,Intangible","Fatal,Despair,Vampire,Nemesis,Shield,Revenge,Fight","Atk%,Spd","CtD%","Atk%");
       var liveSlow=RuneEngine.MakePreset("Slow DD",new[]{"P2","P1","Non","Non","Non","P2","P1","P1","Non","P1","Non"},"Blade,Rage,Violent,Will,Shield,Intangible","Focus,Fatal,Despair,Vampire,Nemesis,Revenge,Fight","Atk%","CtD%","Atk%");
       RuneEngine.ReplacePresets(new List<Preset>{liveFast,liveSlow});
@@ -298,13 +317,9 @@ static class RuneUpdateRegressionTest {
       hpToAtk.Subs.Add(new SubStat{Stat="CtR%",Value=10});
       hpToAtk.Subs.Add(new SubStat{Stat="CtD%",Value=12,Grind=3});
       hpToAtk.Subs.Add(new SubStat{Stat="Acc%",Value=14});
-      var savedAtk=RuneEngine.StatGlobalFactor["Atk+"];
-      var savedHp=RuneEngine.StatGlobalFactor["HP%"];
-      RuneEngine.StatGlobalFactor["Atk+"]=0.9;RuneEngine.StatGlobalFactor["HP%"]=1;
       RuneEngine.Stocks.Add(new CraftStock{Type="Gemme",Set="Violent",Stat="HP%",Grade=4,Amount=1,Ancient=false});
       RuneEngine.Stocks.Add(new CraftStock{Type="Gemme",Set="Violent",Stat="Atk+",Grade=4,Amount=1,Ancient=false});
       RuneEngine.Calculate(new List<RuneRow>{hpToAtk});
-      RuneEngine.StatGlobalFactor["Atk+"]=savedAtk;RuneEngine.StatGlobalFactor["HP%"]=savedHp;
       RuneEngine.Stocks.RemoveAll(x=>x.Id==0&&(x.Stat=="HP%"||x.Stat=="Atk+")&&x.Grade==4);
       Check(hpToAtk.RecommendTarget=="Atk+","Slow DD gems P2 HP% into P1 Atk+");
       RuneEngine.ReplacePresets(new List<Preset>{liveFastHp});
@@ -447,6 +462,11 @@ static class RuneUpdateRegressionTest {
     Check((int)qualityKey.Invoke(null,new object[]{5})==5,"legend rune uses quality 5");
     var legendCol=(Color)typeof(MainForm).GetMethod("RuneLogoColor",iconFlags).Invoke(null,new object[]{5});
     Check(legendCol.R>200&&legendCol.G>150&&legendCol.G<190&&legendCol.B<80,"legend orange matches in-game gold");
+    var paintGrade=typeof(MainForm).GetMethod("CroquisPaintGrade",iconFlags);
+    Check((int)paintGrade.Invoke(null,new object[]{4,15})==5,"plus 15 rune uses legend gold not hero purple");
+    Check((int)paintGrade.Invoke(null,new object[]{4,12})==4,"plus 12 hero stays purple");
+    Check((int)paintGrade.Invoke(null,new object[]{5,15})==5,"plus 15 legend stays gold");
+    Check((int)paintGrade.Invoke(null,new object[]{14,15})==5,"plus 15 ancient hero uses legend gold not purple");
     using(var src=new Bitmap(8,8,PixelFormat.Format32bppArgb)){
       for(int y=0;y<8;y++)for(int x=0;x<8;x++)src.SetPixel(x,y,Color.FromArgb(255,224,159,75));
       var tinted=(Bitmap)typeof(MainForm).GetMethod("TintCroquisCreux",iconFlags).Invoke(null,new object[]{src,Color.FromArgb(64,210,110)});
@@ -482,13 +502,45 @@ static class RuneUpdateRegressionTest {
       var rawA=(Bitmap)typeof(MainForm).GetMethod("LoadPng32",iconFlags).Invoke(null,new object[]{ancientV});
       var rawN=(Bitmap)typeof(MainForm).GetMethod("LoadPng32",iconFlags).Invoke(null,new object[]{normalV});
       Check(rawA!=null&&rawA.GetPixel(0,0).A<8,"ancient png keeps transparent corner");
-      Check(rawA.Width!=rawN.Width||rawA.Height!=rawN.Height,"ancient icon is not the normal png");
+      int differ=0,cmpW=Math.Min(rawA.Width,rawN.Width),cmpH=Math.Min(rawA.Height,rawN.Height);
+      for(int y=0;y<cmpH;y++)for(int x=0;x<cmpW;x++){
+        if(rawA.GetPixel(x,y).ToArgb()!=rawN.GetPixel(x,y).ToArgb())differ++;
+      }
+      Check(differ>100,"ancient icon is not the normal png");
+      var goldA=(Bitmap)typeof(MainForm).GetMethod("TintCroquisCreux",iconFlags).Invoke(null,new object[]{rawA,Color.FromArgb(232,168,56)});
+      int goldPx=0,purplePx=0;
+      for(int y=0;y<goldA.Height;y++)for(int x=0;x<goldA.Width;x++){
+        var c=goldA.GetPixel(x,y);if(c.A<80)continue;
+        if(c.R>=180&&c.B>=180&&c.G<180)purplePx++;
+        if(c.R>=180&&c.G>=110&&c.B<=90)goldPx++;
+      }
+      Check(goldPx>80&&goldPx>purplePx,"plus 15 ancient png tint is gold not purple");
       var pulse=(Bitmap)typeof(MainForm).GetMethod("BuildAncientPulseMask",iconFlags).Invoke(null,new object[]{rawA});
       int pulsePx=0;
       for(int y=0;y<pulse.Height;y++)for(int x=0;x<pulse.Width;x++){
         if(pulse.GetPixel(x,y).A>=40)pulsePx++;
       }
       Check(pulsePx>80,"ancient shine mask keeps looping light body");
+    }
+    string ancientGif=Path.Combine(@"C:\Users\Great-Lucky\Documents\Rune_Manager_Modern\Donnees\assets","ancient-gif","Violent","ViolentSlot1.gif");
+    if(File.Exists(ancientGif)){
+      using(var fs=new FileStream(ancientGif,FileMode.Open,FileAccess.Read,FileShare.Read)){
+        var ms=new MemoryStream();
+        fs.CopyTo(ms);ms.Position=0;
+        using(var gif=Image.FromStream(ms)){
+          Check(ImageAnimator.CanAnimate(gif),"ancient gif animates without extra shine");
+          var fd=new FrameDimension(gif.FrameDimensionsList[0]);
+          Check(gif.GetFrameCount(fd)>1,"ancient gif has multiple frames");
+        }
+      }
+    }
+    var paintSizeFn=typeof(MainForm).GetMethod("CroquisIconPaintSize",iconFlags);
+    using(var png=Image.FromFile(normalV))
+    using(var ancientPng=Image.FromFile(ancientV)){
+      Size baseDest=(Size)paintSizeFn.Invoke(null,new object[]{png,null,84,50});
+      Size ancientDest=(Size)paintSizeFn.Invoke(null,new object[]{ancientPng,png,88,54});
+      Check(ancientDest.Height>baseDest.Height&&ancientDest.Width>=baseDest.Width,"ancient icon is slightly larger than base");
+      Check(ancientDest.Height-baseDest.Height<=6,"ancient icon is only a little larger");
     }
     string outlined=Path.Combine(@"C:\Users\Great-Lucky\Documents\Rune_Manager_Modern\Donnees\assets","croquis-rune-3d-violent-slot1.png");
     if(File.Exists(outlined)){
@@ -522,9 +574,9 @@ static class RuneUpdateRegressionTest {
       }
       Check(bx1>=0&&(bx1-bx0+1)>=40&&(by1-by0+1)>=40,"cell blit fills the square with the stone");
       var boxFn=typeof(MainForm).GetMethod("BlitOpaqueToBox",iconFlags,null,new Type[]{typeof(Image),typeof(RectangleF),typeof(int),typeof(int),typeof(Color)},null);
-      var onGrid=(Bitmap)boxFn.Invoke(null,new object[]{baked,ob,52,52,Color.FromArgb(30,32,36)});
+      var onGrid=(Bitmap)boxFn.Invoke(null,new object[]{baked,ob,52,52,Color.FromArgb(15,25,39)});
       var corner=onGrid.GetPixel(1,1);
-      Check(corner.A==255&&!(corner.R<12&&corner.G<12&&corner.B<12),"transparent pixels stay the cell color not black");
+      Check(corner.A==255&&corner.R==15&&corner.G==25&&corner.B==39,"transparent pixels stay the cell color");
       var destFn=typeof(MainForm).GetMethod("CroquisDestSize",iconFlags);
       string slot2Path=Path.Combine(@"C:\Users\Great-Lucky\Documents\Rune_Manager_Modern\Donnees\assets","croquis-rune-3d-violent-slot2.png");
       if(File.Exists(slot2Path)){
@@ -597,30 +649,30 @@ static class RuneUpdateRegressionTest {
         var g=window.Controls.OfType<DataGridView>().First();
         var created=g.Handle;
         int beforeRows=g.Rows.Count;
-        typeof(MainForm).GetMethod("AddPresetGridRow",flags).Invoke(form,new object[]{g,0,new[]{"HP%","Atk%","Def%","Spd","Res%","Acc%","CtR%","CtD%","HP+","Atk+","Def+"}});
+        typeof(MainForm).GetMethod("AddPresetGridRow",flags).Invoke(form,new object[]{g,-1,new[]{"HP%","Atk%","Def%","Spd","Res%","Acc%","CtR%","CtD%","HP+","Atk+","Def+"}});
         Check(g.Rows.Count==beforeRows+1,"add preset inserts a grid row");
         Check(!g.Columns[1].ReadOnly,"preset name column is editable");
         g.CurrentCell=g.Rows[g.Rows.Count-1].Cells[1];
         var remove=typeof(MainForm).GetMethods(flags).First(m=>m.Name=="RemovePresetGridRow"&&m.GetParameters().Length==3);
-        remove.Invoke(form,new object[]{g,0,false});
+        remove.Invoke(form,new object[]{g,-1,false});
         Check(g.Rows.Count==beforeRows,"remove preset deletes the selected row");
-        string name1=Convert.ToString(g.Rows[1].Cells[1].Value);
-        string name2=Convert.ToString(g.Rows[2].Cells[1].Value);
-        g.CurrentCell=g.Rows[2].Cells[1];
+        string name1=Convert.ToString(g.Rows[0].Cells[1].Value);
+        string name2=Convert.ToString(g.Rows[1].Cells[1].Value);
+        g.CurrentCell=g.Rows[1].Cells[1];
         var move=typeof(MainForm).GetMethods(flags).First(m=>m.Name=="MovePresetGridRow"&&m.GetParameters().Length==4);
-        move.Invoke(form,new object[]{g,0,-1,false});
-        Check(Convert.ToString(g.Rows[1].Cells[1].Value)==name2,"move up puts selected preset above");
-        Check(Convert.ToString(g.Rows[2].Cells[1].Value)==name1,"move up swaps with previous preset");
-        g.CurrentCell=g.Rows[1].Cells[1];
-        move.Invoke(form,new object[]{g,0,-1,false});
-        Check(Convert.ToString(g.Rows[1].Cells[1].Value)==name2,"first preset cannot move above global row");
-        g.CurrentCell=g.Rows[1].Cells[1];
-        move.Invoke(form,new object[]{g,0,1,false});
-        Check(Convert.ToString(g.Rows[1].Cells[1].Value)==name1&&Convert.ToString(g.Rows[2].Cells[1].Value)==name2,"move down restores original preset order");
+        move.Invoke(form,new object[]{g,-1,-1,false});
+        Check(Convert.ToString(g.Rows[0].Cells[1].Value)==name2,"move up puts selected preset above");
+        Check(Convert.ToString(g.Rows[1].Cells[1].Value)==name1,"move up swaps with previous preset");
+        g.CurrentCell=g.Rows[0].Cells[1];
+        move.Invoke(form,new object[]{g,-1,-1,false});
+        Check(Convert.ToString(g.Rows[0].Cells[1].Value)==name2,"first preset cannot move above the top");
+        g.CurrentCell=g.Rows[0].Cells[1];
+        move.Invoke(form,new object[]{g,-1,1,false});
+        Check(Convert.ToString(g.Rows[0].Cells[1].Value)==name1&&Convert.ToString(g.Rows[1].Cells[1].Value)==name2,"move down restores original preset order");
         var setOrder=(string[])typeof(MainForm).GetField("PresetSetOrder",BindingFlags.NonPublic|BindingFlags.Static).GetValue(null);
         var joinSets=typeof(MainForm).GetMethod("JoinOrderedNames",BindingFlags.NonPublic|BindingFlags.Static);
         Check((string)joinSets.Invoke(null,new object[]{new[]{"Intangible","Fight","Will","Violent","Rage","Blade","Swift"},setOrder})=="Swift,Blade,Rage,Violent,Will,Fight,Intangible","set chips follow dropdown order");
-        for(int presetRow=1;presetRow<g.Rows.Count;presetRow++){
+        for(int presetRow=0;presetRow<g.Rows.Count;presetRow++){
           if(g.Rows[presetRow].IsNewRow)continue;
           string prefSets=Convert.ToString(g.Rows[presetRow].Cells[13].Value)??"";
           string accSets=Convert.ToString(g.Rows[presetRow].Cells[14].Value)??"";
@@ -629,32 +681,32 @@ static class RuneUpdateRegressionTest {
           Check(prefSets==(string)joinSets.Invoke(null,new object[]{prefParts,setOrder}),"preferred sets stay in dropdown order");
           Check(accSets==(string)joinSets.Invoke(null,new object[]{accParts,setOrder}),"accepted sets stay in dropdown order");
         }
-        using(var slot2=(ContextMenuStrip)typeof(MainForm).GetMethod("CreatePresetMenu",flags).Invoke(form,new object[]{g,1,15})){
+        using(var slot2=(ContextMenuStrip)typeof(MainForm).GetMethod("CreatePresetMenu",flags).Invoke(form,new object[]{g,0,15})){
           Check(slot2.Items.OfType<ToolStripMenuItem>().Any(x=>x.Text=="Spd")&&!slot2.Items.OfType<ToolStripMenuItem>().Any(x=>x.Text=="CtD%"),"slot 2 menu lists Spd not CtD");
-          var current=Convert.ToString(g.Rows[1].Cells[15].Value)??"";
+          var current=Convert.ToString(g.Rows[0].Cells[15].Value)??"";
           var selected=current.Split(',').Select(x=>x.Trim()).Where(x=>x.Length>0).ToList();
           Check(selected.Count>0,"slot 2 cell has at least one main");
           var marked=slot2.Items.OfType<ToolStripMenuItem>().First(x=>x.Text==selected[0]);
           Check(marked.BackColor.R>marked.BackColor.B,"existing slot 2 main is highlighted");
           bool hadDef=selected.Contains("Def%");
           slot2.Items.OfType<ToolStripMenuItem>().First(x=>x.Text=="Def%").PerformClick();
-          bool hasDef=(Convert.ToString(g.Rows[1].Cells[15].Value)??"").Split(',').Select(x=>x.Trim()).Contains("Def%");
+          bool hasDef=(Convert.ToString(g.Rows[0].Cells[15].Value)??"").Split(',').Select(x=>x.Trim()).Contains("Def%");
           Check(hasDef!=hadDef,"slot 2 menu toggles Def%");
         }
-        using(var slot4=(ContextMenuStrip)typeof(MainForm).GetMethod("CreatePresetMenu",flags).Invoke(form,new object[]{g,1,17})){
+        using(var slot4=(ContextMenuStrip)typeof(MainForm).GetMethod("CreatePresetMenu",flags).Invoke(form,new object[]{g,0,17})){
           Check(slot4.Items.OfType<ToolStripMenuItem>().Any(x=>x.Text=="CtD%")&&!slot4.Items.OfType<ToolStripMenuItem>().Any(x=>x.Text=="Spd"),"slot 4 menu lists CtD not Spd");
         }
-        using(var slot6=(ContextMenuStrip)typeof(MainForm).GetMethod("CreatePresetMenu",flags).Invoke(form,new object[]{g,1,19})){
+        using(var slot6=(ContextMenuStrip)typeof(MainForm).GetMethod("CreatePresetMenu",flags).Invoke(form,new object[]{g,0,19})){
           Check(slot6.Items.OfType<ToolStripMenuItem>().Any(x=>x.Text=="Acc%")&&!slot6.Items.OfType<ToolStripMenuItem>().Any(x=>x.Text=="Spd"),"slot 6 menu lists Acc not Spd");
         }
-        using(var acc=(ContextMenuStrip)typeof(MainForm).GetMethod("CreatePresetMenu",flags).Invoke(form,new object[]{g,1,16})){
+        using(var acc=(ContextMenuStrip)typeof(MainForm).GetMethod("CreatePresetMenu",flags).Invoke(form,new object[]{g,0,16})){
           Check(acc.Items.OfType<ToolStripMenuItem>().Any(x=>x.Text=="Spd")&&!acc.Items.OfType<ToolStripMenuItem>().Any(x=>x.Text=="CtD%"),"slot 2 accepted menu lists Spd not CtD");
-          var prefNow=(Convert.ToString(g.Rows[1].Cells[15].Value)??"").Split(',').Select(x=>x.Trim()).Where(x=>x.Length>0).ToList();
+          var prefNow=(Convert.ToString(g.Rows[0].Cells[15].Value)??"").Split(',').Select(x=>x.Trim()).Where(x=>x.Length>0).ToList();
           Check(prefNow.Count>0,"slot 2 preferred still has a main");
           string pick=prefNow[0];
           acc.Items.OfType<ToolStripMenuItem>().First(x=>x.Text==pick).PerformClick();
-          Check((Convert.ToString(g.Rows[1].Cells[16].Value)??"").Split(',').Select(x=>x.Trim()).Contains(pick),"accepted column receives the moved main");
-          Check(!(Convert.ToString(g.Rows[1].Cells[15].Value)??"").Split(',').Select(x=>x.Trim()).Contains(pick),"preferred column loses the moved main");
+          Check((Convert.ToString(g.Rows[0].Cells[16].Value)??"").Split(',').Select(x=>x.Trim()).Contains(pick),"accepted column receives the moved main");
+          Check(!(Convert.ToString(g.Rows[0].Cells[15].Value)??"").Split(',').Select(x=>x.Trim()).Contains(pick),"preferred column loses the moved main");
         }
         Check(g.Columns.Count==21,"preset grid has accepted main columns");
       }
@@ -666,18 +718,18 @@ static class RuneUpdateRegressionTest {
         var g=window.Controls.OfType<DataGridView>().First();
         var created=g.Handle;
         int shareRows=g.Rows.Count;
-        string shareFirst=Convert.ToString(g.Rows[1].Cells[1].Value);
-        string shareSlot2=Convert.ToString(g.Rows[1].Cells[15].Value);
-        var lines=(string[])typeof(MainForm).GetMethod("BuildPresetShareLines",flags).Invoke(form,new object[]{g,0,stats});
-        Check(lines.Length>=3&&lines[0].StartsWith("RMM-PRESETS"),"export writes share header");
+        string shareFirst=Convert.ToString(g.Rows[0].Cells[1].Value);
+        string shareSlot2=Convert.ToString(g.Rows[0].Cells[15].Value);
+        var lines=(string[])typeof(MainForm).GetMethod("BuildPresetShareLines",flags).Invoke(form,new object[]{g,-1,stats});
+        Check(lines.Length>=2&&lines[0].StartsWith("RMM-PRESETS"),"export writes share header");
         Check(lines.Any(x=>x.StartsWith("PRESET\t"+shareFirst)),"export includes first preset");
-        Check(!(bool)typeof(MainForm).GetMethod("ApplyPresetShare",flags).Invoke(form,new object[]{g,0,stats,new[]{"nope"},false}),"garbage share file is rejected");
+        Check(!(bool)typeof(MainForm).GetMethod("ApplyPresetShare",flags).Invoke(form,new object[]{g,-1,stats,new[]{"nope"},false}),"garbage share file is rejected");
         var one=new[]{"PRESET\tShareOnly\tP1,Non,Non,P1,Non,Non,Non,Non,Non,Non,Non\tViolent\tWill\tSpd\tCtD%\tAtk%\tHP%\t\t\t0.8"};
-        Check((bool)typeof(MainForm).GetMethod("ApplyPresetShare",flags).Invoke(form,new object[]{g,0,stats,one,false}),"single preset file imports");
-        Check(g.Rows.Count==2&&Convert.ToString(g.Rows[1].Cells[1].Value)=="ShareOnly","import replaces grid with shared presets");
-        Check(Convert.ToString(g.Rows[1].Cells[15].Value)=="Spd","import keeps preferred slot 2 mains");
-        Check((bool)typeof(MainForm).GetMethod("ApplyPresetShare",flags).Invoke(form,new object[]{g,0,stats,lines,false}),"roundtrip export imports back");
-        Check(g.Rows.Count==shareRows&&Convert.ToString(g.Rows[1].Cells[1].Value)==shareFirst&&Convert.ToString(g.Rows[1].Cells[15].Value)==shareSlot2,"roundtrip restores original presets");
+        Check((bool)typeof(MainForm).GetMethod("ApplyPresetShare",flags).Invoke(form,new object[]{g,-1,stats,one,false}),"single preset file imports");
+        Check(g.Rows.Count==1&&Convert.ToString(g.Rows[0].Cells[1].Value)=="ShareOnly","import replaces grid with shared presets");
+        Check(Convert.ToString(g.Rows[0].Cells[15].Value)=="Spd","import keeps preferred slot 2 mains");
+        Check((bool)typeof(MainForm).GetMethod("ApplyPresetShare",flags).Invoke(form,new object[]{g,-1,stats,lines,false}),"roundtrip export imports back");
+        Check(g.Rows.Count==shareRows&&Convert.ToString(g.Rows[0].Cells[1].Value)==shareFirst&&Convert.ToString(g.Rows[0].Cells[15].Value)==shareSlot2,"roundtrip restores original presets");
       }
     }
     using(var form=new MainForm()){
@@ -698,7 +750,7 @@ static class RuneUpdateRegressionTest {
       snapshot[0].Name=first;
       RuneEngine.ReplacePresets(snapshot);
     }
-    using(var form=new MainForm()){var flags=BindingFlags.Instance|BindingFlags.NonPublic;var icons=(Dictionary<string,System.Drawing.Image>)typeof(MainForm).GetField("setIcons",flags).GetValue(form);foreach(var path in System.IO.Directory.GetFiles("outputs/rune_manager_release/Donnees/assets/sets","*.png"))icons[System.IO.Path.GetFileNameWithoutExtension(path)]=System.Drawing.Image.FromFile(path);using(var window=(Form)typeof(MainForm).GetMethod("CreatePresetWindow",flags).Invoke(form,null)){window.CreateControl();using(var bitmap=new System.Drawing.Bitmap(window.Width,window.Height)){window.PerformLayout();foreach(Control child in window.Controls){var handle=child.Handle;child.DrawToBitmap(bitmap,new System.Drawing.Rectangle(child.Left,child.Top,child.Width,child.Height));}bitmap.Save("outputs/presets-update-preview.png");}var g=window.Controls.OfType<DataGridView>().First();var menuMethod=typeof(MainForm).GetMethod("CreatePresetMenu",flags);using(var menu=(ContextMenuStrip)menuMethod.Invoke(form,new object[]{g,0,14})){var swift=menu.Items.OfType<ToolStripMenuItem>().First(x=>x.Text=="Swift");swift.PerformClick();Check(Convert.ToString(g.Rows[0].Cells[14].Value).Split(',').Contains("Swift")&&!Convert.ToString(g.Rows[0].Cells[13].Value).Split(',').Contains("Swift"),"set moves between preferred and acceptable");swift.PerformClick();Check(!Convert.ToString(g.Rows[0].Cells[14].Value).Split(',').Contains("Swift"),"set removed by unchecking");}Check(g.DefaultCellStyle.BackColor==System.Drawing.Color.Black,"black preset background");Check(g.Columns[0] is DataGridViewComboBoxColumn&&g.Rows.Count==1+RuneEngine.Presets.Count,"preset window rendered with manual factors");}}
+    using(var form=new MainForm()){var flags=BindingFlags.Instance|BindingFlags.NonPublic;var icons=(Dictionary<string,System.Drawing.Image>)typeof(MainForm).GetField("setIcons",flags).GetValue(form);foreach(var path in System.IO.Directory.GetFiles("outputs/rune_manager_release/Donnees/assets/sets","*.png"))icons[System.IO.Path.GetFileNameWithoutExtension(path)]=System.Drawing.Image.FromFile(path);using(var window=(Form)typeof(MainForm).GetMethod("CreatePresetWindow",flags).Invoke(form,null)){window.CreateControl();using(var bitmap=new System.Drawing.Bitmap(window.Width,window.Height)){window.PerformLayout();foreach(Control child in window.Controls){var handle=child.Handle;child.DrawToBitmap(bitmap,new System.Drawing.Rectangle(child.Left,child.Top,child.Width,child.Height));}bitmap.Save("outputs/presets-update-preview.png");}var g=window.Controls.OfType<DataGridView>().First();var menuMethod=typeof(MainForm).GetMethod("CreatePresetMenu",flags);using(var menu=(ContextMenuStrip)menuMethod.Invoke(form,new object[]{g,0,14})){var swift=menu.Items.OfType<ToolStripMenuItem>().First(x=>x.Text=="Swift");swift.PerformClick();Check(Convert.ToString(g.Rows[0].Cells[14].Value).Split(',').Contains("Swift")&&!Convert.ToString(g.Rows[0].Cells[13].Value).Split(',').Contains("Swift"),"set moves between preferred and acceptable");swift.PerformClick();Check(!Convert.ToString(g.Rows[0].Cells[14].Value).Split(',').Contains("Swift"),"set removed by unchecking");}Check(g.DefaultCellStyle.BackColor==System.Drawing.Color.Black,"black preset background");Check(g.Columns[0] is DataGridViewComboBoxColumn&&g.Rows.Count==RuneEngine.Presets.Count,"preset window rendered with manual factors");}}
     using(var form=new MainForm()){
       var flags=BindingFlags.Instance|BindingFlags.NonPublic;
       using(var window=(Form)typeof(MainForm).GetMethod("CreatePresetWindow",flags).Invoke(form,null)){

@@ -65,14 +65,26 @@ public sealed class SkillUpGroup { public SkillUpMonster Target; public List<Ski
     static readonly Dictionary<int,string> Sets=new Dictionary<int,string>{{1,"Energy"},{2,"Guard"},{3,"Swift"},{4,"Blade"},{5,"Rage"},{6,"Focus"},{7,"Endure"},{8,"Fatal"},{10,"Despair"},{11,"Vampire"},{13,"Violent"},{14,"Nemesis"},{15,"Will"},{16,"Shield"},{17,"Revenge"},{18,"Destroy"},{19,"Fight"},{20,"Determination"},{21,"Enhance"},{22,"Accuracy"},{23,"Tolerance"},{24,"Seal"},{25,"Intangible"}};
     static readonly Dictionary<int,string> Stats=new Dictionary<int,string>{{1,"HP+"},{2,"HP%"},{3,"Atk+"},{4,"Atk%"},{5,"Def+"},{6,"Def%"},{8,"Spd"},{9,"CtR%"},{10,"CtD%"},{11,"Res%"},{12,"Acc%"}};
     public static readonly string[] PresetStatOrder={"HP%","Atk%","Def%","Spd","Res%","Acc%","CtR%","CtD%","HP+","Atk+","Def+"};
-    public static readonly List<Preset> Presets=CreatePresets(); public static readonly List<CraftStock> Stocks=new List<CraftStock>(); public static readonly HashSet<long> ProtectedWorldBossRuneIds=new HashSet<long>(); static readonly Dictionary<int,HashSet<long>> LiveDeckRuneIdsByType=new Dictionary<int,HashSet<long>>(); static readonly HashSet<long> LiveDeckUnitIds=new HashSet<long>(); static readonly string[] DeckUnitRoots=new[]{"deck_list","defense_deck_info","server_arena_defense_deck_info","raid_deck","guildsiege_defense_deck_unit_list","guildsiege_defense_deck_equip_list","worldboss_used_unit"}; public static readonly Dictionary<string,int[]> PresetSlotCounts=new Dictionary<string,int[]>();
+    public static readonly List<Preset> Presets=CreatePresets(); public static readonly List<CraftStock> Stocks=new List<CraftStock>(); public static readonly HashSet<long> ProtectedWorldBossRuneIds=new HashSet<long>(); static readonly Dictionary<int,HashSet<long>> LiveDeckRuneIdsByType=new Dictionary<int,HashSet<long>>(); static readonly HashSet<long> LiveDeckUnitIds=new HashSet<long>(); static readonly string[] DeckUnitRoots=new[]{"deck_list","defense_deck_info","server_arena_defense_deck_info","raid_deck","guildsiege_defense_deck_unit_list","guildsiege_defense_deck_equip_list","worldboss_used_unit"};
+    public const int StockSlotTarget=10;
+    public static readonly Dictionary<string,int[]> PresetSlotCounts=new Dictionary<string,int[]>(StringComparer.OrdinalIgnoreCase);
+    // Top StockSlotTarget runes +12 by raw score keep +1 stock per set|slot.
+    // Rank 11+ of the same set|slot lose the bonus so weak extras can sell.
+    public static readonly HashSet<long> StockBonusRuneIds=new HashSet<long>();
+    public static readonly HashSet<long> StockEligibleIds=new HashSet<long>();
     public static double ScarcityBonus(int[] counts,int slot){
       if(counts==null||counts.Length==0)return 1;
-      int max=counts.Max(),min=counts.Min(),idx=Math.Max(0,Math.Min(counts.Length-1,slot-1)),n=counts[idx];
-      if(max==min)return max==0?1:0;
-      return Math.Max(0,Math.Min(1,(max-n)/(double)(max-min)));
+      int idx=Math.Max(0,Math.Min(counts.Length-1,slot-1));
+      return counts[idx]<StockSlotTarget?1:0;
     }
-    public static double InventoryBonus(Preset p,string set,int slot){int[] c;if(p==null||!PresetSlotCounts.TryGetValue(p.Name+"|"+set,out c)||c==null)c=new int[6];return ScarcityBonus(c,slot);}
+    public static double InventoryBonus(Preset p,string set,int slot,long runeId=0){
+      if(runeId!=0){
+        if(StockBonusRuneIds.Contains(runeId))return 1;
+        if(StockEligibleIds.Contains(runeId))return 0;
+      }
+      int[] c;if(string.IsNullOrEmpty(set)||!PresetSlotCounts.TryGetValue(set,out c)||c==null)c=new int[6];
+      return ScarcityBonus(c,slot);
+    }
     public static string StockFingerprint(){
       int n=Stocks.Count;long qty=0,mix=0;
       for(int i=0;i<n;i++){var x=Stocks[i];qty+=x.Amount;mix+=x.Id+(x.Amount*17L)+(x.Grade*31L);}
@@ -118,11 +130,6 @@ public sealed class SkillUpGroup { public SkillUpMonster Target; public List<Ski
     public static bool SeuilVenteFixe=false;
     public static double ValeurSeuilVenteFixe=8.8;
     public static double PoidsP1=1,PoidsP2=.5,PoidsP3=.2,BonusStatPrincipale=1.75,FacteurSetAcceptable=.95,FacteurMainAcceptable=.85,FacteurSetExclu=.85,SeuilApres12=SeuilQualiteMinimum;
-    // Multiplicateur global par stat (1.0 = 100%, valeur par defaut) applique dans Weight()
-    // EN PLUS de la priorite Non/P1/P2/P3 propre a chaque preset — reglable depuis la ligne
-    // "Valeur globale par stat" de la fenetre Presets (RuneEnhancements.cs). Ex : Atk% a 0.9
-    // fait que l'Atk% compte pour 90% de sa valeur normale, quel que soit le preset.
-    public static readonly Dictionary<string,double> StatGlobalFactor=new Dictionary<string,double>(StringComparer.OrdinalIgnoreCase){{"HP%",1},{"Atk%",1},{"Def%",1},{"Spd",1.1},{"Res%",1},{"Acc%",1},{"CtR%",1},{"CtD%",1},{"HP+",1},{"Atk+",1},{"Def+",1}};
     // Regles de bonus pur (bouton "Regles") : liste ouverte, editable via RuneEnhancements.cs
     // (ShowScoreRules). Chaque regle ajoute Bonus au Potential final si la rune est d'un des
     // Sets listes (vide = tous sets) ET si sa valeur pour Stat atteint Threshold. BuiltIn=true
@@ -526,7 +533,7 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
       if(rune==null)return;rune.Potential=Math.Round(previousPotential,3);rune.Action=rune.Level<12?(PowerSpeed(rune)||rune.Potential>=PwrUpThreshold()?"Pwr up":"Sell"):(PremiumKeep(rune)||rune.Potential>=SeuilApres12?"Keep":"Sell");if(ForceInstantSell(rune))rune.Action="Sell";if(rune.Marker.IndexOf("Reeval",StringComparison.OrdinalIgnoreCase)>=0||rune.Marker.IndexOf("Deck",StringComparison.OrdinalIgnoreCase)>=0)rune.Action=rune.Level<12?"Pwr up":"Keep";
     }
     public static void Calculate(List<RuneRow> rows){
-      PresetSlotCounts.Clear();int n=Presets.Count;if(n<=0||rows==null)return;
+      PresetSlotCounts.Clear();StockBonusRuneIds.Clear();StockEligibleIds.Clear();int n=Presets.Count;if(n<=0||rows==null)return;
       int[,] counts=new int[n,6];var setSlot=new Dictionary<string,int>();var setTotal=new Dictionary<string,int>();
       var raw=new double[rows.Count,n];var projected=new RuneRow[rows.Count,n];
       var bestIdx=new int[rows.Count];var bestVal=new double[rows.Count];
@@ -543,9 +550,26 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
       // toujours son propre bonus stock normalement (lu depuis PresetSlotCounts plus bas via
       // InventoryBonus), mais ne doit plus ALIMENTER ce compte tant qu'elle n'est pas elle-meme
       // +12 — sinon du loot jamais touche destabilise le score de runes deja gardees.
+      var stockGroups=new Dictionary<string,List<KeyValuePair<double,long>>>(StringComparer.OrdinalIgnoreCase);
       for(int i=0;i<rows.Count;i++){
         int bp=bestIdx[i];double best=bestVal[i];
-        if(best>0&&IsUsable(rows[i],best)&&rows[i].Level>=12){counts[bp,Math.Max(0,rows[i].Slot-1)]++;string pk=Presets[bp].Name+"|"+rows[i].Set;int[] pc;if(!PresetSlotCounts.TryGetValue(pk,out pc))PresetSlotCounts[pk]=pc=new int[6];pc[Math.Max(0,Math.Min(5,rows[i].Slot-1))]++;string s=rows[i].Set.ToLowerInvariant(),k=s+"|"+rows[i].Slot;setSlot[k]=setSlot.ContainsKey(k)?setSlot[k]+1:1;setTotal[s]=setTotal.ContainsKey(s)?setTotal[s]+1:1;}
+        var row=rows[i];
+        if(row.Level>=12&&!IsBlue(row)&&!ForceInstantSell(row)){
+          string setName=row.Set??"";
+          int slotIdx=Math.Max(0,Math.Min(5,row.Slot-1));
+          int[] pc;if(!PresetSlotCounts.TryGetValue(setName,out pc)||pc==null)PresetSlotCounts[setName]=pc=new int[6];
+          pc[slotIdx]++;
+          string s=setName.ToLowerInvariant(),k=s+"|"+row.Slot;setSlot[k]=setSlot.ContainsKey(k)?setSlot[k]+1:1;setTotal[s]=setTotal.ContainsKey(s)?setTotal[s]+1:1;
+          StockEligibleIds.Add(row.Id);
+          List<KeyValuePair<double,long>> group;if(!stockGroups.TryGetValue(k,out group)){group=new List<KeyValuePair<double,long>>();stockGroups[k]=group;}
+          group.Add(new KeyValuePair<double,long>(best,row.Id));
+        }
+        if(best>0&&IsUsable(row,best)&&row.Level>=12)counts[bp,Math.Max(0,row.Slot-1)]++;
+      }
+      foreach(var group in stockGroups.Values){
+        group.Sort(delegate(KeyValuePair<double,long> a,KeyValuePair<double,long> b){int cmp=b.Key.CompareTo(a.Key);return cmp!=0?cmp:b.Value.CompareTo(a.Value);});
+        int take=Math.Min(StockSlotTarget,group.Count);
+        for(int k=0;k<take;k++)StockBonusRuneIds.Add(group[k].Value);
       }
       double[] avg=new double[n];for(int p=0;p<n;p++){for(int s=0;s<6;s++)avg[p]+=counts[p,s];avg[p]/=6.0;}
       Parallel.For(0,rows.Count,opts,i=>{
@@ -553,7 +577,7 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
         var rawScores=new double[n];
         for(int p=0;p<n;p++){
           rawScores[p]=raw[i,p];
-          double bonus=raw[i,p]>0?InventoryBonus(Presets[p],r.Set,r.Slot):0;
+          double bonus=raw[i,p]>0?InventoryBonus(Presets[p],r.Set,r.Slot,r.Id):0;
           r.Scores[p]=raw[i,p]+bonus;
           if(CanRefine(r)){double rs=ExpectedRefinementScore(r,Presets[p])+bonus;if(rs>refinementBest){refinementBest=rs;refinementPreset=p;}}
         }
@@ -561,8 +585,12 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
         int named=PreferCoveredName(r,rawScores,bp);
         var chosen=projected[i,named];
         r.Recommendation=Recommend(chosen,Presets[named]);
-        double winBonus=raw[i,bp]>0?InventoryBonus(Presets[bp],r.Set,r.Slot):0;
-        r.Potential=Math.Round(raw[i,bp]+winBonus+RuleBonus(r),3);r.BestBuild=Presets[named].Name;r.RecommendSource=chosen.RecommendSource;r.RecommendTarget=chosen.RecommendTarget;r.RecommendationInStock=chosen.RecommendationInStock;r.RefinementPotential=Math.Round(refinementBest,3);r.RefinementGain=Math.Round(Math.Max(0,refinementBest-raw[i,bp]-winBonus),3);r.RefinementPreset=refinementPreset>=0?Presets[PreferCoveredName(r,rawScores,refinementPreset)].Name:"";
+        // Le tooltip (ExplainPotential) lit InventoryBonus du BestBuild affiche. Le palier
+        // brut (bp) peut etre un preset plus "complet" (Fast DD HP) alors que le nom montre
+        // le preset simple (Fast DD MAX DPS) : sans ca, la grille restait au score brut
+        // pendant que le hover ajoutait +1 de stock vide sur l'autre seau.
+        double winBonus=raw[i,named]>0?InventoryBonus(Presets[named],r.Set,r.Slot,r.Id):0;
+        r.Potential=Math.Round(raw[i,named]+winBonus+RuleBonus(r),3);r.BestBuild=Presets[named].Name;r.RecommendSource=chosen.RecommendSource;r.RecommendTarget=chosen.RecommendTarget;r.RecommendationInStock=chosen.RecommendationInStock;r.RefinementPotential=Math.Round(refinementBest,3);r.RefinementGain=Math.Round(Math.Max(0,refinementBest-raw[i,named]-winBonus),3);r.RefinementPreset=refinementPreset>=0?Presets[PreferCoveredName(r,rawScores,refinementPreset)].Name:"";
       });
       ApplyRetentionRules(rows);
     }
@@ -586,7 +614,7 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
     static double Factorial(int n){double result=1;for(int i=2;i<=n;i++)result*=i;return result;}
     static void SearchProjection(RuneRow variant,Preset preset,int targets,int remaining,int index,int[] allocation,ref RuneRow winner,ref double winnerScore){if(targets==0){var empty=CopyRune(variant);empty.Level=12;double emptyScore=Score(empty,preset);if(emptyScore>winnerScore){winnerScore=emptyScore;winner=empty;}return;}if(index==targets-1){allocation[index]=remaining;var candidate=CopyRune(variant);candidate.Level=12;for(int i=0;i<targets;i++)candidate.Subs[i].Value+=allocation[i]*RollMax(candidate.Subs[i].Stat);double score=Score(candidate,preset);if(score>winnerScore){winnerScore=score;winner=candidate;}return;}for(int rolls=0;rolls<=remaining;rolls++){allocation[index]=rolls;SearchProjection(variant,preset,targets,remaining-rolls,index+1,allocation,ref winner,ref winnerScore);}}
     static RuneRow CopyRune(RuneRow source){var copy=new RuneRow{Id=source.Id,Set=source.Set,Slot=source.Slot,Main=source.Main,MainValue=source.MainValue,Innate=source.Innate,InnateValue=source.InnateValue,Grade=source.Grade,Stars=source.Stars,Level=source.Level,Ancient=source.Ancient,Equipped=source.Equipped,EquippedUnitId=source.EquippedUnitId,EquippedMasterId=source.EquippedMasterId,Marker=source.Marker,Obtained=source.Obtained};foreach(var s in source.Subs)copy.Subs.Add(new SubStat{Stat=s.Stat,Value=s.Value,Gemmed=s.Gemmed,Grind=s.Grind});return copy;}
-    static void CalculateReevalPriority(RuneRow r,int[,] counts,double[] avg,Dictionary<string,int> setSlot,Dictionary<string,int> setTotal){r.ReevalPriority=0;r.ReevalBestBuild="";if(r.Marker.IndexOf("Reeval",StringComparison.OrdinalIgnoreCase)<0||r.Grade<5)return;string sk=r.Set.ToLowerInvariant()+"|"+r.Slot;double setScarcity=1;int ss=setSlot.ContainsKey(sk)?setSlot[sk]:0;double setMean=setTotal.ContainsKey(r.Set.ToLowerInvariant())?setTotal[r.Set.ToLowerInvariant()]/6.0:0;setScarcity=ss<=0?1.35:Math.Max(1,Math.Min(1.35,Math.Pow(Math.Max(1,setMean)/ss,.35)));for(int pi=0;pi<Presets.Count;pi++){var p=Presets[pi];if(!p.Preferred.Contains(r.Set)&&!p.Accepted.Contains(r.Set))continue;double mainF=MainFit(p,r.Slot,r.Main);if((r.Slot==2||r.Slot==4||r.Slot==6)&&mainF<=0)continue;var candidates=p.W.Where(k=>k.Value>0&&k.Key!=r.Main&&k.Key!=r.Innate&&SlotPossible(r.Slot,k.Key)).Select(k=>new{Stat=k.Key,W=Weight(p,k.Key,r.Set)}).OrderByDescending(x=>x.W).ToList();double theoretical=0;int used=0;foreach(var c in candidates){if(used>=4)break;double rolls=3.0;if(c.Stat=="Spd"&&PremiumSet(r.Set))rolls=r.Ancient?4.35:3.85;theoretical+=c.W*rolls;used++;}if(used<4)continue;double main=BonusStatPrincipale*((r.Slot==2||r.Slot==4||r.Slot==6)?Math.Max(Weight(p,r.Main,r.Set),.35):.35);double slotScarcity=counts[pi,Math.Max(0,r.Slot-1)]<=0?1.45:Math.Max(.82,Math.Min(1.45,Math.Pow(Math.Max(1,avg[pi])/counts[pi,Math.Max(0,r.Slot-1)],.45)));double setFit=p.Preferred.Contains(r.Set)?1:.92;double speedUpside=candidates.Any(x=>x.Stat=="Spd")?(PremiumSet(r.Set)?1.18:1.06):1;double score=(theoretical+main)*setFit*speedUpside*p.ScoreFactor*mainF+InventoryBonus(p,r.Set,r.Slot);if(score>r.ReevalPriority){r.ReevalPriority=Math.Round(score,3);r.ReevalBestBuild=p.Name;}}}
+    static void CalculateReevalPriority(RuneRow r,int[,] counts,double[] avg,Dictionary<string,int> setSlot,Dictionary<string,int> setTotal){r.ReevalPriority=0;r.ReevalBestBuild="";if(r.Marker.IndexOf("Reeval",StringComparison.OrdinalIgnoreCase)<0||r.Grade<5)return;string sk=r.Set.ToLowerInvariant()+"|"+r.Slot;double setScarcity=1;int ss=setSlot.ContainsKey(sk)?setSlot[sk]:0;double setMean=setTotal.ContainsKey(r.Set.ToLowerInvariant())?setTotal[r.Set.ToLowerInvariant()]/6.0:0;setScarcity=ss<=0?1.35:Math.Max(1,Math.Min(1.35,Math.Pow(Math.Max(1,setMean)/ss,.35)));for(int pi=0;pi<Presets.Count;pi++){var p=Presets[pi];if(!p.Preferred.Contains(r.Set)&&!p.Accepted.Contains(r.Set))continue;double mainF=MainFit(p,r.Slot,r.Main);if((r.Slot==2||r.Slot==4||r.Slot==6)&&mainF<=0)continue;var candidates=p.W.Where(k=>k.Value>0&&k.Key!=r.Main&&k.Key!=r.Innate&&SlotPossible(r.Slot,k.Key)).Select(k=>new{Stat=k.Key,W=Weight(p,k.Key,r.Set)}).OrderByDescending(x=>x.W).ToList();double theoretical=0;int used=0;foreach(var c in candidates){if(used>=4)break;double rolls=3.0;if(c.Stat=="Spd"&&PremiumSet(r.Set))rolls=r.Ancient?4.35:3.85;theoretical+=c.W*rolls;used++;}if(used<4)continue;double main=BonusStatPrincipale*((r.Slot==2||r.Slot==4||r.Slot==6)?Math.Max(Weight(p,r.Main,r.Set),.35):.35);double slotScarcity=counts[pi,Math.Max(0,r.Slot-1)]<=0?1.45:Math.Max(.82,Math.Min(1.45,Math.Pow(Math.Max(1,avg[pi])/counts[pi,Math.Max(0,r.Slot-1)],.45)));double setFit=p.Preferred.Contains(r.Set)?1:.92;double speedUpside=candidates.Any(x=>x.Stat=="Spd")?(PremiumSet(r.Set)?1.18:1.06):1;double score=(theoretical+main)*setFit*speedUpside*p.ScoreFactor*mainF+InventoryBonus(p,r.Set,r.Slot,r.Id);if(score>r.ReevalPriority){r.ReevalPriority=Math.Round(score,3);r.ReevalBestBuild=p.Name;}}}
     static void SetNoPreset(RuneRow r){r.Potential=0;r.BestBuild=Loc.T("no_preset");r.Recommendation="";r.RecommendSource="";r.RecommendTarget="";r.RecommendationInStock=false;r.Action=r.Level<12?(PowerSpeed(r)?"Pwr up":"Sell"):(PremiumKeep(r)?"Keep":"Sell");if(ForceInstantSell(r))r.Action="Sell";if(r.Marker.IndexOf("Reeval",StringComparison.OrdinalIgnoreCase)>=0||r.Marker.IndexOf("Deck",StringComparison.OrdinalIgnoreCase)>=0)r.Action=r.Level<12?"Pwr up":"Keep";}
     static bool InvalidFlatSlot2(RuneRow r){return r!=null&&r.Slot==2&&(r.Main=="HP+"||r.Main=="Atk+"||r.Main=="Def+");}
     // Regle demandee par Jeremy : runes slot 4/6 a stat principale flat (HP+/Atk+/Def+) —
@@ -673,7 +701,11 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
       }
       return pick;
     }
-    static double Score(RuneRow r,Preset p){if(ForceInstantSell(r))return 0;if(!p.Preferred.Contains(r.Set)&&!p.Accepted.Contains(r.Set))return 0;double mainF=MainFit(p,r.Slot,r.Main);if((r.Slot==2||r.Slot==4||r.Slot==6)&&mainF<=0)return 0;double points=0,bestW=0;foreach(var s in r.Subs){double w=Weight(p,s.Stat,r.Set);bestW=Math.Max(bestW,w);points+=w*(s.Value+(r.Level>=12?GrindMax(s.Stat,r.Ancient):0))/RollMax(s.Stat);}if(r.Level>=12)points+=GemBonus(r,p);int totalRolls=r.Grade>=5?4:r.Grade==4?3:r.Grade==3?2:1;int remaining=r.Level<12?Math.Max(0,totalRolls-r.Level/3):0;points+=remaining*bestW*.75;points+=BonusStatPrincipale*((r.Slot==2||r.Slot==4||r.Slot==6)?Math.Max(Weight(p,r.Main,r.Set),.35):.35);double setF=p.Preferred.Contains(r.Set)?1:FacteurSetAcceptable;return 10*Math.Pow(Math.Max(0,points/11),1.15)*setF*mainF*p.ScoreFactor;}
+    // CtR/CtD/Acc/Res cannot take grinds; Score used to under-value max rolls vs grindable %/Spd.
+    // Match Spd +12 phantom grind: Spd12=(12+5)/6, CtR12=(12/6)*factor → factor=17/12.
+    public static double NonGrindableFactor=17.0/12.0;
+    static double SubPoints(Preset p,RuneRow r,SubStat s){double w=Weight(p,s.Stat,r.Set);double part=w*(s.Value+(r.Level>=12?GrindMax(s.Stat,r.Ancient):0))/RollMax(s.Stat);if(!Grindable(s.Stat)&&NonGrindableFactor>0)part*=NonGrindableFactor;return part;}
+    static double Score(RuneRow r,Preset p){if(ForceInstantSell(r))return 0;if(!p.Preferred.Contains(r.Set)&&!p.Accepted.Contains(r.Set))return 0;double mainF=MainFit(p,r.Slot,r.Main);if((r.Slot==2||r.Slot==4||r.Slot==6)&&mainF<=0)return 0;double points=0,bestW=0;foreach(var s in r.Subs){double w=Weight(p,s.Stat,r.Set);bestW=Math.Max(bestW,w);points+=SubPoints(p,r,s);}if(r.Level>=12)points+=GemBonus(r,p);int totalRolls=r.Grade>=5?4:r.Grade==4?3:r.Grade==3?2:1;int remaining=r.Level<12?Math.Max(0,totalRolls-r.Level/3):0;points+=remaining*bestW*.75;points+=BonusStatPrincipale*((r.Slot==2||r.Slot==4||r.Slot==6)?Math.Max(Weight(p,r.Main,r.Set),.35):.35);double setF=p.Preferred.Contains(r.Set)?1:FacteurSetAcceptable;return 10*Math.Pow(Math.Max(0,points/11),1.15)*setF*mainF*p.ScoreFactor;}
     // Simule le Spd "atteignable" en projetant les rolls futurs restants sur une rune pas
     // encore +12 (ou renvoie le Spd actuel si deja +12). Utilise par les regles Stat=="Spd"
     // Projected=true dans RuleBonus — independant du preset choisi ou de la repartition de
@@ -799,8 +831,10 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
     static bool IsFlat(string s){return s=="HP+"||s=="Atk+"||s=="Def+";}
     static bool Grindable(string s){return s=="HP+"||s=="HP%"||s=="Atk+"||s=="Atk%"||s=="Def+"||s=="Def%"||s=="Spd";}
     static bool SlotPossible(int slot,string s){return !(slot==1&&(s=="Def+"||s=="Def%"))&&!(slot==3&&(s=="Atk+"||s=="Atk%"));} static bool AccResCompatible(RuneRow r,string t,SubStat replacing=null){if(t=="Acc%")return r.Main!="Res%"&&!r.Subs.Any(x=>x.Stat=="Res%"&&x!=replacing);if(t=="Res%")return r.Main!="Acc%"&&!r.Subs.Any(x=>x.Stat=="Acc%"&&x!=replacing);return true;}
-    static double Weight(Preset p,string s,string set){double priority;if(!p.W.TryGetValue(s,out priority)||priority<=0)return 0;double w=priority==1?PoidsP1:priority==2?PoidsP2:PoidsP3;if(IsFlat(s))w*=priority==1?.55:.45;if(s=="CtR%"||s=="CtD%"||s=="Acc%"||s=="Res%")w*=1.3;string q=set.ToLowerInvariant();if(s=="Res%"&&(q=="endure"||q=="energy"))w*=1.15;if(s=="Acc%"&&(q=="seal"||q=="fight"||q=="despair"||q=="focus"))w*=1.15;if(s=="Spd"&&priority==1)w*=1.05;double gf;if(StatGlobalFactor.TryGetValue(s,out gf))w*=gf;return w;}
-    static int Rank(Preset p,string s){double priority;return p.W.TryGetValue(s,out priority)&&priority>0?(int)Math.Round(priority):4;}
+    static double Weight(Preset p,string s,string set){double pct;if(!p.W.TryGetValue(s,out pct)||pct<=0)return 0;return pct;}
+    // 100%/90% = palier 1 (ex-P1), 50% = palier 2, 20% = palier 3. Les gemmes gardent
+    // la logique P1/P2/P3 ; le score utilise le % exact (90% Atk+ < 100% Atk%).
+    static int Rank(Preset p,string s){double pct;if(!p.W.TryGetValue(s,out pct)||pct<=0)return 4;if(pct>=.85)return 1;if(pct>=.35)return 2;return 3;}
     static double RollMax(string s){return s=="HP+"?375:(s=="Atk+"||s=="Def+")?20:(s=="Spd"||s=="CtR%")?6:s=="CtD%"?7:8;} static double RollAverage(string s){return s=="HP+"?255:(s=="Atk+"||s=="Def+")?15:s=="Spd"?5:s=="CtR%"?5:s=="CtD%"?5.5:6;} static double GrindMax(string s,bool a){if(s=="HP+")return a?610:550;if(s=="Atk+"||s=="Def+")return a?34:30;if(s=="HP%"||s=="Atk%"||s=="Def%")return a?12:10;if(s=="Spd")return a?6:5;return 0;} static double GemMax(string s,bool a){if(s=="HP+")return a?640:580;if(s=="Atk+"||s=="Def+")return a?44:40;if(s=="HP%"||s=="Atk%"||s=="Def%")return a?15:13;if(s=="Spd")return a?11:10;if(s=="CtR%")return a?10:9;if(s=="CtD%")return a?12:10;if(s=="Res%"||s=="Acc%")return a?13:11;return 0;}
     static double GemMaxViolet(string s,bool a){if(s=="HP+")return a?440:380;if(s=="Atk+"||s=="Def+")return a?30:26;if(s=="HP%"||s=="Atk%"||s=="Def%")return a?13:11;if(s=="Spd")return a?9:8;if(s=="CtR%")return a?8:7;if(s=="CtD%")return a?10:8;if(s=="Res%"||s=="Acc%")return a?11:9;return 0;}
     static bool HasGemGrade(RuneRow r,string stat,int grade){if(CountUsableCraft(r.Ancient,"Gemme",r.Set,stat,grade)>0)return true;if(!r.Ancient&&CountUsableCraft(false,"Gemme","Immemorial",stat,grade)>0)return true;return false;}
@@ -817,15 +851,29 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
     public static Dictionary<string,Dictionary<string,double>> AutoKeepThresholds=BuildDefaultAutoKeep();
     static bool PremiumKeep(RuneRow r){if(r.Level<12)return false;Dictionary<string,double> row;if(!AutoKeepThresholds.TryGetValue(r.Set,out row))return false;foreach(var sub in r.Subs){if(r.Slot==2&&string.Equals(sub.Stat,"Spd",StringComparison.OrdinalIgnoreCase))continue;double th;if(row.TryGetValue(sub.Stat,out th)&&th>0&&sub.Value>=th)return true;}return false;}
     static bool PowerSpeed(RuneRow r){if(r.Slot==2||r.Level>=12||Speed(r)<=0)return false;int rem=r.Grade>=5?Math.Max(0,4-r.Level/3):PremiumSet(r.Set)?Math.Max(0,3-r.Level/3):0;return Speed(r)+rem*6>=23;}
-    static string WeightLabel(double v){return v==1?"P1":v==2?"P2":v==3?"P3":"Non";}
+    public static string FormatStatWeight(double v){if(v<=0)return "0%";return Math.Round(v*100).ToString(CultureInfo.InvariantCulture)+"%";}
+    public static double ParseStatWeight(string lab,string stat){
+      if(string.IsNullOrEmpty(lab))return 0;
+      string t=lab.Trim();
+      if(t=="Non"||t=="None"||t=="Off"||t=="0"||t=="0%")return 0;
+      if(string.Equals(t,"P1",StringComparison.OrdinalIgnoreCase))return IsFlat(stat)?.9:1;
+      if(string.Equals(t,"P2",StringComparison.OrdinalIgnoreCase))return .5;
+      if(string.Equals(t,"P3",StringComparison.OrdinalIgnoreCase))return .2;
+      bool pct=t.EndsWith("%");
+      if(pct)t=t.Substring(0,t.Length-1).Trim();
+      double v;if(!double.TryParse(t.Replace(',','.'),NumberStyles.Any,CultureInfo.InvariantCulture,out v))return 0;
+      if(pct||v>1.0001)v=v/100.0;
+      if(v<0)v=0;if(v>1.5)v=1.5;
+      return v;
+    }
     static HashSet<string> SplitNames(string text){var set=new HashSet<string>(StringComparer.OrdinalIgnoreCase);if(string.IsNullOrEmpty(text))return set;foreach(var x in text.Split(',')){string t=x.Trim();if(t.Length>0)set.Add(t);}return set;}
-    static Preset P(string name,string[] weights,string pref,string acc,string s2,string s4,string s6){var p=new Preset{Name=name??"",ScoreFactor=(name=="Def DD"||name=="Bomber")?.8:1};for(int i=0;i<PresetStatOrder.Length;i++){string lab=(weights!=null&&i<weights.Length)?weights[i]:"";p.W[PresetStatOrder[i]]=lab=="P1"?1:lab=="P2"?2:lab=="P3"?3:0;}p.Preferred=SplitNames(pref);p.Accepted=SplitNames(acc);p.Main[2]=SplitNames(s2);p.Main[4]=SplitNames(s4);p.Main[6]=SplitNames(s6);p.MainAccepted[2]=new HashSet<string>(StringComparer.OrdinalIgnoreCase);p.MainAccepted[4]=new HashSet<string>(StringComparer.OrdinalIgnoreCase);p.MainAccepted[6]=new HashSet<string>(StringComparer.OrdinalIgnoreCase);return p;}
+    static Preset P(string name,string[] weights,string pref,string acc,string s2,string s4,string s6){var p=new Preset{Name=name??"",ScoreFactor=(name=="Def DD"||name=="Bomber")?.8:1};for(int i=0;i<PresetStatOrder.Length;i++){string lab=(weights!=null&&i<weights.Length)?weights[i]:"";p.W[PresetStatOrder[i]]=ParseStatWeight(lab,PresetStatOrder[i]);}p.Preferred=SplitNames(pref);p.Accepted=SplitNames(acc);p.Main[2]=SplitNames(s2);p.Main[4]=SplitNames(s4);p.Main[6]=SplitNames(s6);p.MainAccepted[2]=new HashSet<string>(StringComparer.OrdinalIgnoreCase);p.MainAccepted[4]=new HashSet<string>(StringComparer.OrdinalIgnoreCase);p.MainAccepted[6]=new HashSet<string>(StringComparer.OrdinalIgnoreCase);return p;}
     public static Preset MakePreset(string name,string[] weights,string pref,string acc,string s2,string s4,string s6){return MakePreset(name,weights,pref,acc,s2,s4,s6,"","","");}
     public static Preset MakePreset(string name,string[] weights,string pref,string acc,string s2,string s4,string s6,string a2,string a4,string a6){var p=P(name,weights,pref,acc,s2,s4,s6);p.MainAccepted[2]=SplitNames(a2);p.MainAccepted[4]=SplitNames(a4);p.MainAccepted[6]=SplitNames(a6);return p;}
     public static Preset ClonePreset(Preset src,string newName){
       if(src==null)return MakePreset(newName,new string[0],"","","Atk%","CtD%","Atk%");
       var w=new string[PresetStatOrder.Length];
-      for(int i=0;i<PresetStatOrder.Length;i++){double v;w[i]=src.W.TryGetValue(PresetStatOrder[i],out v)?WeightLabel(v):"Non";}
+      for(int i=0;i<PresetStatOrder.Length;i++){double v;w[i]=src.W.TryGetValue(PresetStatOrder[i],out v)?FormatStatWeight(v):"0%";}
       var p=MakePreset(newName,w,string.Join(",",src.Preferred),string.Join(",",src.Accepted),src.Main.ContainsKey(2)?string.Join(",",src.Main[2]):"",src.Main.ContainsKey(4)?string.Join(",",src.Main[4]):"",src.Main.ContainsKey(6)?string.Join(",",src.Main[6]):"",src.MainAccepted.ContainsKey(2)?string.Join(",",src.MainAccepted[2]):"",src.MainAccepted.ContainsKey(4)?string.Join(",",src.MainAccepted[4]):"",src.MainAccepted.ContainsKey(6)?string.Join(",",src.MainAccepted[6]):"");
       p.ScoreFactor=src.ScoreFactor;return p;
     }
@@ -836,19 +884,19 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
     }
     static List<Preset>CreatePresets(){
       var list=new List<Preset>{
-        MakePreset("Fast DD MAX DPS",new[]{"Non","P1","Non","P1","Non","Non","P1","P1","Non","P1","Non"},"Swift,Blade,Rage,Violent,Will,Fight,Intangible","Fatal,Despair,Vampire,Nemesis,Shield,Revenge","Atk%,Spd","CtD%","Atk%","","",""),
-        MakePreset("Fast DD HP",new[]{"P2","P1","Non","P1","Non","P2","P1","P1","Non","P1","Non"},"Swift,Blade,Rage,Violent,Will,Fight,Intangible","Focus,Fatal,Despair,Vampire,Nemesis,Shield,Revenge","Atk%,Spd","CtD%","Atk%","HP%","HP%","HP%"),
-        MakePreset("Slow DD MAX DPS",new[]{"Non","P1","Non","Non","Non","Non","P1","P1","Non","P1","Non"},"Blade,Rage,Violent,Will,Fight,Intangible","Fatal,Despair,Nemesis","Atk%","CtD%","Atk%","","",""),
-        MakePreset("Slow DD HP",new[]{"P2","P1","Non","Non","Non","P2","P1","P1","Non","P1","Non"},"Blade,Rage,Violent,Will,Shield,Fight,Intangible","Focus,Fatal,Despair,Vampire,Nemesis,Revenge","Atk%","CtD%","Atk%","HP%","HP%","HP%"),
-        MakePreset("Def DD",new[]{"P2","Non","P1","P2","Non","P2","P1","P1","P2","Non","P1"},"Guard,Blade,Rage,Will,Determination,Intangible","Despair,Violent,Fight","Def%","Def%,CtD%","Def%","","",""),
-        MakePreset("Bomber",new[]{"P2","P1","Non","P1","Non","P1","Non","Non","P3","P1","Non"},"Fatal,Will,Intangible","Focus,Violent,Fight","Atk%,Spd","Atk%","Atk%","HP%","HP%","HP%,Acc%"),
-        MakePreset("Support",new[]{"P1","Non","P2","P1","Non","P1","Non","Non","P2","Non","Non"},"Swift,Despair,Violent,Will,Seal,Intangible","Energy,Guard,Nemesis,Revenge,Determination,Enhance,Accuracy,Tolerance","HP%,Spd","HP%,CtR%","HP%,Acc%","Def%","Def%","Def%"),
-        MakePreset("Support ATK",new[]{"P1","P1","P2","P1","Non","P1","Non","Non","P2","Non","Non"},"Swift,Despair,Violent,Will,Seal,Intangible","Energy,Guard,Nemesis,Shield,Revenge,Determination,Enhance,Tolerance","HP%,Atk%,Spd","HP%,Atk%","HP%,Atk%,Acc%","Def%","Def%","Def%"),
-        MakePreset("Suppor DEF",new[]{"P2","Non","P1","P1","Non","P1","Non","Non","Non","Non","P2"},"Swift,Despair,Violent,Will,Seal,Intangible","Energy,Guard,Nemesis,Revenge,Determination,Enhance,Accuracy,Tolerance","Def%,Spd","Def%","Def%,Acc%","HP%","HP%","HP%"),
-        MakePreset("PvP def ACC",new[]{"P1","Non","P2","P1","Non","P1","Non","Non","P2","Non","Non"},"Swift,Despair,Violent,Nemesis,Will,Seal,Intangible","Energy,Guard,Endure,Shield,Revenge,Destroy,Fight,Determination,Tolerance","HP%,Spd","HP%","HP%,Acc%","Def%","Def%","Def%"),
-        MakePreset("PvP def RES",new[]{"P1","Non","P2","P1","P1","Non","Non","Non","P2","Non","Non"},"Swift,Despair,Violent,Nemesis,Will,Seal,Intangible","Energy,Guard,Endure,Shield,Revenge,Destroy,Fight,Determination,Tolerance","HP%,Spd","HP%","HP%","Def%","Def%","Def%,Res%"),
-        MakePreset("Bruiser",new[]{"P1","P2","Non","P1","Non","Non","P1","P2","P2","Non","Non"},"Swift,Despair,Vampire,Violent,Will,Revenge,Destroy,Intangible","Nemesis,Seal","HP%,Spd","HP%,CtR%","HP%","Atk%","CtD%","Atk%"),
-        MakePreset("Bruiser ACC",new[]{"P1","P2","Non","P1","Non","P1","P1","P2","P2","Non","Non"},"Swift,Despair,Vampire,Violent,Will,Revenge,Destroy,Intangible","Nemesis,Seal","HP%,Spd","HP%,CtR%","HP%","Atk%","CtD%","Atk%")
+        MakePreset("Fast DD MAX DPS",new[]{"0%","100%","0%","100%","0%","0%","100%","100%","0%","90%","0%"},"Swift,Blade,Rage,Violent,Will,Fight,Intangible","Fatal,Despair,Vampire,Nemesis,Shield,Revenge","Atk%,Spd","CtD%","Atk%","","",""),
+        MakePreset("Fast DD HP",new[]{"50%","100%","0%","100%","0%","50%","100%","100%","0%","90%","0%"},"Swift,Blade,Rage,Violent,Will,Fight,Intangible","Focus,Fatal,Despair,Vampire,Nemesis,Shield,Revenge","Atk%,Spd","CtD%","Atk%","HP%","HP%","HP%"),
+        MakePreset("Slow DD MAX DPS",new[]{"0%","100%","0%","0%","0%","0%","100%","100%","0%","90%","0%"},"Blade,Rage,Violent,Will,Fight,Intangible","Fatal,Despair,Nemesis","Atk%","CtD%","Atk%","","",""),
+        MakePreset("Slow DD HP",new[]{"50%","100%","0%","0%","0%","50%","100%","100%","0%","90%","0%"},"Blade,Rage,Violent,Will,Shield,Fight,Intangible","Focus,Fatal,Despair,Vampire,Nemesis,Revenge","Atk%","CtD%","Atk%","HP%","HP%","HP%"),
+        MakePreset("Def DD",new[]{"50%","0%","100%","50%","0%","50%","100%","100%","50%","0%","90%"},"Guard,Blade,Rage,Will,Determination,Intangible","Despair,Violent,Fight","Def%","Def%,CtD%","Def%","","",""),
+        MakePreset("Bomber",new[]{"50%","100%","0%","100%","0%","100%","0%","0%","20%","90%","0%"},"Fatal,Will,Intangible","Focus,Violent,Fight","Atk%,Spd","Atk%","Atk%","HP%","HP%","HP%,Acc%"),
+        MakePreset("Support",new[]{"100%","0%","50%","100%","0%","100%","0%","0%","50%","0%","0%"},"Swift,Despair,Violent,Will,Seal,Intangible","Energy,Guard,Nemesis,Revenge,Determination,Enhance,Accuracy,Tolerance","HP%,Spd","HP%,CtR%","HP%,Acc%","Def%","Def%","Def%"),
+        MakePreset("Support ATK",new[]{"100%","100%","50%","100%","0%","100%","0%","0%","50%","0%","0%"},"Swift,Despair,Violent,Will,Seal,Intangible","Energy,Guard,Nemesis,Shield,Revenge,Determination,Enhance,Tolerance","HP%,Atk%,Spd","HP%,Atk%","HP%,Atk%,Acc%","Def%","Def%","Def%"),
+        MakePreset("Suppor DEF",new[]{"50%","0%","100%","100%","0%","100%","0%","0%","0%","0%","50%"},"Swift,Despair,Violent,Will,Seal,Intangible","Energy,Guard,Nemesis,Revenge,Determination,Enhance,Accuracy,Tolerance","Def%,Spd","Def%","Def%,Acc%","HP%","HP%","HP%"),
+        MakePreset("PvP def ACC",new[]{"100%","0%","50%","100%","0%","100%","0%","0%","50%","0%","0%"},"Swift,Despair,Violent,Nemesis,Will,Seal,Intangible","Energy,Guard,Endure,Shield,Revenge,Destroy,Fight,Determination,Tolerance","HP%,Spd","HP%","HP%,Acc%","Def%","Def%","Def%"),
+        MakePreset("PvP def RES",new[]{"100%","0%","50%","100%","100%","0%","0%","0%","50%","0%","0%"},"Swift,Despair,Violent,Nemesis,Will,Seal,Intangible","Energy,Guard,Endure,Shield,Revenge,Destroy,Fight,Determination,Tolerance","HP%,Spd","HP%","HP%","Def%","Def%","Def%,Res%"),
+        MakePreset("Bruiser",new[]{"100%","50%","0%","100%","0%","0%","100%","50%","50%","0%","0%"},"Swift,Despair,Vampire,Violent,Will,Revenge,Destroy,Intangible","Nemesis,Seal","HP%,Spd","HP%,CtR%","HP%","Atk%","CtD%","Atk%"),
+        MakePreset("Bruiser ACC",new[]{"100%","50%","0%","100%","0%","100%","100%","50%","50%","0%","0%"},"Swift,Despair,Vampire,Violent,Will,Revenge,Destroy,Intangible","Nemesis,Seal","HP%,Spd","HP%,CtR%","HP%","Atk%","CtD%","Atk%")
       };
       for(int i=0;i<list.Count;i++){
         string n=list[i].Name;

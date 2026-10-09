@@ -90,12 +90,8 @@ namespace RuneManagerModern {
         menu.Closing+=(s,e)=>{if(e.CloseReason==ToolStripDropDownCloseReason.ItemClicked)e.Cancel=true;};
       }else{
         string currentText=Convert.ToString(cell.Value);
-        // Colonne 0 = facteur preset (0–300%). Ne pas la traiter comme la ligne
-        // "valeur globale par stat" (50–150%) juste parce que le texte finit par %.
-        if(col!=0&&currentText!=null&&currentText.EndsWith("%")){
-          // Ligne "valeur globale par stat" (RuneEnhancements.cs) : menu de pourcentages,
-          // pas la liste Non/P1/P2/P3 de la colonne — reconnue au contenu de la cellule.
-          for(int pct=50;pct<=150;pct+=10){string text=pct+"%";var item=new ToolStripMenuItem(text){Checked=text==currentText,ForeColor=Color.White,BackColor=Color.Black};item.Click+=(s,e)=>{cell.Value=text;g.InvalidateCell(cell);};menu.Items.Add(item);}
+        if(col>=2&&col<=12){
+          for(int pct=0;pct<=100;pct+=10){string text=pct+"%";var item=new ToolStripMenuItem(text){Checked=text==currentText,ForeColor=Color.White,BackColor=Color.Black};item.Click+=(s,e)=>{cell.Value=text;g.InvalidateCell(cell);};menu.Items.Add(item);}
         }else{
           var column=g.Columns[col] as DataGridViewComboBoxColumn;if(column!=null)foreach(object value in column.Items){string text=Convert.ToString(value);var item=new ToolStripMenuItem(text){Checked=text==currentText,ForeColor=Color.White,BackColor=Color.Black};item.Click+=(s,e)=>{cell.Value=text;g.InvalidateCell(cell);};menu.Items.Add(item);}
         }
@@ -118,7 +114,7 @@ namespace RuneManagerModern {
         if(e.ColumnIndex==13||e.ColumnIndex==14){Color chipColor=e.ColumnIndex==13?PreferredColor:AcceptableColor;int chip=Math.Max(12,Math.Min(20,e.CellBounds.Height-8));int step=chip+2;int x=e.CellBounds.X+3,y=e.CellBounds.Y+2;foreach(string name in OrderedNames(CellSets(g.Rows[e.RowIndex].Cells[e.ColumnIndex]),PresetSetOrder)){int w=TextRenderer.MeasureText(name,g.Font).Width+chip+8;if(x+w>e.CellBounds.Right-16){x=e.CellBounds.X+3;y+=step;}if(y+chip>e.CellBounds.Bottom)break;using(var chipBrush=new SolidBrush(chipColor))e.Graphics.FillRectangle(chipBrush,new Rectangle(x,y,w-4,chip));var icon=GetSetIcon(name);if(icon!=null)e.Graphics.DrawImage(icon,new Rectangle(x,y,chip,chip));TextRenderer.DrawText(e.Graphics,name,g.Font,new Point(x+chip+2,y+Math.Max(0,(chip-10)/2)),Color.White);x+=w;}}
         else if(PresetMainColumn(e.ColumnIndex)){Color chipColor=e.ColumnIndex==PresetMainPrefCol(e.ColumnIndex)?PreferredColor:AcceptableColor;int chip=Math.Max(12,Math.Min(20,e.CellBounds.Height-8));int step=chip+2;int x=e.CellBounds.X+3,y=e.CellBounds.Y+2;foreach(string name in OrderedNames(CellSets(g.Rows[e.RowIndex].Cells[e.ColumnIndex]),PresetMainChoices(e.ColumnIndex))){int w=TextRenderer.MeasureText(name,g.Font).Width+12;if(x+w>e.CellBounds.Right-16){x=e.CellBounds.X+3;y+=step;}if(y+chip>e.CellBounds.Bottom)break;using(var chipBrush=new SolidBrush(chipColor))e.Graphics.FillRectangle(chipBrush,new Rectangle(x,y,w-4,chip));TextRenderer.DrawText(e.Graphics,name,g.Font,new Point(x+4,y+Math.Max(0,(chip-10)/2)),Color.White);x+=w;}}
         else TextRenderer.DrawText(e.Graphics,Convert.ToString(e.FormattedValue),g.Font,new Rectangle(e.CellBounds.X+4,e.CellBounds.Y+2,Math.Max(1,e.CellBounds.Width-22),e.CellBounds.Height-4),Color.White,TextFormatFlags.VerticalCenter|TextFormatFlags.EndEllipsis);
-        if(PresetDropColumn(e.ColumnIndex)&&!(e.RowIndex==0&&PresetMainColumn(e.ColumnIndex))){int x=e.CellBounds.Right-12,y=e.CellBounds.Y+Math.Max(6,e.CellBounds.Height/2-2);e.Graphics.FillPolygon(Brushes.White,new[]{new Point(x-4,y-2),new Point(x+4,y-2),new Point(x,y+3)});}
+        if(PresetDropColumn(e.ColumnIndex)){int x=e.CellBounds.Right-12,y=e.CellBounds.Y+Math.Max(6,e.CellBounds.Height/2-2);e.Graphics.FillPolygon(Brushes.White,new[]{new Point(x-4,y-2),new Point(x+4,y-2),new Point(x,y+3)});}
         e.Paint(e.ClipBounds,DataGridViewPaintParts.Border);e.Handled=true;
       };
       Action<int,int> open=(row,col)=>{if(row<0||!PresetDropColumn(col))return;if(PresetMainColumn(col)&&g.Rows[row].Cells[1].ReadOnly)return;g.EndEdit();var rect=g.GetCellDisplayRectangle(col,row,true);CreatePresetMenu(g,row,col).Show(g,new Point(rect.Left,rect.Top+Math.Min(30,rect.Height)));};

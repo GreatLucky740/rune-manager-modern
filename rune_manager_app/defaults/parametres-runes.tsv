@@ -1,16 +1,16 @@
 COEFF	1	0.5	0.2	1.75	0.95	0.85	9.5
-PRESET	Fast DD	P2,P1,Non,P1,Non,P2,P1,P1,Non,Non,Non	Swift,Blade,Rage,Violent,Will,Intangible	Fatal,Despair,Vampire,Nemesis,Revenge	Atk%,Spd	CtD%	Atk%			
-PRESET	Fast DD MAX DPS	Non,P1,Non,P1,Non,Non,P1,P1,Non,P1,Non	Swift,Blade,Rage,Violent,Will,Intangible	Fatal,Despair,Vampire,Nemesis,Revenge	Atk%,Spd	CtD%	Atk%			
-PRESET	Slow DD	P2,P1,Non,Non,Non,P2,P1,P1,P3,Non,Non	Blade,Rage,Violent,Will,Shield,Intangible	Focus,Fatal,Despair,Vampire,Nemesis,Revenge,Fight	HP%,Atk%	HP%,CtD%	HP%,Atk%			
-PRESET	Slow DD MAX DPS	Non,P1,Non,Non,Non,Non,P1,P1,Non,P1,Non	Blade,Rage,Violent,Will,Shield,Intangible	Focus,Fatal,Despair,Vampire,Nemesis,Revenge,Fight	Atk%	CtD%	Atk%			
-PRESET	Def DD	P2,Non,P1,P2,Non,P2,P1,P1,P3,Non,P1	Guard,Blade,Rage,Will,Determination,Intangible	Despair,Violent,Fight	Def%	Def%,CtD%	Def%			
-PRESET	Bomber	P2,P1,Non,P1,Non,P1,Non,Non,Non,P1,Non	Fatal,Will,Intangible	Focus,Violent,Fight	Atk%,Spd	Atk%	Atk%	HP%	HP%	HP%,Acc%
-PRESET	Support	P1,Non,P2,P1,Non,P1,Non,Non,P2,Non,Non	Swift,Despair,Violent,Will,Seal,Intangible	Energy,Guard,Nemesis,Revenge,Determination,Enhance,Accuracy,Tolerance	HP%,Spd	HP%,CtR%	HP%,Acc%	Def%	Def%	Def%
-PRESET	Support DEF	P2,Non,P1,P1,Non,P1,Non,Non,Non,Non,P3	Swift,Despair,Violent,Will,Seal,Intangible	Energy,Guard,Nemesis,Revenge,Determination,Enhance,Accuracy,Tolerance	Def%,Spd	Def%	Def%,Acc%	HP%	HP%	HP%
-PRESET	PvP def	P1,Non,P2,P1,P1,Non,Non,Non,P2,Non,Non	Swift,Despair,Violent,Nemesis,Will,Seal,Intangible	Energy,Guard,Endure,Shield,Revenge,Destroy,Fight,Determination,Tolerance	HP%,Spd	HP%	HP%,Acc%	Def%	Def%	Def%
-PRESET	Bruiser	P1,P2,P3,P1,Non,P2,P1,P2,P2,Non,Non	Swift,Vampire,Violent,Will,Intangible	Despair,Nemesis,Revenge,Destroy,Seal	HP%,Atk%,Spd	HP%,CtR%,CtD%	HP%,Atk%			
-PRESET	Bruiser Crit/Acc	P1,P1,P3,P1,Non,P2,P1,Non,P2,Non,Non	Swift,Violent,Will,Intangible	Despair,Revenge	HP%,Atk%,Spd	HP%,Atk%,CtR%	HP%,Atk%,Acc%			
-PRESET	Bruiser CritD	P1,P1,P2,P1,Non,Non,Non,P2,P3,Non,Non	Swift,Violent,Will,Intangible	Despair,Revenge	HP%,Atk%,Spd	HP%,Atk%,CtD%	HP%,Atk%			
+PRESET	Fast DD	50%,100%,0%,100%,0%,50%,100%,100%,0%,90%,0%	Swift,Blade,Rage,Violent,Will,Intangible	Fatal,Despair,Vampire,Nemesis,Revenge	Atk%,Spd	CtD%	Atk%			
+PRESET	Fast DD MAX DPS	0%,100%,0%,100%,0%,0%,100%,100%,0%,90%,0%	Swift,Blade,Rage,Violent,Will,Intangible	Fatal,Despair,Vampire,Nemesis,Revenge	Atk%,Spd	CtD%	Atk%			
+PRESET	Slow DD	50%,100%,0%,0%,0%,50%,100%,100%,20%,0%,0%	Blade,Rage,Violent,Will,Shield,Intangible	Focus,Fatal,Despair,Vampire,Nemesis,Revenge,Fight	HP%,Atk%	HP%,CtD%	HP%,Atk%			
+PRESET	Slow DD MAX DPS	0%,100%,0%,0%,0%,0%,100%,100%,0%,90%,0%	Blade,Rage,Violent,Will,Shield,Intangible	Focus,Fatal,Despair,Vampire,Nemesis,Revenge,Fight	Atk%	CtD%	Atk%			
+PRESET	Def DD	50%,0%,100%,50%,0%,50%,100%,100%,20%,0%,90%	Guard,Blade,Rage,Will,Determination,Intangible	Despair,Violent,Fight	Def%	Def%,CtD%	Def%			
+PRESET	Bomber	50%,100%,0%,100%,0%,100%,0%,0%,0%,90%,0%	Fatal,Will,Intangible	Focus,Violent,Fight	Atk%,Spd	Atk%	Atk%	HP%	HP%	HP%,Acc%
+PRESET	Support	100%,0%,50%,100%,0%,100%,0%,0%,50%,0%,0%	Swift,Despair,Violent,Will,Seal,Intangible	Energy,Guard,Nemesis,Revenge,Determination,Enhance,Accuracy,Tolerance	HP%,Spd	HP%,CtR%	HP%,Acc%	Def%	Def%	Def%
+PRESET	Support DEF	50%,0%,100%,100%,0%,100%,0%,0%,0%,0%,20%	Swift,Despair,Violent,Will,Seal,Intangible	Energy,Guard,Nemesis,Revenge,Determination,Enhance,Accuracy,Tolerance	Def%,Spd	Def%	Def%,Acc%	HP%	HP%	HP%
+PRESET	PvP def	100%,0%,50%,100%,100%,0%,0%,0%,50%,0%,0%	Swift,Despair,Violent,Nemesis,Will,Seal,Intangible	Energy,Guard,Endure,Shield,Revenge,Destroy,Fight,Determination,Tolerance	HP%,Spd	HP%	HP%,Acc%	Def%	Def%	Def%
+PRESET	Bruiser	100%,50%,20%,100%,0%,50%,100%,50%,50%,0%,0%	Swift,Vampire,Violent,Will,Intangible	Despair,Nemesis,Revenge,Destroy,Seal	HP%,Atk%,Spd	HP%,CtR%,CtD%	HP%,Atk%			
+PRESET	Bruiser Crit/Acc	100%,100%,20%,100%,0%,50%,100%,0%,50%,0%,0%	Swift,Violent,Will,Intangible	Despair,Revenge	HP%,Atk%,Spd	HP%,Atk%,CtR%	HP%,Atk%,Acc%			
+PRESET	Bruiser CritD	100%,100%,50%,100%,0%,0%,0%,50%,20%,0%,0%	Swift,Violent,Will,Intangible	Despair,Revenge	HP%,Atk%,Spd	HP%,Atk%,CtD%	HP%,Atk%			
 AUTOKEEP	Energy	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
 AUTOKEEP	Guard	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
 AUTOKEEP	Swift	HP%=0,Atk%=0,Def%=0,Spd=22,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
@@ -34,4 +34,3 @@ AUTOKEEP	Accuracy	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,A
 AUTOKEEP	Tolerance	HP%=0,Atk%=0,Def%=0,Spd=24,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
 AUTOKEEP	Seal	HP%=0,Atk%=0,Def%=0,Spd=22,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
 AUTOKEEP	Intangible	HP%=0,Atk%=0,Def%=0,Spd=22,Res%=0,Acc%=0,CtR%=0,CtD%=0,HP+=0,Atk+=0,Def+=0
-STATFACTOR	HP%=1,Atk%=1,Def%=1,Spd=1.1,Res%=1,Acc%=1,CtR%=1,CtD%=1,HP+=1,Atk+=1,Def+=1

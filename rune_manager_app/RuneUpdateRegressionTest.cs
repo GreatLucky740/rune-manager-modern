@@ -181,6 +181,25 @@ static class RuneUpdateRegressionTest {
         var filtered=((IEnumerable<RuneRow>)type.GetMethod("Filter",flags).Invoke(form,null)).ToList();
         Check(filtered.Contains(cdRune),"upgrade list includes the rune after live gem drop");
       }
+      RuneEngine.Stocks.Clear();
+      RuneEngine.Stocks.Add(new CraftStock{Id=1,Ancient=false,Type="Gemme",Set="Violent",Stat="CtD%",Grade=4,Amount=2});
+      var ctdLow=new RuneRow{Id=8801,Set="Violent",Slot=1,Main="Atk%",MainValue=1600,Grade=5,Stars=6,Level=12};
+      ctdLow.Subs.Add(new SubStat{Stat="Spd",Value=18});
+      ctdLow.Subs.Add(new SubStat{Stat="CtR%",Value=15});
+      ctdLow.Subs.Add(new SubStat{Stat="Atk%",Value=20});
+      ctdLow.Subs.Add(new SubStat{Stat="CtD%",Value=5,Gemmed=true});
+      RuneEngine.ReplacePresets(new List<Preset>{fast});
+      RuneEngine.Calculate(new List<RuneRow>{ctdLow});
+      Check(ctdLow.RecommendationInStock&&ctdLow.RecommendSource=="CtD%"&&ctdLow.RecommendTarget=="CtD%","violet CtD gem still upgrades CtD below violet max");
+      Check(ctdLow.Recommendation.Contains("+8"),"violet CtD rec shows violet max 8 not legend 10");
+      var ctdVioletMax=new RuneRow{Id=8802,Set="Violent",Slot=1,Main="Atk%",MainValue=1600,Grade=5,Stars=6,Level=12};
+      ctdVioletMax.Subs.Add(new SubStat{Stat="Spd",Value=18});
+      ctdVioletMax.Subs.Add(new SubStat{Stat="CtR%",Value=15});
+      ctdVioletMax.Subs.Add(new SubStat{Stat="Atk%",Value=20});
+      ctdVioletMax.Subs.Add(new SubStat{Stat="CtD%",Value=8,Gemmed=true});
+      RuneEngine.Calculate(new List<RuneRow>{ctdVioletMax});
+      Check(!ctdVioletMax.RecommendationInStock,"CtD at violet max is not in-stock with only violet gems");
+      RuneEngine.Stocks.Clear();
       var support=RuneEngine.MakePreset("Support",new[]{"P1","Non","P2","P1","Non","P1","Non","Non","P2","Non","Non"},"Despair","","HP%,Spd","HP%,CtR%","HP%,Acc%","Def%","Def%","Def%");
       RuneEngine.ReplacePresets(new List<Preset>{support});
       var despair=new RuneRow{Set="Despair",Slot=6,Main="Acc%",MainValue=48,Innate="HP+",InnateValue=288,Grade=5,Stars=6,Level=12};

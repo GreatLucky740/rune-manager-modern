@@ -1,27 +1,11 @@
 {
-  "build": 33,
+  "build": 34,
   "version": "1.18",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Fond de la grille principale mis \u00e0 jour",
-    "Nouvelles ic\u00f4nes de runes de base (PNG transparentes)",
-    "Nouvelles ic\u00f4nes antiques (PNG, un peu plus grandes, +15 en or)",
-    "Presets : priorit\u00e9s sous-stats remplac\u00e9es par des % (0\u2013100), plus de valeur globale",
-    "Bonus stock corrig\u00e9 sur la page principale (affich\u00e9 dans le score)",
-    "Bonus stock d\u00e9sormais par set/slot (plus par preset)",
-    "Moins de 10 runes +12 sur un set/slot \u2192 +1 stock (potential value)",
-    "\u00c0 11+ : les 10 meilleures gardent le +1, la 11e et apr\u00e8s non",
-    "Stats non meulables (CtR/CtD/Acc/Res) revaloris\u00e9es car elle etait trop sous evalu\u00e9"
+    "Correction : Am\u00e9lioration possible ne sort plus une rune trop t\u00f4t apr\u00e8s une gemme violette (max violet respect\u00e9, pas le max l\u00e9gendaire)."
   ],
   "notes_en": [
-    "Main grid background updated",
-    "New base rune icons (transparent PNGs)",
-    "New ancient icons (PNGs, slightly larger, +15 in gold)",
-    "Presets: substat priorities replaced by % weights (0\u2013100), global value removed",
-    "Stock bonus fixed on the main page (included in the displayed score)",
-    "Stock bonus now by set/slot only (no longer by preset)",
-    "Fewer than 10 +12 runes on a set/slot \u2192 +1 stock (potential value)",
-    "At 11+: top 10 keep +1, 11th and beyond do not",
-    "Non-grindable stats (CtR/CtD/Acc/Res) revalued because there were too undervalued"
+    "Fix: Available Upgrade no longer drops a rune too early after a purple gem (violet max used, not legend max)."
   ]
 }

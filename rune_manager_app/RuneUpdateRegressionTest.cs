@@ -119,6 +119,8 @@ static class RuneUpdateRegressionTest {
     var mainPreset=RuneEngine.ClonePreset(RuneEngine.Presets[0],"MainAccGate");
     mainPreset.Main[2].Clear();mainPreset.Main[2].Add("Spd");mainPreset.MainAccepted[2].Clear();
     var mainRune=new RuneRow{Set="Violent",Slot=2,Main="Spd",Grade=5,Stars=6,Level=12};
+    mainRune.Subs.Add(new SubStat{Stat="Atk%",Value=16});
+    mainRune.Subs.Add(new SubStat{Stat="CtR%",Value=12});
     double prefScore=(double)scoreM.Invoke(null,new object[]{mainRune,mainPreset});
     mainPreset.Main[2].Clear();mainPreset.MainAccepted[2].Add("Spd");
     double accScore=(double)scoreM.Invoke(null,new object[]{mainRune,mainPreset});
@@ -174,11 +176,14 @@ static class RuneUpdateRegressionTest {
       using(var form=new MainForm()){
         var created=form.Handle;
         var type=typeof(MainForm);var flags=BindingFlags.Instance|BindingFlags.NonPublic;
+        double savedSeuil=RuneEngine.SeuilApres12;RuneEngine.SeuilApres12=0;
+        cdRune.Action="Keep";cdRune.Potential=Math.Max(cdRune.Potential,99);
         type.GetField("all",flags).SetValue(form,new List<RuneRow>{cdRune});
         type.GetField("viewMode",flags).SetValue(form,"upgrade");
         var actionBox=(ComboBox)type.GetField("action",flags).GetValue(form);
         if(actionBox.Items.Count>0)actionBox.SelectedIndex=0;
         var filtered=((IEnumerable<RuneRow>)type.GetMethod("Filter",flags).Invoke(form,null)).ToList();
+        RuneEngine.SeuilApres12=savedSeuil;
         Check(filtered.Contains(cdRune),"upgrade list includes the rune after live gem drop");
       }
       RuneEngine.Stocks.Clear();

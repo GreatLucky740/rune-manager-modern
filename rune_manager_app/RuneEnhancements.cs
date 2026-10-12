@@ -16,19 +16,19 @@ namespace RuneManagerModern {
       lines.Add(Loc.T("explain_head",p.Name,source.Set,source.Slot));
       if(source.Level<12)lines.Add(Loc.T("explain_proj"));
       double points=0;
-      foreach(var sub in r.Subs){double w=Weight(p,sub.Stat,r.Set);double grind=SubGrind(sub.Stat,r.Ancient,r.Level>=12);double value=SubPoints(p,r,sub);points+=value;lines.Add(Loc.T("explain_stat",sub.Stat,sub.Value,grind,RollMax(sub.Stat),w.ToString("0.####"),value.ToString("0.####")));}
+      foreach(var sub in r.Subs){double w=Weight(p,sub.Stat,r.Set);double value=SubPoints(p,r,sub);points+=value;lines.Add(Loc.T("explain_stat",sub.Stat,sub.Value,0,RollMax(sub.Stat),w.ToString("0.####"),value.ToString("0.####")));}
       double gem=r.Level>=12?GemBonus(r,p):0;points+=gem;lines.Add(Loc.T("explain_gemgain",gem.ToString("0.####")));
-      double main=BonusStatPrincipale*((r.Slot==2||r.Slot==4||r.Slot==6)?Math.Max(Weight(p,r.Main,r.Set),.35):.35);points+=main;
-      lines.Add(Loc.T("explain_main",main.ToString("0.####"),points.ToString("0.####")));
+      double mainF=MainFit(p,r.Slot,r.Main);
+      lines.Add(Loc.T("explain_main",mainF.ToString("0.###"),points.ToString("0.####")));
       double fit=p.Preferred.Contains(r.Set)?1:FacteurSetAcceptable;
-      lines.Add(Loc.T("explain_formula",fit.ToString("0.###"),p.ScoreFactor.ToString("0.###"),"1"));
-      double raw=Score(r,p),bonus=InventoryBonus(p,r.Set,r.Slot,source.Id);lines.Add(Loc.T("explain_raw",raw.ToString("0.000"),bonus.ToString("0.000"),(raw+bonus).ToString("0.000")));
+      lines.Add(Loc.T("explain_formula",fit.ToString("0.###"),p.ScoreFactor.ToString("0.###"),mainF.ToString("0.###")));
+      double raw=Score(r,p),bonus=InventoryBonus(p,r.Set,r.Slot,source.Id),rules=RuleBonus(source);
+      lines.Add(Loc.T("explain_raw",raw.ToString("0.000"),bonus.ToString("0.000"),(raw+bonus).ToString("0.000")));
       lines.Add(Loc.T("explain_stock"));
       var matched=ScoreRules.Where(rule=>(rule.Sets.Count==0||rule.Sets.Any(x=>string.Equals(x,source.Set,StringComparison.OrdinalIgnoreCase)))&&(rule.Slots.Count==0||rule.Slots.Contains(source.Slot))&&(rule.Projected&&string.Equals(rule.Stat,"Spd",StringComparison.OrdinalIgnoreCase)?AchievableSpeed(source):CurrentStatValue(source,rule.Stat))>=rule.Threshold).ToList();
-      if(matched.Count>0)lines.Add(Loc.T("explain_rules_hit",string.Join(" ; ",matched.Select(x=>x.Name+" → +"+x.Bonus.ToString("0.###"))),matched.Sum(x=>x.Bonus).ToString("0.###")));
+      if(matched.Count>0)lines.Add(Loc.T("explain_rules_hit",string.Join(" ; ",matched.Select(x=>x.Name+" +"+x.Bonus.ToString("0.###"))),rules.ToString("0.###")));
       else lines.Add(Loc.T("explain_rules_none"));
-      lines.Add(Loc.T("explain_weights",PoidsP1,PoidsP2,PoidsP3));
-      if(Math.Abs(source.Potential-Math.Round(raw+bonus,3))>.001)lines.Add(Loc.T("explain_hist",(source.Potential-raw-bonus).ToString("+0.000;-0.000;0"),source.Potential.ToString("0.000")));
+      lines.Add(Loc.T("explain_final",(raw+bonus+rules).ToString("0.000")));
       return string.Join("\r\n",lines);
     }
     public static string ExplainGem(RuneRow source){

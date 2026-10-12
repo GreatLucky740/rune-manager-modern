@@ -315,12 +315,13 @@ namespace RuneManagerModern {
       Add("explain_proj","Projection optimiste à +12 (améliorations maximales possibles).","Optimistic +12 projection (maximum possible upgrades).");
       Add("explain_stat","{0} : ({1} + meule {2}) / {3} × poids effectif {4} = {5}","{0}: ({1} + grind {2}) / {3} × effective weight {4} = {5}");
       Add("explain_gemgain","Gain gemmage théorique : +{0}","Theoretical gem gain: +{0}");
-      Add("explain_main","Principale : +{0} ; total pondéré = {1}","Main: +{0}; weighted total = {1}");
-      Add("explain_formula","10 × (total / 11)^1,15 × set {0} × preset {1} × SPD {2}","10 × (total / 11)^1.15 × set {0} × preset {1} × SPD {2}");
+      Add("explain_main","Principale : ×{0} (préférée=1, accepted=facteur) ; total pondéré = {1}","Main: ×{0} (preferred=1, accepted=factor); weighted total = {1}");
+      Add("explain_formula","10 × (total / 11)^1,15 × set {0} × preset {1} × main {2}","10 × (total / 11)^1.15 × set {0} × preset {1} × main {2}");
       Add("explain_raw","Score brut {0} + bonus stock {1} = {2}","Raw score {0} + stock bonus {1} = {2}");
       Add("explain_stock","Bonus stock : les 10 meilleures runes +12 du set sur ce slot gardent +1 ; au-delà (11e…) le bonus tombe. Compte par set, pas par preset.","Stock bonus: the top 10 +12 runes of this set on this slot keep +1; extras (11th+) lose it. Counted by set, not by preset.");
       Add("explain_rules_hit","Règles déclenchées : {0} — total +{1}","Triggered rules: {0} — total +{1}");
       Add("explain_rules_none","Aucune règle déclenchée.","No rule triggered.");
+      Add("explain_final","Total affiché (brut + stock + règles) : {0}","Displayed total (raw + stock + rules): {0}");
       Add("explain_weights","Poids : P1={0}, P2={1}, P3={2} ; fixes ×0,55/0,45 ; CR/CD/ACC/RES ×1,3 ; RES Energy/Endure et ACC Seal/Fight/Despair/Focus ×1,15 ; SPD ×1,1 sur toutes les runes ; presets rapides ×1,05.","Weights: P1={0}, P2={1}, P3={2}; flats ×0.55/0.45; CR/CD/ACC/RES ×1.3; RES Energy/Endure and ACC Seal/Fight/Despair/Focus ×1.15; SPD ×1.1 on every rune; fast presets ×1.05.");
       Add("explain_hist","Ajustement historique après amélioration/gemmage : {0} ; score affiché {1}","Historical adjustment after upgrade/gem: {0}; displayed score {1}");
       Add("explain_gem_none","Aucun preset compatible.","No compatible preset.");

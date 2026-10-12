@@ -1,11 +1,21 @@
-{
-  "build": 35,
-  "version": "1.18",
+﻿{
+  "build": 36,
+  "version": "1.19",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Correction de bugs."
+    "Scoring : toutes les sous-stats ont maintenant la même value à max roll équivalent",
+    "Principal 2/4/6 préférée : plus de bonus stats principale ; calcul selon mains préférées (×1) et acceptées (×0,85) — modifiable dans Coefficient",
+    "Meules : plus comptées dans le potential ; seuls les sous-stats et les gemmes (simulées) comptent",
+    "Simulation : Spd en priorité seulement si le preset valorise Spd (pas Slow DD)",
+    "Coefficients : retrait P1/P2/P3 et bonus main (restent set/main accepted + seuil)",
+    "Ajustement d'échelle des sous-stats (potential recalibré)"
   ],
   "notes_en": [
-    "Bug fixes."
+    "Scoring: all substats now share the same value at equivalent max rolls",
+    "Preferred 2/4/6 main: no main-stat bonus; scored from preferred mains (×1) and accepted mains (×0.85) — adjustable in Coefficient",
+    "Grinds: no longer counted in potential; only substat values and simulated gems count",
+    "Simulation: Spd first only if the preset values Spd (not Slow DD)",
+    "Coefficients: removed P1/P2/P3 and main bonus (kept accepted set/main + threshold)",
+    "Substat scale recalibrated (potential retuned)"
   ]
 }

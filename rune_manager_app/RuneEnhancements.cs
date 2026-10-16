@@ -16,8 +16,12 @@ namespace RuneManagerModern {
       lines.Add(Loc.T("explain_head",p.Name,source.Set,source.Slot));
       if(source.Level<12)lines.Add(Loc.T("explain_proj"));
       double points=0;
-      foreach(var sub in r.Subs){double w=Weight(p,sub.Stat,r.Set);double value=SubPoints(p,r,sub);points+=value;lines.Add(Loc.T("explain_stat",sub.Stat,sub.Value,0,RollMax(sub.Stat),w.ToString("0.####"),value.ToString("0.####")));}
-      double gem=r.Level>=12?GemBonus(r,p):0;points+=gem;lines.Add(Loc.T("explain_gemgain",gem.ToString("0.####")));
+      foreach(var sub in r.Subs){double w=Weight(p,sub.Stat,r.Set);double value=SubPoints(p,r,sub);points+=value;lines.Add(Loc.T("explain_stat",sub.Stat,sub.Value.ToString("0"),RollMax(sub.Stat).ToString("0"),w.ToString("0.####"),value.ToString("0.####")));}
+      string gemSrc,gemTarget;double gem=0;
+      if(r.Level>=12){gem=GemBonusEx(r,p,out gemSrc,out gemTarget);points+=gem;
+        if(gem>0&&gemTarget.Length>0)lines.Add(Loc.T("explain_gemgain_to",gemSrc.Length>0?gemSrc:gemTarget,gemTarget,GemMax(gemTarget,r.Ancient).ToString("0"),gem.ToString("0.####")));
+        else lines.Add(Loc.T("explain_gemgain",gem.ToString("0.####")));
+      }else lines.Add(Loc.T("explain_gemgain","0"));
       double mainF=MainFit(p,r.Slot,r.Main);
       lines.Add(Loc.T("explain_main",mainF.ToString("0.###"),points.ToString("0.####")));
       double fit=p.Preferred.Contains(r.Set)?1:FacteurSetAcceptable;
@@ -73,7 +77,7 @@ namespace RuneManagerModern {
       return y+Pad;
     }
     static bool IsFoot(string line){return line.StartsWith("Poids",StringComparison.Ordinal)||line.StartsWith("Weights",StringComparison.Ordinal)||line.StartsWith("Bonus stock",StringComparison.Ordinal)||line.StartsWith("Stock bonus",StringComparison.Ordinal);}
-    static bool IsScore(string line){return line.IndexOf("Score brut",StringComparison.Ordinal)>=0||line.IndexOf("Raw score",StringComparison.Ordinal)>=0;}
+    static bool IsScore(string line){return line.IndexOf("Score formule",StringComparison.Ordinal)>=0||line.IndexOf("Formula score",StringComparison.Ordinal)>=0||line.IndexOf("Score brut",StringComparison.Ordinal)>=0||line.IndexOf("Raw score",StringComparison.Ordinal)>=0;}
     static bool IsStat(string line){return line.IndexOf("poids effectif",StringComparison.Ordinal)>=0||line.IndexOf("effective weight",StringComparison.Ordinal)>=0;}
     protected override void OnPaint(PaintEventArgs e){
       base.OnPaint(e);

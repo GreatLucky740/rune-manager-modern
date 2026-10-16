@@ -128,6 +128,28 @@ static class RuneUpdateRegressionTest {
     Check(Math.Abs(accScore/prefScore-RuneEngine.FacteurMainAcceptable)<.0000001,"acceptable main is 85 percent of preferred");
     mainPreset.MainAccepted[2].Clear();
     Check((double)scoreM.Invoke(null,new object[]{mainRune,mainPreset})==0,"main outside both lists scores 0");
+    // Potential deja au max gemme: gemmer ne doit pas monter le score (meme unites SubPoints).
+    {
+      var beforeGem=new RuneRow{Set="Violent",Slot=4,Main="CtD%",MainValue=59,Grade=5,Stars=6,Level=12};
+      beforeGem.Subs.Add(new SubStat{Stat="Atk%",Value=14});
+      beforeGem.Subs.Add(new SubStat{Stat="CtR%",Value=10});
+      beforeGem.Subs.Add(new SubStat{Stat="Atk+",Value=27});
+      beforeGem.Subs.Add(new SubStat{Stat="Def+",Value=14});
+      RuneEngine.Calculate(new List<RuneRow>{beforeGem});
+      double potBefore=beforeGem.Potential;
+      string gemTo=beforeGem.RecommendTarget;string gemFrom=beforeGem.RecommendSource;
+      Check(gemTo.Length>0&&gemFrom.Length>0,"gem-stable has a gem recommendation");
+      double gemVal=gemTo=="Spd"?10:gemTo=="CtR%"?9:gemTo=="CtD%"?10:gemTo=="HP%"||gemTo=="Atk%"||gemTo=="Def%"?13:gemTo=="HP+"?580:(gemTo=="Atk+"||gemTo=="Def+")?40:11;
+      var afterGem=new RuneRow{Set="Violent",Slot=4,Main="CtD%",MainValue=59,Grade=5,Stars=6,Level=12};
+      bool replaced=false;
+      foreach(var s in beforeGem.Subs){
+        if(!replaced&&s.Stat==gemFrom){afterGem.Subs.Add(new SubStat{Stat=gemTo,Value=gemVal,Gemmed=true});replaced=true;}
+        else afterGem.Subs.Add(new SubStat{Stat=s.Stat,Value=s.Value,Gemmed=s.Gemmed,Grind=s.Grind});
+      }
+      Check(replaced,"gem-stable replaced recommend source");
+      RuneEngine.Calculate(new List<RuneRow>{afterGem});
+      Check(Math.Abs(afterGem.Potential-potBefore)<0.02,"gemming does not raise potential beyond simulated max");
+    }
     var keepM=typeof(RuneEngine).GetMethod("PremiumKeep",BindingFlags.NonPublic|BindingFlags.Static);
     var pwrM=typeof(RuneEngine).GetMethod("PowerSpeed",BindingFlags.NonPublic|BindingFlags.Static);
     var slot2Spd=new RuneRow{Set="Violent",Slot=2,Main="Atk%",Grade=5,Stars=6,Level=12};slot2Spd.Subs.Add(new SubStat{Stat="Spd",Value=24});
@@ -624,7 +646,7 @@ static class RuneUpdateRegressionTest {
     }
     var rows=RuneEngine.Import(args[0]);Check(rows.Count>0,"real inventory imported");Check(RuneEngine.PresetSlotCounts.Values.All(c=>Enumerable.Range(1,6).All(s=>RuneEngine.ScarcityBonus(c,s)>=0&&RuneEngine.ScarcityBonus(c,s)<=1)),"all inventory bonuses in [0,1]");
     var rune=rows.First(r=>r.Action=="Sell");RuneEngine.ProtectedWorldBossRuneIds.Add(rune.Id);RuneEngine.ApplyRetentionRules(rows);Check(rune.Action!="Sell","World Boss sale protection overrides low score");
-    var scored=rows.First(r=>r.Potential>1);Check(RuneEngine.ExplainPotential(scored).Contains("Score brut"),"score explanation available");Check(RuneEngine.ExplainGem(scored).Contains("Preset"),"gem explanation available");
+    var scored=rows.First(r=>r.Potential>1);Check(RuneEngine.ExplainPotential(scored).Contains("Score formule")||RuneEngine.ExplainPotential(scored).Contains("Formula score"),"score explanation available");Check(RuneEngine.ExplainGem(scored).Contains("Preset"),"gem explanation available");
     string entry="{\"rune_id\":0,\"set_id\":13,\"slot_no\":3,\"class\":6,\"rank\":5,\"extra\":5,\"upgrade_curr\":15,\"pri_eff\":[5,160],\"prefix_eff\":[0,0],\"sec_eff\":[[11,10],[8,10],[2,10],[1,617]]}";
     string dict="{\"command\":\"ReceiveMail\",\"ret_code\":0,\"mail_list\":[{\"extra\":{\"101\":"+entry+",\"102\":"+entry+",\"103\":"+entry+"}}]}";
     var before=string.Join(";",RuneEngine.PresetSlotCounts.OrderBy(x=>x.Key).Select(x=>x.Key+string.Join(",",x.Value)));var choice=RuneEngine.CompareRuneChoice(rows,dict);Check(choice!=null&&choice.Choices.Count==3,"mail dictionary chest detected");Check(before==string.Join(";",RuneEngine.PresetSlotCounts.OrderBy(x=>x.Key).Select(x=>x.Key+string.Join(",",x.Value))),"chest does not alter inventory bonuses");

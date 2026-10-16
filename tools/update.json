@@ -1,21 +1,13 @@
 ﻿{
-  "build": 36,
-  "version": "1.19",
+  "build": 37,
+  "version": "1.20",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Scoring : toutes les sous-stats ont maintenant la même value à max roll équivalent",
-    "Principal 2/4/6 préférée : plus de bonus stats principale ; calcul selon mains préférées (×1) et acceptées (×0,85) — modifiable dans Coefficient",
-    "Meules : plus comptées dans le potential ; seuls les sous-stats et les gemmes (simulées) comptent",
-    "Simulation : Spd en priorité seulement si le preset valorise Spd (pas Slow DD)",
-    "Coefficients : retrait P1/P2/P3 et bonus main (restent set/main accepted + seuil)",
-    "Ajustement d'échelle des sous-stats (potential recalibré)"
+    "Potential : la gemme simulée utilise les mêmes unités que les sous-stats — gemmer ne monte plus le potential",
+    "Tooltip score : clarifie points (déjà avec gemme) vs score formule ; retrait de l’affichage « meule 0 » trompeur"
   ],
   "notes_en": [
-    "Scoring: all substats now share the same value at equivalent max rolls",
-    "Preferred 2/4/6 main: no main-stat bonus; scored from preferred mains (×1) and accepted mains (×0.85) — adjustable in Coefficient",
-    "Grinds: no longer counted in potential; only substat values and simulated gems count",
-    "Simulation: Spd first only if the preset values Spd (not Slow DD)",
-    "Coefficients: removed P1/P2/P3 and main bonus (kept accepted set/main + threshold)",
-    "Substat scale recalibrated (potential retuned)"
+    "Potential: simulated gem uses the same units as substats — gemming no longer raises potential",
+    "Score tooltip: clarifies points (gem already included) vs formula score; removed misleading “grind 0” display"
   ]
 }

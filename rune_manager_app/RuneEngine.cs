@@ -703,13 +703,16 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
     // Crit ↔ Spd (+5), CritD/Acc/Res ↔ % (+10). Then normalize by that full package
     // so EVERY max roll scores the same (weight * 1), e.g. Spd6 = Crit6 = CritD7 = HP%8.
     // Meule hors potential: SubPoints = rolls de valeur seule (gemme deja dans Value).
-    // Scale garde l'echelle UI (~2.25 pts / roll max). Meule seulement dans Contribution (gemmes).
+    // Scale garde l'echelle UI (~2.25 pts / roll max). Contribution (meule +0.5) reste pour
+    // classer les gemmes dans Recommend — GemBonus doit etre en unites SubPoints sinon le
+    // potential monte encore apres gemme reelle (simulation sous-comptee).
     const double RollPointScale=1.6929; // 1.782 -5%
-    static double SubPoints(Preset p,RuneRow r,SubStat s){
-      double w=Weight(p,s.Stat,r.Set);if(w<=0)return 0;
-      double roll=RollMax(s.Stat);if(roll<=0)return 0;
-      return w*(s.Value/roll)*RollPointScale;
+    static double SubPointOf(Preset p,RuneRow r,string stat,double value){
+      double w=Weight(p,stat,r.Set);if(w<=0)return 0;
+      double roll=RollMax(stat);if(roll<=0)return 0;
+      return w*(value/roll)*RollPointScale;
     }
+    static double SubPoints(Preset p,RuneRow r,SubStat s){return SubPointOf(p,r,s.Stat,s.Value);}
     static double Score(RuneRow r,Preset p){if(ForceInstantSell(r))return 0;if(!p.Preferred.Contains(r.Set)&&!p.Accepted.Contains(r.Set))return 0;double mainF=MainFit(p,r.Slot,r.Main);if((r.Slot==2||r.Slot==4||r.Slot==6)&&mainF<=0)return 0;double points=0,bestW=0;foreach(var s in r.Subs){double w=Weight(p,s.Stat,r.Set);bestW=Math.Max(bestW,w);points+=SubPoints(p,r,s);}if(r.Level>=12)points+=GemBonus(r,p);int totalRolls=r.Grade>=5?4:r.Grade==4?3:r.Grade==3?2:1;int remaining=r.Level<12?Math.Max(0,totalRolls-r.Level/3):0;points+=remaining*bestW*.75;double setF=p.Preferred.Contains(r.Set)?1:FacteurSetAcceptable;return 10*Math.Pow(Math.Max(0,points/11),1.15)*setF*mainF*p.ScoreFactor;}
     // Simule le Spd "atteignable" en projetant les rolls futurs restants sur une rune pas
     // encore +12 (ou renvoie le Spd actuel si deja +12). Utilise par les regles Stat=="Spd"
@@ -749,7 +752,13 @@ var stock=id>0?Stocks.FirstOrDefault(x=>x.Id==id):null;if(stock==null&&id==0)sto
       }
       return total;
     }
-    static double GemBonus(RuneRow r,Preset p){double best=0;bool hasGem=r.Subs.Any(x=>x.Gemmed);foreach(var src in r.Subs){if(hasGem&&!src.Gemmed)continue;foreach(string target in p.W.Keys){bool same=src.Stat==target;if(!same&&PercentMustBeKept(r,src,hasGem))continue;if(p.W[target]<=0||(!same&&r.Subs.Any(x=>x.Stat==target))||target==r.Main||target==r.Innate||!SlotPossible(r.Slot,target)||!AccResCompatible(r,target,src))continue;if(Rank(p,target)>Rank(p,src.Stat))continue;if(IsFlat(target)&&!IsFlat(src.Stat)&&Rank(p,target)>=Rank(p,src.Stat))continue;double gain=Contribution(target,GemMax(target,r.Ancient),Weight(p,target,r.Set),r.Ancient)-Contribution(src.Stat,src.Value,Weight(p,src.Stat,r.Set),r.Ancient);best=Math.Max(best,gain);}}return Math.Max(0,best);}
+    static double GemBonus(RuneRow r,Preset p){string src,target;return GemBonusEx(r,p,out src,out target);}
+    // Plafond potential = gemme legendaire (GemMax), pas le stock violet affiche dans la reco.
+    static double GemBonusEx(RuneRow r,Preset p,out string bestSrc,out string bestTarget){
+      bestSrc="";bestTarget="";double best=0;bool hasGem=r.Subs.Any(x=>x.Gemmed);
+      foreach(var src in r.Subs){if(hasGem&&!src.Gemmed)continue;foreach(string target in p.W.Keys){bool same=src.Stat==target;if(!same&&PercentMustBeKept(r,src,hasGem))continue;if(p.W[target]<=0||(!same&&r.Subs.Any(x=>x.Stat==target))||target==r.Main||target==r.Innate||!SlotPossible(r.Slot,target)||!AccResCompatible(r,target,src))continue;if(Rank(p,target)>Rank(p,src.Stat))continue;if(IsFlat(target)&&!IsFlat(src.Stat)&&Rank(p,target)>=Rank(p,src.Stat))continue;double gain=SubPointOf(p,r,target,GemMax(target,r.Ancient))-SubPointOf(p,r,src.Stat,src.Value);if(gain>best){best=gain;bestSrc=src.Stat;bestTarget=target;}}}
+      return Math.Max(0,best);
+    }
     static string Recommend(RuneRow r,Preset p){double best=double.MinValue;int bestRank=99;int bestSrcRank=-1;SubStat source=null;string target="";bool hasGem=r.Subs.Any(x=>x.Gemmed);r.RecommendationInStock=false;foreach(var src in r.Subs){if(hasGem&&!src.Gemmed)continue;foreach(string t in p.W.Keys){if(p.W[t]<=0||t==r.Main||t==r.Innate||!SlotPossible(r.Slot,t)||!AccResCompatible(r,t,src))continue;bool same=src.Stat==t;if(!same&&PercentMustBeKept(r,src,hasGem))continue;if(!same&&r.Subs.Any(x=>x.Stat==t))continue;if(same&&WorseSourceCanFillMissingP1(r,p,src,hasGem))continue;if(!GemTargetAllowed(r,p,src,t,same,hasGem))continue;if(IsFlat(t)&&!IsFlat(src.Stat)&&Rank(p,t)>=Rank(p,src.Stat))continue;double available=GemRecommendMax(r,t,same,src.Value);if(available<=0)continue;double gain=Contribution(t,available,Weight(p,t,r.Set),r.Ancient)-SourceCost(p,r,src);int tr=Rank(p,t);int sr=Rank(p,src.Stat);if(gain<=0)continue;if(sr<bestSrcRank)continue;if(sr==bestSrcRank){int sib=sr>=4?LinkedPriorityRank(p,src.Stat):4;int bestSib=sr>=4&&source!=null?LinkedPriorityRank(p,source.Stat):4;if(sib<bestSib)continue;if(sib==bestSib){if(tr>bestRank)continue;if(tr==bestRank){bool flatSrc=IsFlat(src.Stat);bool bestFlatSrc=source!=null&&IsFlat(source.Stat);bool flatT=IsFlat(t);bool bestFlatT=target.Length>0&&IsFlat(target);if(flatT!=bestFlatT){if(flatT)continue;}else if(flatSrc!=bestFlatSrc){if(!flatSrc)continue;}else if(gain<=best)continue;}}}best=gain;bestRank=tr;bestSrcRank=sr;source=src;target=t;}}if(source==null){r.RecommendSource="";r.RecommendTarget="";return Loc.T("gem_max");}bool samePick=target==source.Stat;double stockMax=StockGemMax(r,target);double displayed;bool inStock;if(samePick){if(stockMax>source.Value){displayed=stockMax;inStock=true;}else if(GemMax(target,r.Ancient)>source.Value){displayed=GemMax(target,r.Ancient);inStock=false;}else{r.RecommendSource="";r.RecommendTarget="";return Loc.T("gem_max");}}else{displayed=stockMax>0?stockMax:GemMax(target,r.Ancient);inStock=stockMax>0;}double actualGain=Contribution(target,displayed,Weight(p,target,r.Set),r.Ancient)-SourceCost(p,r,source);if((samePick&&displayed<=source.Value)||actualGain<=0){r.RecommendSource="";r.RecommendTarget="";return Loc.T("gem_max");}r.RecommendSource=source.Stat;r.RecommendTarget=target;r.RecommendationInStock=inStock;return source.BaseDisplay+" → "+new SubStat{Stat=target,Value=displayed}.BaseDisplay;}
     // Same-stat: P1 always. P2/P3 only when no P1 gem remains (else Def%+5 becomes Max gem
     // while Atk%/Spd/CtR are already at cap). Different-stat: strictly better rank, or same

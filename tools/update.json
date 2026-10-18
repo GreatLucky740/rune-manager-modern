@@ -1,13 +1,15 @@
-﻿{
-  "build": 37,
-  "version": "1.20",
+{
+  "build": 38,
+  "version": "1.21",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Potential : la gemme simulée utilise les mêmes unités que les sous-stats — gemmer ne monte plus le potential",
-    "Tooltip score : clarifie points (déjà avec gemme) vs score formule ; retrait de l’affichage « meule 0 » trompeur"
+    "Tri Potential Value : seules les runes +12 et plus sont affichées",
+    "Journal SWEX (full_log.txt) : détecté même s’il apparaît après le lancement. Pas besoin de redémarrer",
+    "Réglages SWEX : ProfileExport coché, FullLogger coché, « Delete log file before quitting app » décoché, « Merge sealed monster storage into profile data (Currently not working) » coché"
   ],
   "notes_en": [
-    "Potential: simulated gem uses the same units as substats — gemming no longer raises potential",
-    "Score tooltip: clarifies points (gem already included) vs formula score; removed misleading “grind 0” display"
+    "Potential Value sort: only +12 runes and above are shown",
+    "SWEX log (full_log.txt): detected even if it appears after startup. No restart needed",
+    "SWEX settings: ProfileExport on, FullLogger on, “Delete log file before quitting app” off, “Merge sealed monster storage into profile data (Currently not working)” on"
   ]
 }

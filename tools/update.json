@@ -1,13 +1,11 @@
 {
-  "build": 39,
+  "build": 40,
   "version": "1.22",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Auto-Keep : une rune est protégée si une stat cochée peut atteindre son seuil avec les power-ups restants (rolls max), même si cette stat n’est pas encore sur la rune. Sous +12 : power up. À +12 : keep. Le seuil Spd ignore le slot 2. Case vide ou 0 = stat désactivée",
-    "Auto-Keep : « Tous les sets » met les mêmes valeurs sur tous les sets d’un coup. « Par set » garde une valeur par set"
+    "Corrections de bugs"
   ],
   "notes_en": [
-    "Auto-Keep: a rune is protected if a filled-in stat can reach its threshold with the remaining power-ups (max rolls), even if that stat is not on the rune yet. Below +12: power up. At +12: keep. The Spd threshold ignores slot 2. Empty or 0 disables that stat",
-    "Auto-Keep: “All sets” applies the same values to every set at once. “Per set” keeps a value for each set"
+    "Bug fixes"
   ]
 }

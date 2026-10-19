@@ -1,15 +1,13 @@
 {
-  "build": 38,
-  "version": "1.21",
+  "build": 39,
+  "version": "1.22",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Tri Potential Value : seules les runes +12 et plus sont affichées",
-    "Journal SWEX (full_log.txt) : détecté même s’il apparaît après le lancement. Pas besoin de redémarrer",
-    "Réglages SWEX : ProfileExport coché, FullLogger coché, « Delete log file before quitting app » décoché, « Merge sealed monster storage into profile data (Currently not working) » coché"
+    "Auto-Keep : une rune est protégée si une stat cochée peut atteindre son seuil avec les power-ups restants (rolls max), même si cette stat n’est pas encore sur la rune. Sous +12 : power up. À +12 : keep. Le seuil Spd ignore le slot 2. Case vide ou 0 = stat désactivée",
+    "Auto-Keep : « Tous les sets » met les mêmes valeurs sur tous les sets d’un coup. « Par set » garde une valeur par set"
   ],
   "notes_en": [
-    "Potential Value sort: only +12 runes and above are shown",
-    "SWEX log (full_log.txt): detected even if it appears after startup. No restart needed",
-    "SWEX settings: ProfileExport on, FullLogger on, “Delete log file before quitting app” off, “Merge sealed monster storage into profile data (Currently not working)” on"
+    "Auto-Keep: a rune is protected if a filled-in stat can reach its threshold with the remaining power-ups (max rolls), even if that stat is not on the rune yet. Below +12: power up. At +12: keep. The Spd threshold ignores slot 2. Empty or 0 disables that stat",
+    "Auto-Keep: “All sets” applies the same values to every set at once. “Per set” keeps a value for each set"
   ]
 }

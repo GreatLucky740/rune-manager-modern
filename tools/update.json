@@ -1,15 +1,11 @@
 {
-  "build": 41,
+  "build": 42,
   "version": "1.23",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Auto-Keep : les colonnes HP+, Atk+ et Def+ sont remplacées par Flat 4/6 Spd. Plus de vente forcée sous 26 Spd pour les slots 4 et 6 à stat principale plate",
-    "Coefficients : boost de potential par set, en pourcentage. Vide ou 0 = aucun boost",
-    "Filtre All runes : Decks only. Affiche seulement les runes équipées dans un deck"
+    "Corrections de bugs"
   ],
   "notes_en": [
-    "Auto-Keep: the HP+, Atk+ and Def+ columns are replaced by Flat 4/6 Spd. Flat slot 4 and 6 runes are no longer force-sold under 26 Spd",
-    "Coefficients: potential boost per set, as a percent. Empty or 0 = no boost",
-    "All runes filter: Decks only. Shows only runes equipped in a deck"
+    "Bug fixes"
   ]
 }

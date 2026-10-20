@@ -1,13 +1,11 @@
 {
-  "build": 44,
+  "build": 45,
   "version": "1.24",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Skill-Up : le monstre affiche sa progression, par exemple Nina Williams (2/10 skill-up). Le 2, ce sont les skill-ups déjà faits. Le 10, c’est le maximum.",
-    "Marteau : une fenêtre liste les runes montées et indique Sell, Pwr up ou Keep. L’ordre suit le tri Grade du jeu. Elle se met à jour quand tu vends ou power-up, se rouvre à l’endroit où tu l’as laissée, et se ferme quand il ne reste plus de rune."
+    "Corrections de bugs"
   ],
   "notes_en": [
-    "Skill-Up: the monster shows its progress, for example Nina Williams (2/10 skill-up). 2 is the skill-ups already done. 10 is the maximum.",
-    "Hammer: a window lists the powered-up runes and marks them Sell, Pwr up or Keep. The order matches the Grade ingame sort. It updates when you sell or power up, reopens where you left it, and closes when no runes remain."
+    "Bug fixes"
   ]
 }

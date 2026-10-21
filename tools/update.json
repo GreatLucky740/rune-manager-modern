@@ -1,15 +1,11 @@
 {
-  "build": 46,
+  "build": 47,
   "version": "1.25",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Cartes : les runes s’affichent comme en jeu, avec la vraie icône, le portrait du monstre, le niveau, la stat principale, l’innée juste en dessous, les substats et les couleurs gemme/meule. À la place du score du jeu, c’est Potential Value. Le meilleur preset est aligné dessous.",
-    "Liste / Cartes : un bouton bascule entre les deux. Le choix est gardé au prochain lancement.",
-    "Marteau : la fenêtre montre l’icône de la rune avec son niveau. Si l’appli est en cartes, le marteau l’est aussi."
+    "Corrections de bugs"
   ],
   "notes_en": [
-    "Cards: runes are shown like in game, with the real icon, the monster portrait, the level, the main stat, the innate just under it, the substats, and the gem/grind colors. Where the game shows its score, the app shows Potential Value. The best preset lines up under it.",
-    "List / Cards: a button switches between the two. The choice is kept the next time you open the app.",
-    "Hammer: the window shows the rune icon with its level. If the app is in cards, the hammer is too."
+    "Bug fixes"
   ]
 }

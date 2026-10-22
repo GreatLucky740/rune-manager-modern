@@ -1,19 +1,13 @@
 {
-  "build": 49,
-  "version": "1.26",
+  "build": 50,
+  "version": "1.27",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "RTA : les monstres support de la saison 39 sont lus dans le JSON et entrent dans le calcul des picks. Ceux que tu ne possèdes pas sont marqués « support de saison ».",
-    "RTA : le bouton Monstres support liste tous les monstres support de la saison, avec le portrait. Reset RTA est tout à droite.",
-    "RTA : win, pick, ban, lead et le nombre de parties sont à jour pour la saison 39.",
-    "RTA : sets, subs, slots et duos SWLens sont remplis pour la saison 39.",
-    "RTA : les doublons sont cachés. Si le même monstre apparaît deux fois (éveillé et non éveillé, ou le même nom), seule la ligne avec le plus de parties reste."
+    "RTA : un monstre adverse n’est ajouté que quand tu cliques sur son icône et que sa fiche s’ouvre. Les noms déjà affichés sur l’écran de draft ne se posent plus tout seuls.",
+    "RTA : dans Monstres support, une case « Utiliser seulement ces monstres pour le pick et le ban ». Cochée, le calcul ne prend que ces monstres. Le choix est gardé. Reset RTA le décoche."
   ],
   "notes_en": [
-    "RTA: season 39 support monsters are read from the JSON and included in the pick calculation. Ones you do not own are marked \"season support\".",
-    "RTA: the Support monsters button lists every support monster of the season, with the portrait. Reset RTA sits at the far right.",
-    "RTA: win, pick, ban, lead and games are up to date for season 39.",
-    "RTA: SWLens sets, subs, slots and duos are filled for season 39.",
-    "RTA: duplicates are hidden. If the same monster shows twice (awakened and unawakened, or the same name), only the row with the most games stays."
+    "RTA: an enemy monster is added only when you click its icon and its card opens. Names already shown on the draft screen are no longer placed on their own.",
+    "RTA: in Support monsters, a checkbox \"Use only these monsters for pick and ban\". When it is on, the calculation uses only those monsters. The choice is kept. Reset RTA turns it off."
   ]
 }

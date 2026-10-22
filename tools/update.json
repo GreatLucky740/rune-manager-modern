@@ -1,13 +1,11 @@
 {
-  "build": 50,
+  "build": 51,
   "version": "1.27",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "RTA : un monstre adverse n’est ajouté que quand tu cliques sur son icône et que sa fiche s’ouvre. Les noms déjà affichés sur l’écran de draft ne se posent plus tout seuls.",
-    "RTA : dans Monstres support, une case « Utiliser seulement ces monstres pour le pick et le ban ». Cochée, le calcul ne prend que ces monstres. Le choix est gardé. Reset RTA le décoche."
+    "Corrections de bugs"
   ],
   "notes_en": [
-    "RTA: an enemy monster is added only when you click its icon and its card opens. Names already shown on the draft screen are no longer placed on their own.",
-    "RTA: in Support monsters, a checkbox \"Use only these monsters for pick and ban\". When it is on, the calculation uses only those monsters. The choice is kept. Reset RTA turns it off."
+    "Bug fixes"
   ]
 }

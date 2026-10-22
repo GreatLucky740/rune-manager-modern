@@ -1,11 +1,11 @@
 {
-  "build": 51,
+  "build": 52,
   "version": "1.27",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Corrections de bugs"
+    "Corrections de bugs : recommandation de ban RTA"
   ],
   "notes_en": [
-    "Bug fixes"
+    "Bug fixes: RTA ban recommendation"
   ]
 }

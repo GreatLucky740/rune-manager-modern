@@ -1,11 +1,13 @@
 {
-  "build": 55,
-  "version": "1.27",
+  "build": 56,
+  "version": "1.28",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Auto-Keep : Exporter et Importer enregistrent ou rechargent les seuils de chaque set. Après un import, Enregistrer garde les valeurs."
+    "Marteau : Fix le bug ou l'ordre des runes changeait quand il rester au moins une rune a vendre quand le marteau ameliorer les runes +12",
+    "Monstres : Dark Frieren, Maris, Volcaris, Auraris, Luminaris, Noctaris, les Homunculus d'attaque Lumière et Ténèbres, et l'Homunculus de soutien Vent sont ajoutés. Les icônes manquantes sont en place."
   ],
   "notes_en": [
-    "Auto-Keep: Export and Import save or reload the thresholds for each set. After an import, Save keeps the values."
+    "Hammer: Fix a bug where the order of runes changed when the hammer powered up runes +12 and when a rune still was still left to sell",
+    "Monsters: Dark Frieren, Maris, Volcaris, Auraris, Luminaris, Noctaris, the Light and Dark Attack Homunculi, and the Wind Support Homunculus are added. The missing icons are in place."
   ]
 }

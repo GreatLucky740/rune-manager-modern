@@ -1,13 +1,11 @@
 {
-  "build": 54,
+  "build": 55,
   "version": "1.27",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Vente : si une rune Keep ou Pwr up est vendue, une fenêtre montre cette rune (set, slot, niveau, stat principale, subs, potential). Une rune déjà en Sell ne déclenche rien.",
-    "Seuil : dans le panneau SEUIL, Exporter et Importer enregistrent ou rechargent le mode, le nombre ou le score, et l'économie de mana. Après un import, Appliquer enregistre le seuil."
+    "Auto-Keep : Exporter et Importer enregistrent ou rechargent les seuils de chaque set. Après un import, Enregistrer garde les valeurs."
   ],
   "notes_en": [
-    "Selling: if a Keep or Pwr up rune is sold, a window shows that rune (set, slot, level, main stat, subs, potential). A rune already set to Sell does not trigger it.",
-    "Threshold: in the THRESHOLD panel, Export and Import save or reload the mode, the count or the score, and mana saver. After an import, Apply stores the threshold."
+    "Auto-Keep: Export and Import save or reload the thresholds for each set. After an import, Save keeps the values."
   ]
 }

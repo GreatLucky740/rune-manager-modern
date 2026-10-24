@@ -1,13 +1,11 @@
 {
-  "build": 56,
-  "version": "1.28",
+  "build": 57,
+  "version": "1.29",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "Marteau : Fix le bug ou l'ordre des runes changeait quand il rester au moins une rune a vendre quand le marteau ameliorer les runes +12",
-    "Monstres : Dark Frieren, Maris, Volcaris, Auraris, Luminaris, Noctaris, les Homunculus d'attaque Lumière et Ténèbres, et l'Homunculus de soutien Vent sont ajoutés. Les icônes manquantes sont en place."
+    "SIEGE/ARENE TEAMS : Arène attaque et défense, Siège attaque et défense, et Siège 4★ et moins. Seules les équipes que tu peux jouer avec tes monstres, box et stockage, sont affichées, dans l'ordre de SWLens."
   ],
   "notes_en": [
-    "Hammer: Fix a bug where the order of runes changed when the hammer powered up runes +12 and when a rune still was still left to sell",
-    "Monsters: Dark Frieren, Maris, Volcaris, Auraris, Luminaris, Noctaris, the Light and Dark Attack Homunculi, and the Wind Support Homunculus are added. The missing icons are in place."
+    "SIEGE/ARENA TEAMS: Arena attack and defense, Siege attack and defense, and Siege 4★ and below. Only the teams you can field with your monsters, box and storage, are shown, in the SWLens order."
   ]
 }

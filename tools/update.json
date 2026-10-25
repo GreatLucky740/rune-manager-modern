@@ -1,13 +1,11 @@
 {
-  "build": 58,
-  "version": "1.30",
+  "build": 59,
+  "version": "1.31",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "CAIROS TEAMS : Fort des Géants B12, Tanière du Dragon B12 et Nécropolis B12.",
-    "MOYENNE RUNES : Moyenne des Keep +12 qui passent le seuil, à part des Keep forcés. Moyenne de tout le Keep, moyenne par set avec les icônes, et la raison de chaque Keep forcé. Une rune dans un deck affiche « Dans une équipe de deck »."
+    "RUNES QUOTA : Pour chaque set et chaque slot, le nombre de runes +12 gardées à 100 % du potentiel. La suivante perd 1 %, celle d'après 2 %, jusqu'à 30 %. Export et import du quota. Les icônes de set suivent l'ordre du jeu, aussi sur Auto-Keep, MOYENNE RUNES, le stock et CLASSEMENT SPD."
   ],
   "notes_en": [
-    "CAIROS TEAMS: Giants Keep B12, Dragons Lair B12 and Necropolis B12.",
-    "RUNES AVERAGE: Average of the +12 Keep runes that pass the threshold, apart from the forced Keep. Average of every Keep, average by set with the icons, and the reason for each forced Keep. A rune on a deck shows \"On a deck team\"."
+    "RUNES QUOTA: For each set and slot, how many +12 runes stay at 100% potential. The next one loses 1%, the one after 2%, up to 30%. Quota export and import. Set icons follow the game order, also on Auto-Keep, RUNES AVERAGE, the stock and SPD RANKING."
   ]
 }

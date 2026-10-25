@@ -1,11 +1,13 @@
 {
-  "build": 57,
-  "version": "1.29",
+  "build": 58,
+  "version": "1.30",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "SIEGE/ARENE TEAMS : Arène attaque et défense, Siège attaque et défense, et Siège 4★ et moins. Seules les équipes que tu peux jouer avec tes monstres, box et stockage, sont affichées, dans l'ordre de SWLens."
+    "CAIROS TEAMS : Fort des Géants B12, Tanière du Dragon B12 et Nécropolis B12.",
+    "MOYENNE RUNES : Moyenne des Keep +12 qui passent le seuil, à part des Keep forcés. Moyenne de tout le Keep, moyenne par set avec les icônes, et la raison de chaque Keep forcé. Une rune dans un deck affiche « Dans une équipe de deck »."
   ],
   "notes_en": [
-    "SIEGE/ARENA TEAMS: Arena attack and defense, Siege attack and defense, and Siege 4★ and below. Only the teams you can field with your monsters, box and storage, are shown, in the SWLens order."
+    "CAIROS TEAMS: Giants Keep B12, Dragons Lair B12 and Necropolis B12.",
+    "RUNES AVERAGE: Average of the +12 Keep runes that pass the threshold, apart from the forced Keep. Average of every Keep, average by set with the icons, and the reason for each forced Keep. A rune on a deck shows \"On a deck team\"."
   ]
 }

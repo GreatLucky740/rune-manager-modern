@@ -1,11 +1,11 @@
 {
-  "build": 59,
-  "version": "1.31",
+  "build": 60,
+  "version": "1.32",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "RUNES QUOTA : Pour chaque set et chaque slot, le nombre de runes +12 gardées à 100 % du potentiel. La suivante perd 1 %, celle d'après 2 %, jusqu'à 30 %. Export et import du quota. Les icônes de set suivent l'ordre du jeu, aussi sur Auto-Keep, MOYENNE RUNES, le stock et CLASSEMENT SPD."
+    "RUNES QUOTA : La suivante perd 5 %, celle d'après 6 %, et ainsi de suite, jusqu'à 50 %."
   ],
   "notes_en": [
-    "RUNES QUOTA: For each set and slot, how many +12 runes stay at 100% potential. The next one loses 1%, the one after 2%, up to 30%. Quota export and import. Set icons follow the game order, also on Auto-Keep, RUNES AVERAGE, the stock and SPD RANKING."
+    "RUNES QUOTA: The next one loses 5%, the one after 6%, and so on, up to 50%."
   ]
 }

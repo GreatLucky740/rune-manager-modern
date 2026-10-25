@@ -1,11 +1,11 @@
 {
-  "build": 60,
+  "build": 61,
   "version": "1.32",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "RUNES QUOTA : La suivante perd 5 %, celle d'après 6 %, et ainsi de suite, jusqu'à 50 %."
+    "RUNES QUOTA : Affichage du nombre de runes au-dessus du seuil de vente pour chaque slot et chaque set."
   ],
   "notes_en": [
-    "RUNES QUOTA: The next one loses 5%, the one after 6%, and so on, up to 50%."
+    "RUNES QUOTA: Shows how many runes are above the sell threshold for each slot and set."
   ]
 }

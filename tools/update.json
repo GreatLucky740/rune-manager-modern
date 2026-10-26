@@ -1,11 +1,11 @@
 {
-  "build": 62,
-  "version": "1.32",
+  "build": 63,
+  "version": "1.33",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "MOYENNE RUNES : Correction de bug."
+    "RUNES QUOTA : Quota aussi pour les presets. Tous les presets garde l'affichage actuel. Chaque preset affiche combien de ses runes sont au-dessus du seuil de vente pour chaque slot."
   ],
   "notes_en": [
-    "RUNES AVERAGE: Bug fix."
+    "RUNES QUOTA: Quota also for presets. All presets keeps the current display. Each preset shows how many of its runes are above the sell threshold for each slot."
   ]
 }

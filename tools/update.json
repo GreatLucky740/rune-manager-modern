@@ -1,11 +1,11 @@
 {
-  "build": 63,
-  "version": "1.33",
+  "build": 64,
+  "version": "1.34",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "RUNES QUOTA : Quota aussi pour les presets. Tous les presets garde l'affichage actuel. Chaque preset affiche combien de ses runes sont au-dessus du seuil de vente pour chaque slot."
+    "SEUIL DE VENTE : Seuil pour tous les sets, ou un seuil par set et par slot. Le nombre gris montre les runes +12 au-dessus du seuil de chaque case."
   ],
   "notes_en": [
-    "RUNES QUOTA: Quota also for presets. All presets keeps the current display. Each preset shows how many of its runes are above the sell threshold for each slot."
+    "SELL THRESHOLD: Threshold for all sets, or one threshold per set and slot. The gray number shows the +12 runes above the threshold of each cell."
   ]
 }

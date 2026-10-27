@@ -1,11 +1,11 @@
 {
-  "build": 64,
-  "version": "1.34",
+  "build": 65,
+  "version": "1.35",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "SEUIL DE VENTE : Seuil pour tous les sets, ou un seuil par set et par slot. Le nombre gris montre les runes +12 au-dessus du seuil de chaque case."
+    "SEUIL DE VENTE AUTOMATIQUE : Mode auto. Tu choisis un seuil de base et ensuite l'application met a jour en temps réelle le seuil de vente en fonction de tes runes, le seuil de vente auto ne peut pas descendre en dessous du seuil de base et seule les runes au dessus du seuil de base sont calculer dans le seuil de vente automatique"
   ],
   "notes_en": [
-    "SELL THRESHOLD: Threshold for all sets, or one threshold per set and slot. The gray number shows the +12 runes above the threshold of each cell."
+    "AUTO-SELL THRESHOLD: Auto mode. You choose a base threshold and then the app update the threshold in real time with your runes quality the auto sell threshold won't be able to go under the base threshold and only the runes above the base threshold will be used for the calculation of the auto-sell threshold."
   ]
 }

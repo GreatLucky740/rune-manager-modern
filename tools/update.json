@@ -1,13 +1,11 @@
 {
-  "build": 66,
-  "version": "1.35",
+  "build": 67,
+  "version": "1.36",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "SEUIL DE VENTE : Correction de bug.",
-    "AUTO-KEEP : Correction de bug."
+    "SEUIL DE VENTE AUTOMATIQUE : La ligne est par preset, par set et par slot. Tous les presets montre la ligne de toutes les runes de la case. Une rune est vendue selon la ligne de son preset. Moins de 5 runes dans la case : la case garde le seuil de base. La ligne prévoit déjà les ventes suivantes. En vendre une ne retire pas les autres."
   ],
   "notes_en": [
-    "SELL THRESHOLD: Bug fix.",
-    "AUTO-KEEP: Bug fix."
+    "AUTO-SELL THRESHOLD: The line is per preset, per set and per slot. All presets shows the line of every rune in the cell. A rune is sold against its preset's line. Under 5 runes in the cell: the cell keeps the base threshold. The line already includes the next sells. Selling one does not take the others off the list."
   ]
 }

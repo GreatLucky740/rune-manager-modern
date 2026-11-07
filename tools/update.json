@@ -1,11 +1,15 @@
 {
-  "build": 67,
-  "version": "1.36",
+  "build": 68,
+  "version": "1.37",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "SEUIL DE VENTE AUTOMATIQUE : La ligne est par preset, par set et par slot. Tous les presets montre la ligne de toutes les runes de la case. Une rune est vendue selon la ligne de son preset. Moins de 5 runes dans la case : la case garde le seuil de base. La ligne prévoit déjà les ventes suivantes. En vendre une ne retire pas les autres."
+    "QUOTA DE RUNES : Si on met 5 sur Fast DD, Blade, slot 1, seulement les 5 meilleures runes +12 de cette case sont gardées. Les autres sont vendues, même au-dessus de l’ancien seuil. Le nouveau seuil est le potentiel de cette 5e rune. Il ne descend pas sous le seuil classique. Case vide : le seuil classique reste. Une rune pas encore +12 ne prend pas la place d’une +12. Au-dessus de ce seuil elle reste à améliorer, en dessous elle est vendue. Dans le tableau, le nombre blanc est le quota écrit, le nombre vert est le seuil de la case, le nombre gris compte les +12 au-dessus.",
+    "RAFFINAGE : Les runes qui ont une gemme active ne sont plus affichées.",
+    "ARÈNE DIMENSIONNELLE : Ses runes ne sont pas détectées, comptées, ni affichées."
   ],
   "notes_en": [
-    "AUTO-SELL THRESHOLD: The line is per preset, per set and per slot. All presets shows the line of every rune in the cell. A rune is sold against its preset's line. Under 5 runes in the cell: the cell keeps the base threshold. The line already includes the next sells. Selling one does not take the others off the list."
+    "RUNE QUOTA: If you put 5 on Fast DD, Blade, slot 1, only the 5 best +12 runes in that cell are kept. The others are sold, even above the old threshold. The new threshold is the potential of that 5th rune. It does not drop below the classic threshold. An empty cell keeps the classic threshold. A rune that is not +12 yet does not take a +12 rune’s place. Above that threshold it stays to upgrade, below it is sold. In the grid, the white number is the quota you typed, the green number is the cell threshold, and the gray number counts the +12 runes above it.",
+    "REFINEMENT: Runes with an active gem are no longer shown.",
+    "DIMENSIONAL ARENA: Its runes are not detected, counted, or shown."
   ]
 }

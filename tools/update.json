@@ -1,15 +1,13 @@
 {
-  "build": 68,
-  "version": "1.37",
+  "build": 69,
+  "version": "1.38",
   "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
   "notes_fr": [
-    "QUOTA DE RUNES : Si on met 5 sur Fast DD, Blade, slot 1, seulement les 5 meilleures runes +12 de cette case sont gardées. Les autres sont vendues, même au-dessus de l’ancien seuil. Le nouveau seuil est le potentiel de cette 5e rune. Il ne descend pas sous le seuil classique. Case vide : le seuil classique reste. Une rune pas encore +12 ne prend pas la place d’une +12. Au-dessus de ce seuil elle reste à améliorer, en dessous elle est vendue. Dans le tableau, le nombre blanc est le quota écrit, le nombre vert est le seuil de la case, le nombre gris compte les +12 au-dessus.",
-    "RAFFINAGE : Les runes qui ont une gemme active ne sont plus affichées.",
-    "ARÈNE DIMENSIONNELLE : Ses runes ne sont pas détectées, comptées, ni affichées."
+    "COULEUR LÉGENDAIRE : L’orange des runes légendaires est le même sur tous les sets et tous les slots.",
+    "MENU : Fix pour afficher tous les boutons de l’interface."
   ],
   "notes_en": [
-    "RUNE QUOTA: If you put 5 on Fast DD, Blade, slot 1, only the 5 best +12 runes in that cell are kept. The others are sold, even above the old threshold. The new threshold is the potential of that 5th rune. It does not drop below the classic threshold. An empty cell keeps the classic threshold. A rune that is not +12 yet does not take a +12 rune’s place. Above that threshold it stays to upgrade, below it is sold. In the grid, the white number is the quota you typed, the green number is the cell threshold, and the gray number counts the +12 runes above it.",
-    "REFINEMENT: Runes with an active gem are no longer shown.",
-    "DIMENSIONAL ARENA: Its runes are not detected, counted, or shown."
+    "LEGENDARY COLOR: Legendary runes use the same orange on every set and every slot.",
+    "MENU: Fix to show every interface button."
   ]
 }

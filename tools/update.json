@@ -1,13 +1,23 @@
 {
-  "build": 69,
-  "version": "1.38",
-  "url": "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
-  "notes_fr": [
-    "COULEUR LÉGENDAIRE : L’orange des runes légendaires est le même sur tous les sets et tous les slots.",
-    "MENU : Fix pour afficher tous les boutons de l’interface."
-  ],
-  "notes_en": [
-    "LEGENDARY COLOR: Legendary runes use the same orange on every set and every slot.",
-    "MENU: Fix to show every interface button."
-  ]
+    "build":  70,
+    "version":  "1.39",
+    "url":  "https://github.com/GreatLucky740/rune-manager-modern/releases/latest/download/Rune_Manager_Update.exe",
+    "notes_fr":  [
+                     "AUTO REEVAL : Choix du set, du slot et des innées, plusieurs à la fois, chacune avec un minimum. Les 6★ légendaires de base qui correspondent sont gardées automatiquement.",
+                     "ANTIQUES : Passage runes normales / runes antiques, avec les valeurs d’innées antiques.",
+                     "IMPORT / EXPORT : Export et import des règles Auto Reeval.",
+                     "INTANGIBLE : Ligne retirée, ce set ne peut pas être réévalué.",
+                     "SLOT 6 : Une principale plate (HP+, Atk+, Def+) n’est pas gardée, même avec la bonne innée.",
+                     "REFINEMENT : Seules les runes légendaires de base sont listées. Le grade d’origine est conservé à +15.",
+                     "GEMME : Une stat déjà gemmée mais trop basse peut être proposée en montée quand c’est le meilleur choix."
+                 ],
+    "notes_en":  [
+                     "AUTO REAPPS : Pick the set, the slot and the innates, several at once, each with a minimum. Matching base legendary 6★ runes are kept automatically.",
+                     "ANCIENT : Switch between normal and ancient runes, using ancient innate values.",
+                     "IMPORT / EXPORT : Export and import of Auto Reapps rules.",
+                     "INTANGIBLE : Row removed, this set cannot be reappraised.",
+                     "SLOT 6 : A flat main stat (HP+, Atk+, Def+) is not kept, even with the right innate.",
+                     "REFINEMENT : Only base legendary runes are listed. The original grade stays at +15.",
+                     "GEM : A stat already gemmed but too low can be offered as an upgrade when it is the best choice."
+                 ]
 }
